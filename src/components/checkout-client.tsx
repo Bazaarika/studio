@@ -20,26 +20,36 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: string }) => {
   const x = useMotionValue(0);
   const buttonRef = useRef<HTMLDivElement>(null);
-  const [swiped, setSwiped] = useState(false);
-  
+  const [buttonWidth, setButtonWidth] = useState(0);
+
+  useEffect(() => {
+    if (buttonRef.current) {
+      setButtonWidth(buttonRef.current.offsetWidth);
+    }
+  }, []);
+
   const background = useTransform(
     x,
-    [0, buttonRef.current ? buttonRef.current.offsetWidth - 56 : 200],
+    [0, buttonWidth > 0 ? buttonWidth - 56 : 200],
     ["hsl(var(--primary))", "hsl(var(--accent))"]
   );
-
+  
   const handleDragEnd = () => {
-    if (buttonRef.current) {
-        const buttonWidth = buttonRef.current.offsetWidth;
+      if (buttonWidth > 0) {
         const swipeThreshold = buttonWidth * 0.75;
         if (x.get() > swipeThreshold) {
-            setSwiped(true);
             onComplete();
         } else {
             animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
         }
     }
   };
+
+  const dragConstraints = { 
+    left: 0, 
+    right: buttonWidth > 0 ? buttonWidth - 56 : 0 
+  };
+
 
   return (
     <div
@@ -53,7 +63,7 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
       <motion.div
         className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10 cursor-grab"
         drag="x"
-        dragConstraints={{ left: 0, right: buttonRef.current ? buttonRef.current.offsetWidth - 56 : 200 }}
+        dragConstraints={dragConstraints}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ x }}
