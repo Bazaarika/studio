@@ -46,9 +46,9 @@ export default function RootLayout({
     );
   }
   
-  const isProductOrCategoryPage = pathname.startsWith('/product/') || pathname === '/categories';
-  const showHeader = !isProductOrCategoryPage;
-  const showBottomNav = !isProductOrCategoryPage;
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/categories' || pathname === '/checkout';
+  const showHeader = !isImmersivePage;
+  const showBottomNav = !isImmersivePage;
 
 
   return (
