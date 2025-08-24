@@ -78,18 +78,10 @@ export default function AdminPage() {
         try {
             const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
             
-            // The mock data has the full category name, we need the ID.
-            const categoryObject = categories.find(c => c.name.toLowerCase() === randomProduct.category.toLowerCase());
-            if (!categoryObject) {
-                throw new Error(`Invalid category: ${randomProduct.category}`);
-            }
+            // The randomProduct already has the correct category ID.
+            const { id, ...productData } = randomProduct;
 
-            const { id, category, ...productData } = randomProduct;
-
-            await addProduct({
-                ...productData,
-                category: categoryObject.id, // Use the correct category ID
-            });
+            await addProduct(productData);
 
             toast({
                 title: "Sample product added!",
