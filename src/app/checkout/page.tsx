@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, ShoppingBag, PartyPopper, Pencil } from "lucide-react";
+import { CreditCard, Truck, ShoppingBag, PartyPopper, Pencil, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ import type { Address } from "@/lib/firebase/firestore";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
-  const { address, saveAddress } = useAuth();
+  const { user, address, loading, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,11 +31,20 @@ export default function CheckoutPage() {
     country: ''
   });
 
+  // State to prevent hydration mismatch for client-side cart logic
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     if (address) {
       setShippingAddress(address);
+    } else if (user?.displayName) {
+        setShippingAddress(prev => ({ ...prev, name: user.displayName! }));
     }
-  }, [address]);
+  }, [address, user]);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -58,19 +67,16 @@ export default function CheckoutPage() {
       return;
     }
     
-    // If the address form was filled out, save it first.
-    if (!isAddressSaved) {
-        const { name, address: street, city, zip, country } = shippingAddress;
-        if (!name || !street || !city || !zip || !country) {
-             toast({
-                title: "Incomplete Address",
-                description: "Please fill out all shipping address fields.",
-                variant: "destructive",
-            });
-            return;
-        }
-        await saveAddress(shippingAddress);
+    const { name, address: street, city, zip, country } = shippingAddress;
+    if (!name || !street || !city || !zip || !country) {
+        toast({
+            title: "Incomplete Address",
+            description: "Please fill out all shipping address fields.",
+            variant: "destructive",
+        });
+        return;
     }
+    await saveAddress(shippingAddress);
     
     // In a real app, you would process the payment here.
     // For this demo, we'll just simulate a successful order.
@@ -82,6 +88,15 @@ export default function CheckoutPage() {
     });
     router.push('/orders');
   };
+
+  if (!isClient || loading) {
+    return (
+        <div className="flex justify-center items-center min-h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
+
 
   if (cart.length === 0) {
     return (
@@ -111,9 +126,11 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2">
                   <Truck className="h-5 w-5" /> Shipping Address
                 </div>
-                <Link href="/profile">
-                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                </Link>
+                 <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                    <Link href="/profile">
+                        <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                    </Link>
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -232,4 +249,5 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-}
+
+    
