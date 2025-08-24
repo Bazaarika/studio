@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [displayName, setDisplayName] = useState('');
   const [shippingAddress, setShippingAddress] = useState<Address>({
     name: '',
     address: '',
@@ -49,13 +49,16 @@ export default function ProfilePage() {
     if (!loading && !user) {
       router.push('/login');
     }
-    if (user) {
+  }, [user, loading, router]);
+  
+  useEffect(() => {
+     if (user) {
         setDisplayName(user.displayName || '');
     }
     if (address) {
         setShippingAddress(address);
     }
-  }, [user, loading, router, address]);
+  }, [user, address]);
 
   if (loading || !user) {
     return (
