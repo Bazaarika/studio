@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import { categories, products as mockProducts, Product } from '@/lib/mock-data';
+import { categories, Product } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { getProducts } from '@/lib/firebase/firestore';
 
