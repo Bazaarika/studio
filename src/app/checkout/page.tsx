@@ -49,10 +49,6 @@ export default function CheckoutPage() {
     const { id, value } = e.target;
     setShippingAddress(prev => ({ ...prev, [id]: value }));
   };
-
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = subtotal > 0 ? 50.00 : 0;
-  const total = subtotal + shipping;
   
   const isAddressSaved = !!(address && address.name && address.address && address.city && address.zip && address.country);
 
@@ -96,6 +92,10 @@ export default function CheckoutPage() {
         </div>
     );
   }
+
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const shipping = subtotal > 0 ? 50.00 : 0;
+  const total = subtotal + shipping;
 
   if (cart.length === 0) {
     return (
@@ -247,5 +247,4 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-
-    
+}
