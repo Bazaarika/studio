@@ -36,13 +36,13 @@ export function ProductActions({ product }: ProductActionsProps) {
                 <div className="flex items-center justify-between h-20 md:h-24">
                     <div>
                         <p className="text-sm text-muted-foreground">Total price</p>
-                        <p className="text-xl md:text-2xl font-bold">₹{product.price.toFixed(2)}</p>
+                        <p className="text-xl md:text-2xl font-bold text-primary">₹{product.price.toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">
-                        <Button size="lg" className="hidden sm:inline-flex" onClick={handleAddToCart}>
+                        <Button size="lg" variant="outline" className="hidden sm:inline-flex" onClick={handleAddToCart}>
                             <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
                         </Button>
-                        <Button size="icon" className="sm:hidden" onClick={handleAddToCart}>
+                        <Button size="icon" variant="outline" className="sm:hidden" onClick={handleAddToCart}>
                             <ShoppingBag className="h-5 w-5" />
                         </Button>
                         <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleBuyNow}>
