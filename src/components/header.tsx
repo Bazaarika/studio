@@ -8,10 +8,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Input } from './ui/input';
 import { useCart } from '@/hooks/use-cart';
+import { useRouter } from 'next/navigation';
+import type { FormEvent } from 'react';
 
 export function Header() {
   const { user } = useAuth();
   const { cart } = useCart();
+  const router = useRouter();
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
   const getInitials = (name: string | null | undefined) => {
@@ -21,6 +24,15 @@ export function Header() {
       return names[0][0] + names[names.length - 1][0];
     }
     return name[0];
+  };
+
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const searchQuery = formData.get('q') as string;
+    if (searchQuery) {
+        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   return (
@@ -34,12 +46,12 @@ export function Header() {
             </Link>
           </div>
           
-          <div className="flex flex-1 max-w-sm mx-4">
+          <form onSubmit={handleSearch} className="flex flex-1 max-w-sm mx-4">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input placeholder="Search" className="pl-10 rounded-full bg-secondary focus:bg-background" />
+              <Input name="q" placeholder="Search" className="pl-10 rounded-full bg-secondary focus:bg-background" />
             </div>
-          </div>
+          </form>
           
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="icon" className="relative">
@@ -87,13 +99,13 @@ export function Header() {
                     </Link>
                 </div>
             </div>
-            <div className="relative w-full">
+             <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input placeholder="Search" className="pl-12 pr-12 h-12 rounded-full bg-secondary focus:bg-background w-full" />
-                 <Button size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-primary hover:bg-primary/90">
+                <Input name="q" placeholder="Search" className="pl-12 pr-12 h-12 rounded-full bg-secondary focus:bg-background w-full" />
+                 <Button type="submit" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-primary hover:bg-primary/90">
                     <Search className="h-5 w-5 text-primary-foreground" />
                 </Button>
-            </div>
+            </form>
         </div>
       </div>
     </header>

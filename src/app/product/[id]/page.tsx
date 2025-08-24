@@ -6,6 +6,16 @@ import { Separator } from '@/components/ui/separator';
 import { Star, Truck } from 'lucide-react';
 import type { Product } from '@/lib/mock-data';
 import { ProductActions } from '@/components/product-actions';
+import { getProducts } from '@/lib/firebase/firestore';
+
+// This function tells Next.js which dynamic routes to pre-render at build time.
+export async function generateStaticParams() {
+  const products: Product[] = await getProducts();
+ 
+  return products.map((product) => ({
+    id: product.id,
+  }));
+}
 
 export default async function ProductDetailsPage({ params }: { params: { id: string } }) {
   const product: Product | null = await getProduct(params.id);
