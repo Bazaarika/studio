@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { addProduct } from "@/lib/firebase/firestore";
-import { Loader2, PlusCircle, Sparkles } from "lucide-react";
+import { addProduct, addTestData } from "@/lib/firebase/firestore";
+import { Loader2, PlusCircle, Sparkles, TestTube } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +22,7 @@ export default function AdminPage() {
     const [aiHint, setAiHint] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
+    const [isTestLoading, setIsTestLoading] = useState(false);
     const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -78,14 +79,11 @@ export default function AdminPage() {
         try {
             const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
             
-            // The randomProduct already has the correct category ID.
-            const { id, ...productData } = randomProduct;
-
-            await addProduct(productData);
+            await addProduct(randomProduct);
 
             toast({
                 title: "Sample product added!",
-                description: `${productData.name} has been added to the store.`,
+                description: `${randomProduct.name} has been added to the store.`,
             });
         } catch (error) {
              console.error("Error adding sample product:", error);
@@ -96,6 +94,26 @@ export default function AdminPage() {
             });
         } finally {
             setIsSampleLoading(false);
+        }
+    };
+
+    const handleTestDatabase = async () => {
+        setIsTestLoading(true);
+        try {
+            await addTestData();
+            toast({
+                title: "Success!",
+                description: "Saved 'raj kumar' to the database.",
+            });
+        } catch (error) {
+            console.error("Database test error:", error);
+            toast({
+                title: "Database Test Failed",
+                description: "Could not save data. Check the console for errors.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsTestLoading(false);
         }
     };
 
@@ -177,6 +195,28 @@ export default function AdminPage() {
                             </>
                         ) : (
                             "Add Random Sample Product"
+                        )}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                        <TestTube /> Database Connection Test
+                    </CardTitle>
+                    <CardDescription>
+                        Click this button to add a simple piece of data to the database to verify the connection is working.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={handleTestDatabase} disabled={isTestLoading} className="w-full" variant="outline">
+                         {isTestLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Testing...
+                            </>
+                        ) : (
+                            "Add 'raj kumar' to Database"
                         )}
                     </Button>
                 </CardContent>
