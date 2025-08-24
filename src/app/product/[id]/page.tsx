@@ -1,22 +1,47 @@
 
+'use client';
+
 import { notFound } from 'next/navigation';
 import { getProduct } from '@/lib/firebase/firestore';
 import type { Product } from '@/lib/mock-data';
 import { ProductDetailsClient } from '@/components/product-details-client';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
-// This function tells Next.js which dynamic routes to pre-render at build time.
-export async function generateStaticParams() {
-  // In a real app, you might want to fetch a list of product IDs here.
-  // For now, we'll keep it simple, as this might not be strictly necessary
-  // if you're fetching data dynamically on every request in a server environment.
-  return [];
-}
+export default function ProductDetailsPage({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function ProductDetailsPage({ params }: { params: { id: string } }) {
-  const product: Product | null = await getProduct(params.id);
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const fetchedProduct = await getProduct(params.id);
+        if (fetchedProduct) {
+          setProduct(fetchedProduct);
+        } else {
+          // Handle case where product is not found
+          notFound();
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   if (!product) {
-    notFound();
+    // This will be caught by notFound() in the fetch logic, but as a fallback
+    return notFound();
   }
   
   return <ProductDetailsClient product={product} />;
