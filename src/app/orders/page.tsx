@@ -2,30 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { products } from "@/lib/mock-data";
+import { orders } from "@/lib/mock-data";
 import { Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-const orders = [
-  {
-    id: "ORD001",
-    date: "June 23, 2024",
-    status: "Delivered",
-    total: 249.98,
-    items: [
-      { ...products[1], quantity: 1 },
-      { ...products[2], quantity: 1 },
-    ],
-  },
-  {
-    id: "ORD002",
-    date: "June 25, 2024",
-    status: "Shipped",
-    total: 79.99,
-    items: [{ ...products[0], quantity: 1 }],
-  },
-];
 
 export default function OrdersPage() {
   return (
@@ -55,7 +35,7 @@ export default function OrdersPage() {
                     <Image src={item.imageUrl} alt={item.name} fill className="object-cover" data-ai-hint={item.aiHint}/>
                   </div>
                   <div>
-                    <Link href="/product" className="font-semibold hover:text-primary">{item.name}</Link>
+                    <Link href={`/product/${item.id}`} className="font-semibold hover:text-primary">{item.name}</Link>
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                     <p className="text-sm font-medium">₹{item.price.toFixed(2)}</p>
                   </div>
@@ -63,8 +43,12 @@ export default function OrdersPage() {
               ))}
             </CardContent>
             <CardFooter className="gap-2">
-              <Button variant="outline">Track Order</Button>
-              <Button>View Details</Button>
+              <Button variant="outline" asChild>
+                <Link href={`/track-order/${order.id}`}>Track Order</Link>
+              </Button>
+              <Button asChild>
+                <Link href={`/orders/${order.id}`}>View Details</Link>
+              </Button>
             </CardFooter>
           </Card>
         ))}

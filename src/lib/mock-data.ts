@@ -19,6 +19,17 @@ export interface Category {
   icon: ComponentType<LucideProps>;
 }
 
+export interface Order {
+    id: string;
+    date: string;
+    status: 'Delivered' | 'Shipped' | 'Processing';
+    total: number;
+    items: (Product & { quantity: number })[];
+    shippingAddress: string;
+    paymentMethod: string;
+    trackingHistory: { status: string; date: string; location: string }[];
+}
+
 export const categories: Category[] = [
   { id: 'clothing', name: 'Clothing', icon: Shirt },
   { id: 'jewelry', name: 'Jewelry', icon: Diamond },
@@ -100,5 +111,40 @@ export const products: Product[] = [
     imageUrl: 'https://placehold.co/600x800.png',
     category: 'shoes',
     aiHint: 'leather boots',
+  },
+];
+
+
+export const orders: Order[] = [
+  {
+    id: "ORD001",
+    date: "June 23, 2024",
+    status: "Delivered",
+    total: 249.98,
+    items: [
+      { ...products[1], quantity: 1 },
+      { ...products[2], quantity: 1 },
+    ],
+    shippingAddress: '123 Main St, Anytown, 12345, India',
+    paymentMethod: 'Credit Card (**** **** **** 1234)',
+    trackingHistory: [
+        { status: 'Delivered', date: 'June 23, 2024', location: 'Anytown, India' },
+        { status: 'Out for Delivery', date: 'June 23, 2024', location: 'Anytown Hub' },
+        { status: 'Shipped', date: 'June 22, 2024', location: 'Main Warehouse' },
+        { status: 'Order Placed', date: 'June 21, 2024', location: 'Bazaarika.com' },
+    ]
+  },
+  {
+    id: "ORD002",
+    date: "June 25, 2024",
+    status: "Shipped",
+    total: 79.99,
+    items: [{ ...products[0], quantity: 1 }],
+    shippingAddress: '456 Oak Ave, Someville, 67890, India',
+    paymentMethod: 'UPI',
+    trackingHistory: [
+        { status: 'Shipped', date: 'June 25, 2024', location: 'Main Warehouse' },
+        { status: 'Order Placed', date: 'June 25, 2024', location: 'Bazaarika.com' },
+    ]
   },
 ];
