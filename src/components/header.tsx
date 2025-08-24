@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Heart, Menu, X, Bot, User } from 'lucide-react';
+import { ShoppingBag, Heart, Menu, X, Bot, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,6 +19,7 @@ const navLinks = [
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, loading } = useAuth();
 
   return (
     <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
@@ -49,12 +51,24 @@ export function Header() {
             ))}
           </nav>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/profile">
-                <User className="h-5 w-5" />
-                <span className="sr-only">Profile</span>
-              </Link>
-            </Button>
+            {!loading && (
+              <>
+                {user ? (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href="/profile">
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Profile</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">
+                      <LogIn className="mr-2 h-5 w-5" /> Login
+                    </Link>
+                  </Button>
+                )}
+              </>
+            )}
             <Button variant="ghost" size="icon" asChild>
               <Link href="/wishlist">
                 <Heart className="h-5 w-5" />

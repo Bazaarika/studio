@@ -1,0 +1,34 @@
+
+import { db } from './config';
+import { collection, addDoc, getDocs, DocumentData } from 'firebase/firestore';
+import type { Product } from '@/lib/mock-data';
+
+interface NewProduct {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  aiHint: string;
+}
+
+// Add a new product to the "products" collection
+export const addProduct = async (productData: NewProduct) => {
+  try {
+    const docRef = await addDoc(collection(db, "products"), productData);
+    return docRef.id;
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    throw new Error("Failed to add product");
+  }
+};
+
+// Get all products from the "products" collection
+export const getProducts = async (): Promise<Product[]> => {
+    const querySnapshot = await getDocs(collection(db, "products"));
+    const products: Product[] = [];
+    querySnapshot.forEach((doc: DocumentData) => {
+        products.push({ id: doc.id, ...doc.data() } as Product);
+    });
+    return products;
+}
