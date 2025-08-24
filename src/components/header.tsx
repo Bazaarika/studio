@@ -1,139 +1,54 @@
-
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Heart, Menu, X, Bot, User, LogIn } from 'lucide-react';
+import { Search, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { useCart } from '@/hooks/use-cart';
-import { Badge } from './ui/badge';
-
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/categories', label: 'Categories' },
-  { href: '/orders', label: 'My Orders' },
-  { href: '/ai-stylist', label: 'AI Stylist', icon: Bot },
-];
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Input } from './ui/input';
 
 export function Header() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
-  const { user, loading } = useAuth();
-  const { cart } = useCart();
-
-  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const { user } = useAuth();
+  
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return names[0][0] + names[names.length - 1][0];
+    }
+    return name[0];
+  }
 
   return (
-    <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
+    <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold font-headline text-primary">
-              Bazaarika
+            <Link href="/" className="text-2xl font-bold font-headline">
+              SSENSE
             </Link>
           </div>
-          <nav className="hidden md:flex md:items-center md:space-x-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  'text-sm font-medium transition-colors hover:text-primary',
-                  pathname === link.href ? 'text-primary' : 'text-foreground/60'
-                )}
-              >
-                {link.icon ? (
-                  <span className="flex items-center gap-2">
-                    <link.icon className="h-4 w-4" /> {link.label}
-                  </span>
-                ) : (
-                  link.label
-                )}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center space-x-2">
-            {!loading && (
-              <>
-                {user ? (
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href="/profile">
-                      <User className="h-5 w-5" />
-                      <span className="sr-only">Profile</span>
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button variant="ghost" asChild>
-                    <Link href="/login">
-                      <LogIn className="mr-2 h-5 w-5" /> Login
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/wishlist">
-                <Heart className="h-5 w-5" />
-                <span className="sr-only">Wishlist</span>
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart">
-                <ShoppingBag className="h-5 w-5" />
-                {cartItemCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                    {cartItemCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Shopping Cart</span>
-              </Link>
-            </Button>
-            <div className="md:hidden">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full max-w-xs bg-background">
-                  <div className="flex justify-between items-center py-4 px-6 border-b">
-                    <Link href="/" className="text-xl font-bold font-headline text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                      Bazaarika
-                    </Link>
-                    <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-                      <X className="h-6 w-6" />
-                      <span className="sr-only">Close menu</span>
-                    </Button>
-                  </div>
-                  <nav className="flex flex-col space-y-4 p-6">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={cn(
-                          'text-lg font-medium transition-colors hover:text-primary',
-                          pathname === link.href ? 'text-primary' : 'text-foreground'
-                        )}
-                      >
-                         {link.icon ? (
-                            <span className="flex items-center gap-2">
-                              <link.icon className="h-5 w-5" /> {link.label}
-                            </span>
-                          ) : (
-                            link.label
-                          )}
-                      </Link>
-                    ))}
-                  </nav>
-                </SheetContent>
-              </Sheet>
+          
+          <div className="flex-1 max-w-sm mx-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input placeholder="Search" className="pl-10 rounded-full bg-secondary focus:bg-background" />
             </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="#">
+                <Bell className="h-6 w-6" />
+                <span className="sr-only">Notifications</span>
+              </Link>
+            </Button>
+             <Link href="/profile">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                </Avatar>
+             </Link>
           </div>
         </div>
       </div>
