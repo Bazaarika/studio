@@ -16,7 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const showHeader = pathname !== '/categories';
+  const isProductPage = pathname.startsWith('/product/');
+  const showHeader = pathname !== '/categories' && !isProductPage;
+  const showBottomNav = !isProductPage;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -40,7 +42,7 @@ export default function RootLayout({
               <div className="hidden md:block">
                  <Footer />
               </div>
-              <BottomNav />
+              {showBottomNav && <BottomNav />}
             </div>
             <Toaster />
           </CartProvider>
