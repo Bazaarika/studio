@@ -1,10 +1,12 @@
 
 import { ProductCard } from '@/components/product-card';
-import { products as mockProducts, categories, Product } from '@/lib/mock-data';
+import { categories } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
+import { getProducts } from '@/lib/firebase/firestore';
+import type { Product } from '@/lib/mock-data';
 
-export default function CategoriesPage() {
-  const products = mockProducts;
+export default async function CategoriesPage() {
+  const products: Product[] = await getProducts();
   
   return (
     <div className="space-y-12">
@@ -23,7 +25,7 @@ export default function CategoriesPage() {
       </section>
       
       <section>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

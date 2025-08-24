@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import { categories, products as mockProducts, Product } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
+import { getProducts } from '@/lib/firebase/firestore';
 
-export default function Home() {
-  const products: Product[] = mockProducts;
+export default async function Home() {
+  const products: Product[] = await getProducts();
   const trendingProducts = products.slice(0, 8);
 
   return (
@@ -27,7 +28,7 @@ export default function Home() {
       {/* Trending Products */}
       <section>
         <h2 className="text-3xl font-bold font-headline text-center mb-8">Trending Now</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
