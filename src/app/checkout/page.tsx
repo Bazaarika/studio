@@ -1,22 +1,62 @@
 
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { products } from "@/lib/mock-data";
-import { CreditCard, Truck } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { CreditCard, Truck, ShoppingBag, PartyPopper } from "lucide-react";
 import Image from "next/image";
+import { useCart } from "@/hooks/use-cart";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function CheckoutPage() {
-  const cartItems = [
-    { ...products[0], quantity: 1 },
-    { ...products[2], quantity: 2 },
-  ];
-  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = 5.00;
+  const { cart, clearCart } = useCart();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const shipping = subtotal > 0 ? 50.00 : 0;
   const total = subtotal + shipping;
+
+  const handlePlaceOrder = () => {
+    if (cart.length === 0) {
+      toast({
+        title: "Your cart is empty",
+        description: "Please add items to your cart before placing an order.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real app, you would process the payment here.
+    // For this demo, we'll just simulate a successful order.
+    
+    clearCart();
+    toast({
+      title: "Order Placed!",
+      description: "Thank you for your purchase. Your order is being processed.",
+    });
+    router.push('/orders');
+  };
+
+  if (cart.length === 0) {
+    return (
+        <div className="text-center py-20 bg-secondary/50 rounded-lg flex flex-col items-center">
+            <PartyPopper className="h-12 w-12 text-primary mb-4" />
+            <h2 className="text-2xl font-semibold mb-2 font-headline">Ready to Checkout?</h2>
+            <p className="text-muted-foreground">Your cart is currently empty. Add some products to get started!</p>
+            <Button asChild className="mt-6">
+                <Link href="/categories">Browse Products</Link>
+            </Button>
+        </div>
+    )
+  }
+
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -24,7 +64,7 @@ export default function CheckoutPage() {
         <h1 className="text-4xl font-bold font-headline">Checkout</h1>
         <p className="text-muted-foreground">Complete your purchase</p>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <div className="space-y-8">
           <Card>
             <CardHeader>
@@ -100,7 +140,7 @@ export default function CheckoutPage() {
               <CardTitle className="font-headline">Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {cartItems.map(item => (
+              {cart.map(item => (
                 <div key={item.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="relative h-16 w-16 rounded-md overflow-hidden border">
@@ -119,7 +159,7 @@ export default function CheckoutPage() {
                 <span>Subtotal</span>
                 <span>₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
                 <span>₹{shipping.toFixed(2)}</span>
               </div>
@@ -130,7 +170,7 @@ export default function CheckoutPage() {
               </div>
             </CardContent>
           </Card>
-          <Button size="lg" className="w-full">
+          <Button size="lg" className="w-full" onClick={handlePlaceOrder}>
             Place Order
           </Button>
         </div>

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@/lib/mock-data";
 import { ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/hooks/use-cart";
 
 interface ProductActionsProps {
     product: Product;
@@ -14,8 +15,10 @@ interface ProductActionsProps {
 export function ProductActions({ product }: ProductActionsProps) {
     const router = useRouter();
     const { toast } = useToast();
+    const { addToCart } = useCart();
 
     const handleAddToCart = () => {
+        addToCart(product);
         toast({
             title: "Added to cart!",
             description: `${product.name} has been added to your cart.`,
@@ -23,6 +26,7 @@ export function ProductActions({ product }: ProductActionsProps) {
     };
 
     const handleBuyNow = () => {
+        addToCart(product);
         router.push('/checkout');
     };
 
@@ -34,7 +38,7 @@ export function ProductActions({ product }: ProductActionsProps) {
                         <p className="text-sm text-muted-foreground">Total price</p>
                         <p className="text-xl md:text-2xl font-bold">₹{product.price.toFixed(2)}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 md:gap-4">
                         <Button size="lg" className="hidden sm:inline-flex" onClick={handleAddToCart}>
                             <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
                         </Button>
