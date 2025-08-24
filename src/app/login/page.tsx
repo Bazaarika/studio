@@ -6,17 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Chrome } from "lucide-react";
+import { Chrome, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const { user, loading, signInWithGoogle } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (user) {
+        // Only redirect if loading is complete and a user exists
+        if (!loading && user) {
             router.push('/profile');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
 
     return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -26,14 +27,21 @@ export default function LoginPage() {
                     <CardDescription>Sign in to continue to your account.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button 
-                        className="w-full" 
-                        onClick={signInWithGoogle}
-                        disabled={loading}
-                    >
-                        <Chrome className="mr-2 h-5 w-5" />
-                        Sign in with Google
-                    </Button>
+                    {loading ? (
+                        <Button className="w-full" disabled>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Loading...
+                        </Button>
+                    ) : (
+                         <Button 
+                            className="w-full" 
+                            onClick={signInWithGoogle}
+                            disabled={loading}
+                        >
+                            <Chrome className="mr-2 h-5 w-5" />
+                            Sign in with Google
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
         </div>
