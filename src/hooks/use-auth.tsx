@@ -49,21 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
     const router = useRouter();
 
-    const fetchAddress = useCallback(async (uid: string) => {
-        const userAddress = await getUserAddress(uid);
-        if (userAddress) {
-            setAddress(userAddress);
-        }
-    }, []);
-
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                fetchAddress(user.uid);
+                // User is signed in, fetch address concurrently
+                const userAddress = await getUserAddress(user.uid);
+                setAddress(userAddress);
+                setUser(user);
             } else {
+                // User is signed out
+                setUser(null);
                 setAddress(null);
             }
+            // Only set loading to false after all initial data is fetched
             setLoading(false);
         });
 
@@ -83,12 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         variant: "destructive"
                     });
                 }
-            }).finally(() => {
-                setLoading(false);
             });
 
         return () => unsubscribe();
-    }, [router, toast, fetchAddress]);
+    }, [router, toast]);
 
     const handleAuthError = (error: AuthError) => {
         let title = "Authentication Error";
