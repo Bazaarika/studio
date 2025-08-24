@@ -92,19 +92,19 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
         {/* Sticky Footer */}
         <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-20">
+                <div className="flex items-center justify-between h-20 md:h-24">
                      <div>
-                        <p className="text-2xl font-bold">₹{product.price.toFixed(2)}</p>
                         <p className="text-sm text-muted-foreground">Total price</p>
+                        <p className="text-xl md:text-2xl font-bold">₹{product.price.toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                         <Button size="lg" variant="outline">
-                            <Heart className="h-5 w-5" />
-                        </Button>
-                        <Button size="lg" className="flex-1 min-w-[150px]">
+                        <Button size="lg" className="hidden sm:inline-flex">
                             <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
                         </Button>
-                         <Button size="lg" className="flex-1 min-w-[150px] bg-accent hover:bg-accent/90 text-accent-foreground">
+                         <Button size="icon" className="sm:hidden">
+                            <ShoppingBag className="h-5 w-5" />
+                        </Button>
+                         <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                             Buy Now
                         </Button>
                     </div>
