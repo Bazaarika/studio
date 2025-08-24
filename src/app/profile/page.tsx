@@ -3,6 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import {
   ChevronRight,
@@ -78,20 +79,21 @@ export default function ProfilePage() {
       </div>
     );
 
-    if (href) {
-        return <Link href={href}>{content}</Link>
-    }
-    return <button onClick={onClick} className="w-full text-left">{content}</button>;
+    const Wrapper = href ? Link : 'button';
+    const props = href ? { href } : { onClick, className: "w-full text-left" };
+
+    // @ts-ignore
+    return <Wrapper {...props}>{content}</Wrapper>;
   }
 
 
   return (
-    <div className="max-w-xl mx-auto">
-      <header className="py-4">
-        <h1 className="text-3xl font-bold font-headline text-center md:text-left">Profile</h1>
+    <div className="max-w-xl mx-auto space-y-8">
+      <header className="py-4 text-center">
+        <h1 className="text-3xl font-bold font-headline">Profile</h1>
       </header>
 
-      <div className="flex items-center gap-4 my-6">
+      <div className="flex items-center gap-4">
         <Avatar className="h-16 w-16">
           <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
           <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -106,31 +108,34 @@ export default function ProfilePage() {
       </div>
       
       <div className="space-y-6">
-        <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2">ACCOUNT SETTINGS</h2>
-            <div className="bg-secondary/50 rounded-lg px-4">
-                {accountSettings.map((item, index) => (
-                    <div key={item.label}>
-                        <ProfileRow icon={item.icon} label={item.label} href={item.href} />
-                         {index < accountSettings.length -1 && <Separator />}
-                    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">ACCOUNT SETTINGS</CardTitle>
+          </CardHeader>
+          <CardContent className="divide-y p-0">
+             <div className="px-6">
+                {accountSettings.map((item) => (
+                    <ProfileRow key={item.label} icon={item.icon} label={item.label} href={item.href} />
                 ))}
-                 <Separator />
-                <ProfileRow icon={LogOut} label="Logout" onClick={signOut} isLogout/>
-            </div>
-        </div>
-
-         <div>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2">SUPPORT</h2>
-            <div className="bg-secondary/50 rounded-lg px-4">
-                {supportLinks.map((item, index) => (
-                    <div key={item.label}>
-                        <ProfileRow icon={item.icon} label={item.label} href={item.href} />
-                        {index < supportLinks.length -1 && <Separator />}
-                    </div>
+             </div>
+             <div className="px-6">
+                 <ProfileRow icon={LogOut} label="Logout" onClick={signOut} isLogout/>
+             </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">SUPPORT</CardTitle>
+          </CardHeader>
+          <CardContent className="divide-y p-0">
+            <div className="px-6">
+                {supportLinks.map((item) => (
+                    <ProfileRow key={item.label} icon={item.icon} label={item.label} href={item.href} />
                 ))}
             </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
