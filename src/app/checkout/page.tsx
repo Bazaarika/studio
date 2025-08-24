@@ -19,7 +19,7 @@ import type { Address } from "@/lib/firebase/firestore";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
-  const { address } = useAuth();
+  const { address, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -45,8 +45,10 @@ export default function CheckoutPage() {
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50.00 : 0;
   const total = subtotal + shipping;
+  
+  const isAddressSaved = address && address.name && address.address && address.city && address.zip;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cart.length === 0) {
       toast({
         title: "Your cart is empty",
@@ -54,6 +56,20 @@ export default function CheckoutPage() {
         variant: "destructive",
       });
       return;
+    }
+    
+    // If the address form was filled out, save it first.
+    if (!isAddressSaved) {
+        const { name, address: street, city, zip, country } = shippingAddress;
+        if (!name || !street || !city || !zip || !country) {
+             toast({
+                title: "Incomplete Address",
+                description: "Please fill out all shipping address fields.",
+                variant: "destructive",
+            });
+            return;
+        }
+        await saveAddress(shippingAddress);
     }
     
     // In a real app, you would process the payment here.
@@ -100,27 +116,38 @@ export default function CheckoutPage() {
                 </Link>
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" value={shippingAddress.name} onChange={handleAddressChange} placeholder="John Doe" />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" value={shippingAddress.address} onChange={handleAddressChange} placeholder="123 Main St" />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input id="city" value={shippingAddress.city} onChange={handleAddressChange} placeholder="Anytown" />
-              </div>
-              <div>
-                <Label htmlFor="zip">ZIP Code</Label>
-                <Input id="zip" value={shippingAddress.zip} onChange={handleAddressChange} placeholder="12345" />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" value={shippingAddress.country} onChange={handleAddressChange} placeholder="India" />
-              </div>
+            <CardContent>
+                {isAddressSaved ? (
+                     <div className="space-y-1 text-sm text-muted-foreground">
+                        <p className="font-semibold text-foreground">{address.name}</p>
+                        <p>{address.address}</p>
+                        <p>{address.city}, {address.zip}</p>
+                        <p>{address.country}</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input id="name" value={shippingAddress.name} onChange={handleAddressChange} placeholder="John Doe" />
+                        </div>
+                        <div className="col-span-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Input id="address" value={shippingAddress.address} onChange={handleAddressChange} placeholder="123 Main St" />
+                        </div>
+                        <div>
+                            <Label htmlFor="city">City</Label>
+                            <Input id="city" value={shippingAddress.city} onChange={handleAddressChange} placeholder="Anytown" />
+                        </div>
+                        <div>
+                            <Label htmlFor="zip">ZIP Code</Label>
+                            <Input id="zip" value={shippingAddress.zip} onChange={handleAddressChange} placeholder="12345" />
+                        </div>
+                        <div className="col-span-2">
+                            <Label htmlFor="country">Country</Label>
+                            <Input id="country" value={shippingAddress.country} onChange={handleAddressChange} placeholder="India" />
+                        </div>
+                    </div>
+                )}
             </CardContent>
           </Card>
           <Card>
