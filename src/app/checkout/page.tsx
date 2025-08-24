@@ -19,7 +19,7 @@ import type { Address } from "@/lib/firebase/firestore";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
-  const { user, address, loading, saveAddress } = useAuth();
+  const { user, address, loading: authLoading, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,7 +31,6 @@ export default function CheckoutPage() {
     country: ''
   });
 
-  // State to prevent hydration mismatch for client-side cart logic
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -77,13 +76,9 @@ export default function CheckoutPage() {
         return;
     }
     
-    // Save address if it wasn't saved before
     if (!isAddressSaved) {
         await saveAddress(shippingAddress);
     }
-    
-    // In a real app, you would process the payment here.
-    // For this demo, we'll just simulate a successful order.
     
     clearCart();
     toast({
@@ -92,15 +87,15 @@ export default function CheckoutPage() {
     });
     router.push('/orders');
   };
-
-  if (!isClient || loading) {
+  
+  // This is the crucial fix: Do not render anything that uses cart until the component has mounted on the client.
+  if (!isClient || authLoading) {
     return (
         <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
   }
-
 
   if (cart.length === 0) {
     return (
@@ -114,7 +109,6 @@ export default function CheckoutPage() {
         </div>
     )
   }
-
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -253,4 +247,5 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-}
+
+    
