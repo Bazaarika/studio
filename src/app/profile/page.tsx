@@ -10,18 +10,24 @@ import { useAuth } from "@/hooks/use-auth";
 import { Edit, LogOut, MapPin, User, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function ProfilePage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    // Redirect to login page if not loading and no user is found
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
-  if (!user) {
-    router.push('/login');
-    return null;
+
+  if (loading || !user) {
+    // Show a loading indicator or a blank screen while checking auth state
+    // and redirecting. This prevents rendering the profile page for a split second.
+    return <div>Loading...</div>;
   }
 
   const getInitials = (name: string | null | undefined) => {
