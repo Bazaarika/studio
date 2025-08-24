@@ -33,7 +33,7 @@ export default function CartPage() {
               <div className="flex-grow">
                 <Link href="/product" className="font-semibold hover:text-primary">{item.name}</Link>
                 <p className="text-sm text-muted-foreground">{item.category}</p>
-                <p className="font-bold text-primary mt-1">${item.price.toFixed(2)}</p>
+                <p className="font-bold text-primary mt-1">₹{item.price.toFixed(2)}</p>
               </div>
               <div className="flex items-center gap-2 mx-4">
                 <Button variant="outline" size="icon" className="h-8 w-8">
@@ -44,7 +44,7 @@ export default function CartPage() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="font-semibold w-20 text-right">${(item.price * item.quantity).toFixed(2)}</p>
+              <p className="font-semibold w-20 text-right">₹{(item.price * item.quantity).toFixed(2)}</p>
               <Button variant="ghost" size="icon" className="ml-4 text-muted-foreground hover:text-destructive">
                 <Trash2 className="h-5 w-5" />
               </Button>
@@ -60,15 +60,15 @@ export default function CartPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>₹{shipping.toFixed(2)}</span>
               </div>
               <div className="border-t pt-4 flex justify-between font-bold">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
               </div>
             </CardContent>
             <CardFooter>

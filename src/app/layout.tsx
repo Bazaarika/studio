@@ -6,7 +6,7 @@ import { Footer } from '@/components/footer';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Bazaarika Lite',
+  title: 'Bazaarika',
   description: 'A modern e-commerce experience.',
 };
 

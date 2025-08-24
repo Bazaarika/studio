@@ -40,7 +40,7 @@ export default function ProductPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold font-headline">{product.name}</h1>
-          <p className="text-2xl font-semibold text-primary mt-2">${product.price.toFixed(2)}</p>
+          <p className="text-2xl font-semibold text-primary mt-2">₹{product.price.toFixed(2)}</p>
         </div>
 
         <p className="text-muted-foreground">{product.description}</p>

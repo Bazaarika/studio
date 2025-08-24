@@ -25,7 +25,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold font-headline text-primary">
-              Bazaarika Lite
+              Bazaarika
             </Link>
           </div>
           <nav className="hidden md:flex md:items-center md:space-x-6">
@@ -72,7 +72,7 @@ export function Header() {
                 <SheetContent side="right" className="w-full max-w-xs bg-background">
                   <div className="flex justify-between items-center py-4 px-6 border-b">
                     <Link href="/" className="text-xl font-bold font-headline text-primary" onClick={() => setIsMobileMenuOpen(false)}>
-                      Bazaarika Lite
+                      Bazaarika
                     </Link>
                     <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
                       <X className="h-6 w-6" />
