@@ -24,8 +24,33 @@ export default function RootLayout({
   }, []);
 
   const isProductPage = pathname.startsWith('/product/');
-  const showHeader = pathname !== '/categories' && !isProductPage;
+  const showHeader = !isProductPage && pathname !== '/categories';
+  
+  // This logic ensures BottomNav is not rendered at all on the product page
   const showBottomNav = !isProductPage;
+
+  if (!isMounted) {
+    return (
+       <html lang="en" suppressHydrationWarning>
+        <head>
+            <title>Bazaarika Lite</title>
+            <meta name="description" content="A modern e-commerce experience." />
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+        </head>
+        <body className="font-body antialiased">
+            <div className="flex flex-col min-h-screen">
+                <main className="flex-grow pb-20">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -40,7 +65,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <div className="flex flex-col min-h-screen">
-              {isMounted && showHeader && <Header />}
+              {showHeader && <Header />}
               <main className="flex-grow pb-20">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
                   {children}
@@ -49,7 +74,7 @@ export default function RootLayout({
               <div className="hidden md:block">
                  <Footer />
               </div>
-              {isMounted && showBottomNav && <BottomNav />}
+              {showBottomNav && <BottomNav />}
             </div>
             <Toaster />
           </CartProvider>

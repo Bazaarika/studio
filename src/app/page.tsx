@@ -1,13 +1,33 @@
+
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import { Product } from '@/lib/mock-data';
+import type { Product } from '@/lib/mock-data';
 import { getProducts } from '@/lib/firebase/firestore';
 import { ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export default async function Home() {
-  const products: Product[] = await getProducts();
+export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const fetchedProducts = await getProducts();
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
   const trendingProducts = products.slice(0, 4);
 
   return (
@@ -45,9 +65,19 @@ export default async function Home() {
             </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {trendingProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="aspect-[3/4] w-full bg-muted rounded-xl"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-6 bg-muted rounded w-1/2"></div>
+              </div>
+            ))
+          ) : (
+            trendingProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </section>
 
