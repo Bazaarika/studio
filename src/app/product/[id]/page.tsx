@@ -11,11 +11,12 @@ import { Loader2 } from 'lucide-react';
 export default function ProductDetailsPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const { id } = params;
 
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const fetchedProduct = await getProduct(params.id);
+        const fetchedProduct = await getProduct(id);
         if (fetchedProduct) {
           setProduct(fetchedProduct);
         } else {
@@ -29,7 +30,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
       }
     }
     fetchProduct();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
