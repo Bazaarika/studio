@@ -33,17 +33,20 @@ export function ProductActions({ product }: ProductActionsProps) {
     return (
         <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30 md:hidden">
             <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between gap-4 h-20">
-                    <div className="flex flex-col">
-                        <span className="text-sm text-muted-foreground">Total Price</span>
-                        <span className="text-2xl font-bold font-headline">₹{product.price.toFixed(2)}</span>
+                <div className="flex items-center justify-between gap-2 h-20">
+                    <div className="flex flex-col items-start">
+                        <span className="text-sm text-muted-foreground">Price</span>
+                        <span className="text-xl font-bold font-headline">₹{product.price.toFixed(2)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button size="lg" variant="outline" className="rounded-full" onClick={handleAddToCart}>
-                           <ShoppingCart className="mr-2 h-5 w-5" /> Add To Cart
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button size="lg" variant="outline" className="rounded-full flex-1" onClick={handleAddToCart}>
+                           <ShoppingCart className="h-5 w-5 md:mr-2" /> 
+                           <span className="hidden md:inline">Add To Cart</span>
                         </Button>
-                        <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleBuyNow}>
-                            <Zap className="mr-2 h-5 w-5" /> Buy Now
+                        <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-grow" onClick={handleBuyNow}>
+                            <Zap className="h-5 w-5 md:mr-2" /> 
+                            <span className="hidden md:inline">Buy Now</span>
+                             <span className="inline md:hidden">Buy Now</span>
                         </Button>
                     </div>
                 </div>
