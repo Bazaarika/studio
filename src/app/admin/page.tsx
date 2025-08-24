@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { categories } from "@/lib/mock-data";
+import { categories, products as mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 export default function AdminPage() {
     const [name, setName] = useState("");
@@ -21,6 +22,7 @@ export default function AdminPage() {
     const [imageUrl, setImageUrl] = useState("");
     const [aiHint, setAiHint] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isSampleLoading, setIsSampleLoading] = useState(false);
     const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -71,9 +73,34 @@ export default function AdminPage() {
             setIsLoading(false);
         }
     };
+    
+    const handleAddSampleProduct = async () => {
+        setIsSampleLoading(true);
+        try {
+            const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
+            // remove id from product
+            const { id, ...productData } = randomProduct;
+
+            await addProduct(productData);
+
+            toast({
+                title: "Sample product added!",
+                description: `${productData.name} has been added to the store.`,
+            });
+        } catch (error) {
+             console.error("Error adding sample product:", error);
+            toast({
+                title: "Error",
+                description: "Could not add sample product. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSampleLoading(false);
+        }
+    };
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
@@ -130,6 +157,28 @@ export default function AdminPage() {
                             )}
                         </Button>
                     </form>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                        <Sparkles /> Quick Actions
+                    </CardTitle>
+                    <CardDescription>
+                        Use this to quickly populate your store with sample data.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={handleAddSampleProduct} disabled={isSampleLoading} className="w-full" variant="secondary">
+                         {isSampleLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                            </>
+                        ) : (
+                            "Add Random Sample Product"
+                        )}
+                    </Button>
                 </CardContent>
             </Card>
         </div>
