@@ -75,7 +75,7 @@ export function CheckoutClient() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
@@ -225,16 +225,18 @@ export function CheckoutClient() {
                     <Loader2 className="h-6 w-6 animate-spin" />
                     <span className="text-lg font-semibold">Placing Order...</span>
                  </div>
-            ) : (
+            ) : paymentMethod ? (
                 <SwipeButton 
                     onComplete={handlePlaceOrder}
                     text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
                 />
+            ) : (
+                <div className="text-center text-muted-foreground font-medium h-14 flex items-center justify-center">
+                    Please select a payment method
+                </div>
             )}
         </div>
       </div>
     </div>
   );
 }
-
-    
