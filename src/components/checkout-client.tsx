@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, PartyPopper, Pencil, Loader2 } from "lucide-react";
+import { CreditCard, Truck, PartyPopper, Pencil, Loader2, Home } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
@@ -165,32 +165,14 @@ export function CheckoutClient() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup defaultValue="card" className="space-y-4">
+              <RadioGroup defaultValue="online" className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card">Credit/Debit Card</Label>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="card-number">Card Number</Label>
-                    <Input id="card-number" placeholder="**** **** **** 1234" />
-                  </div>
-                  <div>
-                    <Label htmlFor="expiry">Expiry</Label>
-                    <Input id="expiry" placeholder="MM/YY" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvc">CVC</Label>
-                    <Input id="cvc" placeholder="123" />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="upi" id="upi" />
-                  <Label htmlFor="upi">UPI</Label>
+                  <RadioGroupItem value="online" id="online" />
+                  <Label htmlFor="online" className="font-medium">Online Payment</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="cod" id="cod" />
-                  <Label htmlFor="cod">Cash on Delivery</Label>
+                  <Label htmlFor="cod" className="font-medium">Cash on Delivery (COD)</Label>
                 </div>
               </RadioGroup>
             </CardContent>
