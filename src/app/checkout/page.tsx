@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, ShoppingBag, PartyPopper, Pencil, Loader2 } from "lucide-react";
+import { CreditCard, Truck, PartyPopper, Pencil, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
   const shipping = subtotal > 0 ? 50.00 : 0;
   const total = subtotal + shipping;
   
-  const isAddressSaved = address && address.name && address.address && address.city && address.zip;
+  const isAddressSaved = !!(address && address.name && address.address && address.city && address.zip && address.country);
 
   const handlePlaceOrder = async () => {
     if (cart.length === 0) {
@@ -68,7 +68,7 @@ export default function CheckoutPage() {
     }
     
     const { name, address: street, city, zip, country } = shippingAddress;
-    if (!name || !street || !city || !zip || !country) {
+    if (!isAddressSaved && (!name || !street || !city || !zip || !country)) {
         toast({
             title: "Incomplete Address",
             description: "Please fill out all shipping address fields.",
@@ -76,7 +76,11 @@ export default function CheckoutPage() {
         });
         return;
     }
-    await saveAddress(shippingAddress);
+    
+    // Save address if it wasn't saved before
+    if (!isAddressSaved) {
+        await saveAddress(shippingAddress);
+    }
     
     // In a real app, you would process the payment here.
     // For this demo, we'll just simulate a successful order.
@@ -249,5 +253,4 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-
-    
+}
