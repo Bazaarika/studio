@@ -14,6 +14,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     async function fetchProduct() {
+      if (!params.id) return;
       try {
         const fetchedProduct = await getProduct(params.id);
         if (fetchedProduct) {
@@ -29,7 +30,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
       }
     }
     fetchProduct();
-  }, [params.id]);
+  }, [params]);
 
   if (loading) {
     return (
