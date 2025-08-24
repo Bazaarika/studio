@@ -13,11 +13,27 @@ export default function LoginPage() {
     const router = useRouter();
 
     useEffect(() => {
-        // Only redirect if loading is complete and a user exists
+        // This effect will run when the user is already logged in and visits the login page.
+        // It redirects them to their profile, preventing them from seeing the login page again.
         if (!loading && user) {
             router.push('/profile');
         }
     }, [user, loading, router]);
+
+    // Show a loading state while we check if the user is already authenticated.
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    // If the user is logged in, this component will redirect, so we can return null
+    // to avoid a flash of the login form.
+    if (user) {
+        return null;
+    }
 
     return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -27,21 +43,13 @@ export default function LoginPage() {
                     <CardDescription>Sign in to continue to your account.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                        <Button className="w-full" disabled>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Loading...
-                        </Button>
-                    ) : (
-                         <Button 
-                            className="w-full" 
-                            onClick={signInWithGoogle}
-                            disabled={loading}
-                        >
-                            <Chrome className="mr-2 h-5 w-5" />
-                            Sign in with Google
-                        </Button>
-                    )}
+                    <Button 
+                        className="w-full" 
+                        onClick={signInWithGoogle}
+                    >
+                        <Chrome className="mr-2 h-5 w-5" />
+                        Sign in with Google
+                    </Button>
                 </CardContent>
             </Card>
         </div>

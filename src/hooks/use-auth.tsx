@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInWithRedirect, GoogleAuthProvider, signOut as firebaseSignOut, User, getRedirectResult } from "firebase/auth";
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,28 +28,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         });
 
+        // Check for redirect result on initial load
+        getRedirectResult(auth).catch((error) => {
+            console.error("Error getting redirect result:", error);
+             toast({
+                title: "Authentication Error",
+                description: "Could not complete sign-in. Please ensure your domain is authorized in Firebase.",
+                variant: "destructive",
+            });
+        });
+
         return () => unsubscribe();
     }, []);
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            // We use signInWithRedirect now which is more reliable than popup.
+            // The result is handled by the getRedirectResult in the useEffect.
+            await signInWithRedirect(auth, provider);
         } catch (error: any) {
-            console.error("Error signing in with Google", error);
-            if (error.code === 'auth/popup-closed-by-user') {
-                toast({
-                    title: "Sign-in Cancelled",
-                    description: "You closed the sign-in window. If you're having trouble, please ensure your domain is authorized in Firebase.",
-                    variant: "destructive",
-                });
-            } else {
-                 toast({
-                    title: "Authentication Error",
-                    description: "An error occurred during sign-in. Please try again.",
-                    variant: "destructive",
-                });
-            }
+            console.error("Error initiating sign-in with Google", error);
+            toast({
+                title: "Authentication Error",
+                description: "An error occurred during sign-in. Please try again.",
+                variant: "destructive",
+            });
         }
     };
 
