@@ -6,8 +6,7 @@ import { products, categories } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function Home() {
-  const featuredProducts = products.slice(0, 4);
-  const secondaryFeatured = products.slice(4, 8);
+  const trendingProducts = products.slice(0, 8);
 
   return (
     <div className="space-y-16">
@@ -24,11 +23,11 @@ export default function Home() {
         </Button>
       </section>
 
-      {/* Featured Products */}
+      {/* Trending Products */}
       <section>
-        <h2 className="text-3xl font-bold font-headline text-center mb-8">Featured Products</h2>
+        <h2 className="text-3xl font-bold font-headline text-center mb-8">Trending Now</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
+          {trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -50,16 +49,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      {/* Secondary Feature section */}
-      <section>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-           {secondaryFeatured.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
-
     </div>
   );
 }
