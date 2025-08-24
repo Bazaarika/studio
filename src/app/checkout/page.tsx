@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, ShoppingBag, PartyPopper } from "lucide-react";
+import { CreditCard, Truck, ShoppingBag, PartyPopper, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
@@ -91,8 +91,13 @@ export default function CheckoutPage() {
         <div className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline">
-                <Truck className="h-5 w-5" /> Shipping Address
+              <CardTitle className="flex items-center justify-between font-headline">
+                <div className="flex items-center gap-2">
+                  <Truck className="h-5 w-5" /> Shipping Address
+                </div>
+                <Link href="/profile">
+                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                </Link>
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
