@@ -31,7 +31,7 @@ export function ProductActions({ product }: ProductActionsProps) {
     };
 
     return (
-        <div className="fixed bottom-16 md:bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30">
+        <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-4 h-24 md:h-auto md:py-4">
                     <div className="flex flex-col">
