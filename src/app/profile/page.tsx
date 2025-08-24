@@ -28,11 +28,29 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/lib/firebase/firestore";
 
 export default function ProfilePage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  return isClient ? <ProfileView /> : <ProfileLoading />;
+}
+
+function ProfileLoading() {
+  return (
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
+
+
+function ProfileView() {
   const { user, address, loading, signOut, updateUserProfile, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isClient, setIsClient] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +65,6 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    setIsClient(true);
     if (!loading && !user) {
       router.push('/login');
     }
@@ -62,12 +79,8 @@ export default function ProfilePage() {
     }
   }, [user, address]);
 
-  if (!isClient || loading || !user) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+  if (loading || !user) {
+    return <ProfileLoading />;
   }
 
   const getInitials = (name: string | null | undefined) => {
