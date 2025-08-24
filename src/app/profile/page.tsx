@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const [isClient, setIsClient] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +47,7 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
+    setIsClient(true);
     if (!loading && !user) {
       router.push('/login');
     }
@@ -60,7 +62,7 @@ export default function ProfilePage() {
     }
   }, [user, address]);
 
-  if (loading || !user) {
+  if (!isClient || loading || !user) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin" />

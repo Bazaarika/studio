@@ -4,15 +4,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Loader2, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 
 export default function CartPage() {
-  const { cart, updateQuantity, removeFromCart } = useCart();
   const [isClient, setIsClient] = useState(false);
+  const { cart, updateQuantity } = useCart();
 
   useEffect(() => {
     setIsClient(true);
