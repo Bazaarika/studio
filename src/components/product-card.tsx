@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Product } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -41,15 +41,15 @@ export function ProductCard({ product, isWishlistedDefault = false }: ProductCar
   }
 
   return (
-    <Link href={`/product/${product.id}`} className="group block text-center md:text-left">
+    <Link href={`/product/${product.id}`} className="group block">
       <div className="relative overflow-hidden rounded-xl">
-        <div className="bg-secondary p-4">
+        <div className="bg-secondary p-2 rounded-xl">
              <Image
                 src={product.imageUrl}
                 alt={product.name}
                 width={400}
                 height={400}
-                className="aspect-square w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                className="aspect-[3/4] w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
                 data-ai-hint={product.aiHint}
                 />
         </div>
@@ -62,17 +62,10 @@ export function ProductCard({ product, isWishlistedDefault = false }: ProductCar
           <Heart className={cn("h-4 w-4", isWishlisted ? "fill-red-500 text-red-500" : "text-foreground")} />
         </Button>
       </div>
-      <div className="mt-3 space-y-1">
-        {isWishlistedDefault && (
-            <div className="flex items-center justify-center md:justify-start gap-1">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
-                <span className="text-sm font-bold">4.9</span>
-                <span className="text-xs text-muted-foreground">(235)</span>
-            </div>
-        )}
-        <h3 className="text-sm font-semibold text-foreground truncate">{product.name}</h3>
-        <div className="flex items-center justify-center md:justify-between gap-4">
-            <p className="text-base font-bold text-primary">₹{product.price.toFixed(2)}</p>
+      <div className="mt-2 space-y-1">
+        <h3 className="text-sm font-semibold text-foreground">{product.name}</h3>
+        <div className="flex items-center justify-between gap-4">
+            <p className="text-base font-bold text-foreground">₹{product.price.toFixed(2)}</p>
              <Button 
                 size="icon" 
                 variant="ghost" 
