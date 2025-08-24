@@ -3,221 +3,213 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, PartyPopper, Pencil, Loader2, Home } from "lucide-react";
+import { CreditCard, Truck, PartyPopper, Pencil, Loader2, Wallet, CheckCircle, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Address } from "@/lib/firebase/firestore";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+
+
+// Custom SwipeButton component
+const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: string }) => {
+  const x = useMotionValue(0);
+  const [swiped, setSwiped] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const background = useTransform(x, [0, 200], ["hsl(var(--primary))", "hsl(var(--accent))"]);
+
+  const handleDragEnd = () => {
+    if (buttonRef.current) {
+        const buttonWidth = buttonRef.current.offsetWidth;
+        const swipeThreshold = buttonWidth * 0.75;
+        if (x.get() > swipeThreshold) {
+            setSwiped(true);
+            onComplete();
+        } else {
+            animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
+        }
+    }
+  };
+
+  return (
+    <motion.div
+      ref={buttonRef}
+      className="relative w-full h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden"
+    >
+      <motion.div
+        className="absolute left-0 top-0 h-full w-full bg-primary"
+        style={{ width: x.get() + 56, background }} // 56px is handle width
+      />
+      <motion.div
+        className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10 cursor-grab"
+        drag="x"
+        dragConstraints={{ left: 0, right: buttonRef.current ? buttonRef.current.offsetWidth - 56 : 200 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        style={{ x }}
+        whileTap={{ cursor: "grabbing" }}
+      >
+        <ChevronRight className="h-6 w-6 text-primary" />
+      </motion.div>
+      <span className="z-20 text-primary-foreground font-semibold text-lg pointer-events-none">
+        {text}
+      </span>
+    </motion.div>
+  );
+};
+
 
 export function CheckoutClient() {
   const { cart, clearCart } = useCart();
   const { user, address, loading: authLoading, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-
-  const [shippingAddress, setShippingAddress] = useState<Address>({
-    name: '',
-    address: '',
-    city: '',
-    zip: '',
-    country: ''
-  });
+  
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
-    if (address) {
-      setShippingAddress(address);
-    } else if (user?.displayName) {
-        setShippingAddress(prev => ({ ...prev, name: user.displayName! }));
+    if (!authLoading && cart.length === 0) {
+      router.push('/categories');
     }
-  }, [address, user]);
-
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setShippingAddress(prev => ({ ...prev, [id]: value }));
-  };
-  
-  const isAddressSaved = !!(address && address.name && address.address && address.city && address.zip && address.country);
+  }, [authLoading, cart, router]);
 
   const handlePlaceOrder = async () => {
-    if (cart.length === 0) {
-      toast({
-        title: "Your cart is empty",
-        description: "Please add items to your cart before placing an order.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (isPlacingOrder) return;
+    setIsPlacingOrder(true);
     
-    const { name, address: street, city, zip, country } = shippingAddress;
-    if (!isAddressSaved && (!name || !street || !city || !zip || !country)) {
+    if (!address?.address) {
         toast({
-            title: "Incomplete Address",
-            description: "Please fill out all shipping address fields.",
+            title: "No Address",
+            description: "Please set a shipping address in your profile.",
             variant: "destructive",
         });
+        setIsPlacingOrder(false);
         return;
     }
-    
-    if (!isAddressSaved) {
-        await saveAddress(shippingAddress);
-    }
-    
-    clearCart();
-    toast({
-      title: "Order Placed!",
-      description: "Thank you for your purchase. Your order is being processed.",
-    });
-    router.push('/orders');
+
+    // Simulate order placement
+    setTimeout(() => {
+      clearCart();
+      toast({
+        title: "Order Placed!",
+        description: "Thank you for your purchase.",
+      });
+      router.push('/orders');
+    }, 1500);
   };
   
-  if (authLoading) {
+  if (authLoading || cart.length === 0) {
     return (
         <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
   }
-
+  
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50.00 : 0;
   const total = subtotal + shipping;
 
-  if (cart.length === 0) {
-    return (
-        <div className="text-center py-20 bg-secondary/50 rounded-lg flex flex-col items-center">
-            <PartyPopper className="h-12 w-12 text-primary mb-4" />
-            <h2 className="text-2xl font-semibold mb-2 font-headline">Ready to Checkout?</h2>
-            <p className="text-muted-foreground">Your cart is currently empty. Add some products to get started!</p>
-            <Button asChild className="mt-6">
-                <Link href="/categories">Browse Products</Link>
-            </Button>
-        </div>
-    )
-  }
+  const formattedAddress = address ? [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ') : '';
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <header className="text-center space-y-2 mb-10">
+    <div className="max-w-xl mx-auto space-y-8">
+      <header className="text-center">
         <h1 className="text-4xl font-bold font-headline">Checkout</h1>
-        <p className="text-muted-foreground">Complete your purchase</p>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between font-headline">
-                <div className="flex items-center gap-2">
-                  <Truck className="h-5 w-5" /> Shipping Address
-                </div>
-                 <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+      
+      <div className="space-y-6">
+        <Card>
+           <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="font-headline text-lg flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-primary"/> 
+                    Your delivery address
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                     <Link href="/profile">
                         <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
                     </Link>
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-                {isAddressSaved ? (
-                     <div className="space-y-1 text-sm text-muted-foreground">
-                        <p className="font-semibold text-foreground">{address.name}</p>
-                        <p>{address.address}</p>
-                        <p>{address.city}, {address.zip}</p>
-                        <p>{address.country}</p>
-                    </div>
+           </CardHeader>
+           <CardContent>
+                {formattedAddress ? (
+                     <p className="text-muted-foreground">{formattedAddress}</p>
                 ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" value={shippingAddress.name} onChange={handleAddressChange} placeholder="John Doe" />
-                        </div>
-                        <div className="col-span-2">
-                            <Label htmlFor="address">Address</Label>
-                            <Input id="address" value={shippingAddress.address} onChange={handleAddressChange} placeholder="123 Main St" />
-                        </div>
-                        <div>
-                            <Label htmlFor="city">City</Label>
-                            <Input id="city" value={shippingAddress.city} onChange={handleAddressChange} placeholder="Anytown" />
-                        </div>
-                        <div>
-                            <Label htmlFor="zip">ZIP Code</Label>
-                            <Input id="zip" value={shippingAddress.zip} onChange={handleAddressChange} placeholder="12345" />
-                        </div>
-                        <div className="col-span-2">
-                            <Label htmlFor="country">Country</Label>
-                            <Input id="country" value={shippingAddress.country} onChange={handleAddressChange} placeholder="India" />
-                        </div>
+                    <div className="text-center text-muted-foreground space-y-2">
+                        <p>No shipping address found.</p>
+                        <Button variant="outline" asChild>
+                            <Link href="/profile">Add Address</Link>
+                        </Button>
                     </div>
                 )}
-            </CardContent>
-          </Card>
-          <Card>
+           </CardContent>
+        </Card>
+
+        <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline">
-                <CreditCard className="h-5 w-5" /> Payment Method
-              </CardTitle>
+                <CardTitle className="font-headline text-lg flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-primary"/>
+                    Payment Method
+                </CardTitle>
             </CardHeader>
-            <CardContent>
-              <RadioGroup defaultValue="online" className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="online" id="online" />
-                  <Label htmlFor="online" className="font-medium">Online Payment</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cod" id="cod" />
-                  <Label htmlFor="cod" className="font-medium">Cash on Delivery (COD)</Label>
-                </div>
-              </RadioGroup>
+            <CardContent className="space-y-3">
+               <button onClick={() => setPaymentMethod('online')} className={cn("w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all", paymentMethod === 'online' ? 'border-primary bg-primary/5' : 'border-border')}>
+                    <div className="flex items-center gap-3">
+                        <Wallet className="h-6 w-6 text-primary"/>
+                        <span className="font-semibold">Online Payment</span>
+                    </div>
+                    {paymentMethod === 'online' && <CheckCircle className="h-5 w-5 text-primary" />}
+               </button>
+               <button onClick={() => setPaymentMethod('cod')} className={cn("w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all", paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border')}>
+                    <div className="flex items-center gap-3">
+                        <Image src="https://bazaarika.in/wp-content/plugins/woocommerce-cod-advanced/images/cod.png" width={24} height={24} alt="COD"/>
+                        <span className="font-semibold">Cash on Delivery (COD)</span>
+                    </div>
+                     {paymentMethod === 'cod' && <CheckCircle className="h-5 w-5 text-primary" />}
+               </button>
             </CardContent>
-          </Card>
-        </div>
-        
-        <div className="space-y-8">
-          <Card>
+        </Card>
+
+        <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Order Summary</CardTitle>
+                <CardTitle className="font-headline">Order Summary</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {cart.map(item => (
-                <div key={item.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 rounded-md overflow-hidden border">
-                      <Image src={item.imageUrl} alt={item.name} fill className="object-cover" data-ai-hint={item.aiHint}/>
-                    </div>
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                    </div>
-                  </div>
-                  <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+             <CardContent className="space-y-2">
+                <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-              ))}
-              <Separator />
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Shipping</span>
-                <span>₹{shipping.toFixed(2)}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>₹{total.toFixed(2)}</span>
-              </div>
+                <div className="flex justify-between text-muted-foreground">
+                    <span>Shipping</span>
+                    <span>₹{shipping.toFixed(2)}</span>
+                </div>
+                <Separator className="my-2"/>
+                <div className="flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span>₹{total.toFixed(2)}</span>
+                </div>
             </CardContent>
-          </Card>
-          <Button size="lg" className="w-full" onClick={handlePlaceOrder}>
-            Place Order
-          </Button>
+        </Card>
+
+        <div>
+            {isPlacingOrder ? (
+                 <div className="flex justify-center items-center gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="text-lg font-semibold">Placing Order...</span>
+                 </div>
+            ) : (
+                <SwipeButton 
+                    onComplete={handlePlaceOrder}
+                    text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
+                />
+            )}
         </div>
       </div>
     </div>
