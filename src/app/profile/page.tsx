@@ -23,7 +23,6 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
-import { Separator } from "@/components/ui/separator";
 
 export default function ProfilePage() {
   const { user, loading, signOut } = useAuth();
@@ -93,16 +92,16 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold font-headline">Profile</h1>
       </header>
 
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16">
+      <div className="space-y-4 text-center">
+        <Avatar className="h-24 w-24 mx-auto">
           <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-          <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+          <AvatarFallback className="text-3xl">{getInitials(user.displayName)}</AvatarFallback>
         </Avatar>
-        <div className="flex-grow">
-          <p className="text-lg font-semibold">{user.displayName || "User"}</p>
+        <div>
+          <p className="text-2xl font-semibold font-headline">{user.displayName || "User"}</p>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
-        <Button variant="outline" className="rounded-full bg-secondary hover:bg-secondary/80">
+        <Button variant="outline" className="rounded-full bg-secondary hover:bg-secondary/80 w-full max-w-xs mx-auto">
           Edit Profile
         </Button>
       </div>
