@@ -31,14 +31,14 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center text-sm gap-1 transition-colors relative',
+                'flex flex-col items-center justify-center text-xs gap-1 transition-colors relative w-16',
                 isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-primary'
               )}
             >
-              <item.icon className="h-6 w-6" />
+              <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
               {item.href === '/cart' && totalItems > 0 && (
-                <span className="absolute top-0 right-0 -mr-2 -mt-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                <span className="absolute top-0 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                   {totalItems}
                 </span>
               )}

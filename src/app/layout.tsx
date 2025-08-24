@@ -5,9 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { CartProvider } from '@/hooks/use-cart';
 import { BottomNav } from '@/components/bottom-nav';
+import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'SSENSE',
+  title: 'Bazaarika Lite',
   description: 'A modern e-commerce experience.',
 };
 
@@ -21,7 +22,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
@@ -33,6 +34,9 @@ export default function RootLayout({
                   {children}
                 </div>
               </main>
+              <div className="hidden md:block">
+                 <Footer />
+              </div>
               <BottomNav />
             </div>
             <Toaster />
