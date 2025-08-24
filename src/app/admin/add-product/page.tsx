@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { addProduct, addTestData } from "@/lib/firebase/firestore";
+import { addProduct } from "@/lib/firebase/firestore";
 import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
