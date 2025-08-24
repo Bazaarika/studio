@@ -23,12 +23,6 @@ export default function RootLayout({
     setIsMounted(true);
   }, []);
 
-  // Determine which layout components to show based on the current path
-  const isProductPage = pathname.startsWith('/product/');
-  const showHeader = !isProductPage && pathname !== '/categories';
-  const showBottomNav = !isProductPage; // BottomNav should not be shown on product pages
-
-  // A basic layout to prevent hydration errors during server-side rendering
   if (!isMounted) {
     return (
        <html lang="en" suppressHydrationWarning>
@@ -51,6 +45,11 @@ export default function RootLayout({
       </html>
     );
   }
+  
+  const isProductOrCategoryPage = pathname.startsWith('/product/') || pathname === '/categories';
+  const showHeader = !isProductOrCategoryPage;
+  const showBottomNav = !isProductOrCategoryPage;
+
 
   return (
     <html lang="en" suppressHydrationWarning>

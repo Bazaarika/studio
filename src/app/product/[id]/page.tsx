@@ -20,7 +20,6 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
         if (fetchedProduct) {
           setProduct(fetchedProduct);
         } else {
-          // Handle case where product is not found
           notFound();
         }
       } catch (error) {
@@ -41,7 +40,6 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
   }
 
   if (!product) {
-    // This will be caught by notFound() in the fetch logic, but as a fallback
     return notFound();
   }
   
