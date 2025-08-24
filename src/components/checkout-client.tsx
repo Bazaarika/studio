@@ -4,14 +4,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, PartyPopper, Pencil, Loader2, Wallet, CheckCircle, ChevronRight } from "lucide-react";
+import { CreditCard, Truck, Pencil, Loader2, Wallet, CheckCircle, ChevronRight, Banknote } from "lucide-react";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState, useRef } from "react";
-import type { Address } from "@/lib/firebase/firestore";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
@@ -20,9 +19,14 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 // Custom SwipeButton component
 const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: string }) => {
   const x = useMotionValue(0);
-  const [swiped, setSwiped] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
-  const background = useTransform(x, [0, 200], ["hsl(var(--primary))", "hsl(var(--accent))"]);
+  const [swiped, setSwiped] = useState(false);
+  
+  const background = useTransform(
+    x,
+    [0, buttonRef.current ? buttonRef.current.offsetWidth - 56 : 200],
+    ["hsl(var(--primary))", "hsl(var(--accent))"]
+  );
 
   const handleDragEnd = () => {
     if (buttonRef.current) {
@@ -38,13 +42,13 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
   };
 
   return (
-    <motion.div
+    <div
       ref={buttonRef}
       className="relative w-full h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden"
     >
       <motion.div
-        className="absolute left-0 top-0 h-full w-full bg-primary"
-        style={{ width: x.get() + 56, background }} // 56px is handle width
+        className="absolute left-0 top-0 h-full bg-primary"
+        style={{ width: x, background }}
       />
       <motion.div
         className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10 cursor-grab"
@@ -60,14 +64,14 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
       <span className="z-20 text-primary-foreground font-semibold text-lg pointer-events-none">
         {text}
       </span>
-    </motion.div>
+    </div>
   );
 };
 
 
 export function CheckoutClient() {
   const { cart, clearCart } = useCart();
-  const { user, address, loading: authLoading, saveAddress } = useAuth();
+  const { user, address, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -169,7 +173,7 @@ export function CheckoutClient() {
                </button>
                <button onClick={() => setPaymentMethod('cod')} className={cn("w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all", paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border')}>
                     <div className="flex items-center gap-3">
-                        <Image src="https://bazaarika.in/wp-content/plugins/woocommerce-cod-advanced/images/cod.png" width={24} height={24} alt="COD"/>
+                        <Banknote className="h-6 w-6 text-primary"/>
                         <span className="font-semibold">Cash on Delivery (COD)</span>
                     </div>
                      {paymentMethod === 'cod' && <CheckCircle className="h-5 w-5 text-primary" />}
@@ -181,19 +185,36 @@ export function CheckoutClient() {
             <CardHeader>
                 <CardTitle className="font-headline">Order Summary</CardTitle>
             </CardHeader>
-             <CardContent className="space-y-2">
-                <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal.toFixed(2)}</span>
+             <CardContent className="space-y-4">
+                <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                   {cart.map((item) => (
+                        <div key={item.id} className="flex items-center gap-4">
+                            <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0 border">
+                                <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                            </div>
+                            <div className="flex-grow">
+                                <p className="font-semibold">{item.name}</p>
+                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                            </div>
+                            <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+                        </div>
+                   ))}
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                    <span>Shipping</span>
-                    <span>₹{shipping.toFixed(2)}</span>
-                </div>
-                <Separator className="my-2"/>
-                <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>₹{total.toFixed(2)}</span>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                      <span>Shipping</span>
+                      <span>₹{shipping.toFixed(2)}</span>
+                  </div>
+                  <Separator className="my-2"/>
+                  <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>₹{total.toFixed(2)}</span>
+                  </div>
                 </div>
             </CardContent>
         </Card>
@@ -215,3 +236,5 @@ export function CheckoutClient() {
     </div>
   );
 }
+
+    
