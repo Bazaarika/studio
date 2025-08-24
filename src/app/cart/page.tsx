@@ -11,19 +11,26 @@ import { useEffect, useState } from 'react';
 
 export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
-  const { cart, updateQuantity } = useCart();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  if (!isClient) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // The useCart hook is now called conditionally, only when isClient is true.
+  // We cannot call hooks inside a conditional, so we create a sub-component.
+  return isClient ? <CartView /> : <CartLoading />;
+}
+
+function CartLoading() {
+  return (
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
+
+function CartView() {
+  const { cart, updateQuantity } = useCart();
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50.00 : 0;
