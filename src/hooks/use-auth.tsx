@@ -12,11 +12,17 @@ import {
     getRedirectResult,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    updateProfile,
     AuthError
 } from "firebase/auth";
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+
+interface UserUpdatePayload {
+    displayName?: string;
+    photoURL?: string;
+}
 
 interface AuthContextType {
     user: User | null;
@@ -25,6 +31,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signInWithEmail: (email: string, pass: string) => Promise<void>;
+    updateUserProfile: (payload: UserUpdatePayload) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,11 +53,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         getRedirectResult(auth)
             .then((result) => {
                 if (result) {
+                    toast({ title: "Signed in successfully!"});
                     router.push('/profile');
                 }
             })
             .catch((error) => {
-                console.error("Error getting redirect result:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    console.error("Error getting redirect result:", error);
+                    toast({
+                        title: "Sign-in failed",
+                        description: "Could not complete sign in with Google. Please try again.",
+                        variant: "destructive"
+                    });
+                }
+            }).finally(() => {
+                setLoading(false);
             });
 
         return () => unsubscribe();
@@ -90,13 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await signInWithRedirect(auth, provider);
         } catch (error) {
             console.error("Google sign-in error", error);
-            if (error instanceof Error && 'code' in error && error.code !== 'auth/popup-closed-by-user') {
-                 toast({
-                    title: "Authentication Error",
-                    description: "Could not complete sign-in. Please try again.",
-                    variant: "destructive",
-                });
-            }
+            toast({
+                title: "Authentication Error",
+                description: "Could not start sign-in process. Please try again.",
+                variant: "destructive",
+            });
             setLoading(false);
         }
     };
@@ -127,15 +142,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signOut = async () => {
         try {
-            await firebaseSignOut(auth);
+            await firebaseSignout(auth);
             router.push('/login');
         } catch (error) {
             console.error("Error signing out", error);
         }
     };
 
+    const updateUserProfile = async (payload: UserUpdatePayload) => {
+        if (!auth.currentUser) {
+            toast({ title: "Not signed in", description: "You must be signed in to update your profile.", variant: "destructive"});
+            return;
+        }
+        try {
+            await updateProfile(auth.currentUser, payload);
+            // Manually update the user state to reflect changes immediately
+            setUser({ ...auth.currentUser });
+            toast({
+                title: "Profile Updated!",
+                description: "Your changes have been saved successfully."
+            })
+        } catch (error) {
+            console.error("Error updating profile", error);
+            toast({
+                title: "Update Failed",
+                description: "Could not save your profile changes. Please try again.",
+                variant: "destructive"
+            })
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail }}>
+        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile }}>
             {children}
         </AuthContext.Provider>
     );
