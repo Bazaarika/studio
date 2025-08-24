@@ -2,10 +2,9 @@
 import { ProductCard } from '@/components/product-card';
 import { products as mockProducts, categories, Product } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { getProducts } from '@/lib/firebase/firestore';
 
-export default async function CategoriesPage() {
-  const products = await getProducts();
+export default function CategoriesPage() {
+  const products = mockProducts;
   
   return (
     <div className="space-y-12">

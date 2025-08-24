@@ -2,12 +2,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import { categories, Product } from '@/lib/mock-data';
+import { categories, products as mockProducts, Product } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
-import { getProducts } from '@/lib/firebase/firestore';
 
-export default async function Home() {
-  const products: Product[] = await getProducts();
+export default function Home() {
+  const products: Product[] = mockProducts;
   const trendingProducts = products.slice(0, 8);
 
   return (
