@@ -13,11 +13,34 @@ import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import type { Address } from "@/lib/firebase/firestore";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
+  const { address } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+
+  const [shippingAddress, setShippingAddress] = useState<Address>({
+    name: '',
+    address: '',
+    city: '',
+    zip: '',
+    country: ''
+  });
+
+  useEffect(() => {
+    if (address) {
+      setShippingAddress(address);
+    }
+  }, [address]);
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setShippingAddress(prev => ({ ...prev, [id]: value }));
+  };
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50.00 : 0;
@@ -75,23 +98,23 @@ export default function CheckoutPage() {
             <CardContent className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" />
+                <Input id="name" value={shippingAddress.name} onChange={handleAddressChange} placeholder="John Doe" />
               </div>
               <div className="col-span-2">
                 <Label htmlFor="address">Address</Label>
-                <Input id="address" placeholder="123 Main St" />
+                <Input id="address" value={shippingAddress.address} onChange={handleAddressChange} placeholder="123 Main St" />
               </div>
               <div>
                 <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Anytown" />
+                <Input id="city" value={shippingAddress.city} onChange={handleAddressChange} placeholder="Anytown" />
               </div>
               <div>
                 <Label htmlFor="zip">ZIP Code</Label>
-                <Input id="zip" placeholder="12345" />
+                <Input id="zip" value={shippingAddress.zip} onChange={handleAddressChange} placeholder="12345" />
               </div>
               <div className="col-span-2">
                 <Label htmlFor="country">Country</Label>
-                <Input id="country" placeholder="India" />
+                <Input id="country" value={shippingAddress.country} onChange={handleAddressChange} placeholder="India" />
               </div>
             </CardContent>
           </Card>

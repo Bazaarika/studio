@@ -10,16 +10,25 @@ import { useAuth } from "@/hooks/use-auth";
 import { Edit, LogOut, MapPin, User, Shield, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useToast } from "@/hooks/use-toast";
+import type { Address } from "@/lib/firebase/firestore";
 
 export default function ProfilePage() {
-  const { user, loading, signOut, updateUserProfile } = useAuth();
+  const { user, address, loading, signOut, updateUserProfile, saveAddress } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState('');
+  const [shippingAddress, setShippingAddress] = useState<Address>({
+      name: '',
+      address: '',
+      city: '',
+      zip: '',
+      country: 'India'
+  });
   const [isSaving, setIsSaving] = useState(false);
+  const [isAddressSaving, setIsAddressSaving] = useState(false);
 
 
   useEffect(() => {
@@ -29,8 +38,12 @@ export default function ProfilePage() {
     }
     if (user) {
         setDisplayName(user.displayName || '');
+        setShippingAddress(prev => ({ ...prev, name: user.displayName || '' }));
     }
-  }, [user, loading, router]);
+    if (address) {
+        setShippingAddress(address);
+    }
+  }, [user, address, loading, router]);
 
 
   if (loading || !user) {
@@ -63,6 +76,18 @@ export default function ProfilePage() {
     setIsSaving(true);
     await updateUserProfile({ displayName });
     setIsSaving(false);
+  };
+  
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setShippingAddress(prev => ({...prev, [id]: value}));
+  };
+  
+  const handleAddressSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsAddressSaving(true);
+    await saveAddress(shippingAddress);
+    setIsAddressSaving(false);
   };
 
   return (
@@ -119,14 +144,39 @@ export default function ProfilePage() {
                         Shipping Address
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <p className="text-muted-foreground">
-                        You have not set a default shipping address.
-                    </p>
-                    <Button variant="outline">
-                        <Edit className="mr-2 h-4 w-4"/>
-                        Add Address
-                    </Button>
+                <CardContent>
+                    <form onSubmit={handleAddressSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input id="name" value={shippingAddress.name} onChange={handleAddressChange} placeholder="John Doe" />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Input id="address" value={shippingAddress.address} onChange={handleAddressChange} placeholder="123 Main St" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="city">City</Label>
+                                <Input id="city" value={shippingAddress.city} onChange={handleAddressChange} placeholder="Anytown" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="zip">ZIP Code</Label>
+                                <Input id="zip" value={shippingAddress.zip} onChange={handleAddressChange} placeholder="12345" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="country">Country</Label>
+                            <Input id="country" value={shippingAddress.country} onChange={handleAddressChange} placeholder="India" />
+                        </div>
+                        <Button type="submit" variant="outline" disabled={isAddressSaving}>
+                           {isAddressSaving ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    Saving...
+                                </>
+                            ) : "Save Address"}
+                        </Button>
+                    </form>
                 </CardContent>
             </Card>
         </div>

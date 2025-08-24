@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { 
     getAuth, 
     onAuthStateChanged, 
@@ -18,6 +18,8 @@ import {
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { getUserAddress, updateUserAddress, type Address } from "@/lib/firebase/firestore";
+
 
 interface UserUpdatePayload {
     displayName?: string;
@@ -26,12 +28,14 @@ interface UserUpdatePayload {
 
 interface AuthContextType {
     user: User | null;
+    address: Address | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signInWithEmail: (email: string, pass: string) => Promise<void>;
     updateUserProfile: (payload: UserUpdatePayload) => Promise<void>;
+    saveAddress: (address: Address) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,13 +44,26 @@ const auth = getAuth(app);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [address, setAddress] = useState<Address | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
 
+    const fetchAddress = useCallback(async (uid: string) => {
+        const userAddress = await getUserAddress(uid);
+        if (userAddress) {
+            setAddress(userAddress);
+        }
+    }, []);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
+            if (user) {
+                fetchAddress(user.uid);
+            } else {
+                setAddress(null);
+            }
             setLoading(false);
         });
 
@@ -71,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
         return () => unsubscribe();
-    }, [router, toast]);
+    }, [router, toast, fetchAddress]);
 
     const handleAuthError = (error: AuthError) => {
         let title = "Authentication Error";
@@ -142,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signOut = async () => {
         try {
-            await firebaseSignout(auth);
+            await firebaseSignOut(auth);
             router.push('/login');
         } catch (error) {
             console.error("Error signing out", error);
@@ -171,9 +188,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
         }
     };
+    
+    const saveAddress = async (address: Address) => {
+        if (!user) {
+            toast({ title: "Not signed in", variant: "destructive" });
+            return;
+        }
+        try {
+            await updateUserAddress(user.uid, address);
+            setAddress(address);
+            toast({ title: "Address saved!" });
+        } catch (error) {
+            toast({ title: "Error saving address", variant: "destructive" });
+        }
+    };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile }}>
+        <AuthContext.Provider value={{ user, address, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress }}>
             {children}
         </AuthContext.Provider>
     );
