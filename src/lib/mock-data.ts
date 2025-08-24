@@ -39,9 +39,8 @@ export const categories: Category[] = [
   { id: 'bags', name: 'Bags', icon: ShoppingBag },
 ];
 
-export const products: Product[] = [
+export const mockProducts: Omit<Product, 'id'>[] = [
   {
-    id: '1',
     name: 'Elegant Floral Dress',
     description: 'A beautiful floral dress perfect for summer occasions. Made from lightweight and breathable fabric.',
     price: 2499,
@@ -50,7 +49,6 @@ export const products: Product[] = [
     aiHint: 'floral dress',
   },
   {
-    id: '2',
     name: 'Classic Leather Watch',
     description: 'A timeless watch with a genuine leather strap and stainless steel case. Water-resistant up to 50m.',
     price: 8999,
@@ -59,7 +57,6 @@ export const products: Product[] = [
     aiHint: 'leather watch',
   },
   {
-    id: '3',
     name: 'Silver Heart Necklace',
     description: 'A delicate sterling silver necklace featuring a heart-shaped pendant. A perfect gift for a loved one.',
     price: 3499,
@@ -68,7 +65,6 @@ export const products: Product[] = [
     aiHint: 'silver necklace',
   },
   {
-    id: '4',
     name: 'Running Sneakers',
     description: 'High-performance running sneakers with cushioned soles and a breathable mesh upper. Ideal for daily workouts.',
     price: 4599,
@@ -77,7 +73,6 @@ export const products: Product[] = [
     aiHint: 'running shoes',
   },
   {
-    id: '5',
     name: 'Silk Scarf',
     description: 'A luxurious 100% silk scarf with a vibrant print. Can be styled in multiple ways.',
     price: 1899,
@@ -86,7 +81,6 @@ export const products: Product[] = [
     aiHint: 'silk scarf',
   },
   {
-    id: '6',
     name: 'Modern Linen Shirt',
     description: 'A stylish and comfortable linen shirt for a relaxed yet sophisticated look. Perfect for warm weather.',
     price: 2999,
@@ -95,7 +89,6 @@ export const products: Product[] = [
     aiHint: 'linen shirt',
   },
   {
-    id: '7',
     name: 'Gold Hoop Earrings',
     description: 'Classic gold hoop earrings that add a touch of elegance to any outfit. Lightweight and comfortable for all-day wear.',
     price: 4999,
@@ -104,7 +97,6 @@ export const products: Product[] = [
     aiHint: 'gold earrings',
   },
   {
-    id: '8',
     name: 'Leather Ankle Boots',
     description: 'Chic and versatile leather ankle boots. Features a comfortable block heel and side zipper.',
     price: 6999,
@@ -113,7 +105,6 @@ export const products: Product[] = [
     aiHint: 'leather boots',
   },
   {
-    id: '9',
     name: 'Canvas Tote Bag',
     description: 'A durable and spacious canvas tote bag, perfect for everyday use, from shopping to beach trips.',
     price: 1599,
@@ -122,7 +113,6 @@ export const products: Product[] = [
     aiHint: 'tote bag',
   },
   {
-    id: '10',
     name: 'Denim Jacket',
     description: 'A timeless denim jacket with a modern fit. A versatile piece for any wardrobe.',
     price: 4299,
@@ -131,7 +121,6 @@ export const products: Product[] = [
     aiHint: 'denim jacket',
   },
   {
-    id: '11',
     name: 'Pearl Stud Earrings',
     description: 'Elegant freshwater pearl stud earrings, a classic accessory for any formal or casual occasion.',
     price: 2999,
@@ -140,7 +129,6 @@ export const products: Product[] = [
     aiHint: 'pearl earrings',
   },
   {
-    id: '12',
     name: 'Suede Loafers',
     description: 'Comfortable and stylish suede loafers for a smart-casual look.',
     price: 3999,
@@ -149,7 +137,6 @@ export const products: Product[] = [
     aiHint: 'suede loafers',
   },
   {
-    id: '13',
     name: 'Leather Belt',
     description: 'A high-quality genuine leather belt with a classic buckle.',
     price: 1999,
@@ -158,7 +145,6 @@ export const products: Product[] = [
     aiHint: 'leather belt',
   },
   {
-    id: '14',
     name: 'Striped Cotton T-Shirt',
     description: 'A soft and breathable cotton t-shirt with a classic striped pattern.',
     price: 1299,
@@ -167,7 +153,6 @@ export const products: Product[] = [
     aiHint: 'striped t-shirt',
   },
   {
-    id: '15',
     name: 'Digital Sports Watch',
     description: 'A feature-packed digital watch for sports enthusiasts, with a stopwatch, alarm, and backlight.',
     price: 3599,
@@ -176,7 +161,6 @@ export const products: Product[] = [
     aiHint: 'digital watch',
   },
   {
-    id: '16',
     name: 'Crossbody Bag',
     description: 'A compact and stylish crossbody bag, perfect for carrying your essentials on the go.',
     price: 2799,
@@ -185,7 +169,6 @@ export const products: Product[] = [
     aiHint: 'crossbody bag',
   },
   {
-    id: '17',
     name: 'Cashmere Sweater',
     description: 'A luxurious and incredibly soft cashmere sweater, perfect for staying warm in style.',
     price: 14999,
@@ -194,7 +177,6 @@ export const products: Product[] = [
     aiHint: 'cashmere sweater',
   },
   {
-    id: '18',
     name: 'White Canvas Sneakers',
     description: 'Versatile and comfortable white sneakers that pair well with almost any outfit.',
     price: 3299,
@@ -203,7 +185,6 @@ export const products: Product[] = [
     aiHint: 'white sneakers',
   },
   {
-    id: '19',
     name: ' Aviator Sunglasses',
     description: 'Classic aviator sunglasses with polarized lenses to protect your eyes from the sun.',
     price: 2499,
@@ -212,7 +193,6 @@ export const products: Product[] = [
     aiHint: 'aviator sunglasses',
   },
   {
-    id: '20',
     name: 'Tailored Chinos',
     description: 'Smart and comfortable tailored chinos, perfect for both office and casual wear.',
     price: 3499,
@@ -221,6 +201,8 @@ export const products: Product[] = [
     aiHint: 'tailored chinos',
   },
 ];
+
+export const products: Product[] = mockProducts.map((p, i) => ({ ...p, id: (i + 1).toString() }));
 
 
 export const orders: Order[] = [

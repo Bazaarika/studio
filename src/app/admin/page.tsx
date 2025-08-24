@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
 import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { categories, products as mockProducts } from "@/lib/mock-data";
+import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminPage() {
