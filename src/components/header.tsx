@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, Heart, Menu, X, Bot } from 'lucide-react';
+import { ShoppingBag, Heart, Menu, X, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/categories', label: 'Categories' },
+  { href: '/orders', label: 'My Orders' },
   { href: '/ai-stylist', label: 'AI Stylist', icon: Bot },
 ];
 
@@ -49,6 +49,12 @@ export function Header() {
             ))}
           </nav>
           <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/profile">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Profile</span>
+              </Link>
+            </Button>
             <Button variant="ghost" size="icon" asChild>
               <Link href="/wishlist">
                 <Heart className="h-5 w-5" />
