@@ -12,7 +12,6 @@ import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { categories, products as mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
 export default function AdminPage() {
     const [name, setName] = useState("");
@@ -78,10 +77,19 @@ export default function AdminPage() {
         setIsSampleLoading(true);
         try {
             const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
-            // remove id from product
-            const { id, ...productData } = randomProduct;
+            
+            // The mock data has the full category name, we need the ID.
+            const categoryObject = categories.find(c => c.name.toLowerCase() === randomProduct.category.toLowerCase());
+            if (!categoryObject) {
+                throw new Error(`Invalid category: ${randomProduct.category}`);
+            }
 
-            await addProduct(productData);
+            const { id, category, ...productData } = randomProduct;
+
+            await addProduct({
+                ...productData,
+                category: categoryObject.id, // Use the correct category ID
+            });
 
             toast({
                 title: "Sample product added!",
