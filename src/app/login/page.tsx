@@ -20,11 +20,14 @@ export default function LoginPage() {
         }
     }, [user, loading, router]);
 
-    // Show a loading state while we check if the user is already authenticated.
+    // Show a loading state while we check if the user is already authenticated or during the redirect process.
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                 <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Authenticating...</p>
+                </div>
             </div>
         );
     }
@@ -46,6 +49,7 @@ export default function LoginPage() {
                     <Button 
                         className="w-full" 
                         onClick={signInWithGoogle}
+                        disabled={loading}
                     >
                         <Chrome className="mr-2 h-5 w-5" />
                         Sign in with Google

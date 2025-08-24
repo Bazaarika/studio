@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { getAuth, onAuthStateChanged, signInWithRedirect, GoogleAuthProvider, signOut as firebaseSignOut, User, getRedirectResult } from "firebase/auth";
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
     user: User | null;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const router = useRouter();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -29,23 +31,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         // Check for redirect result on initial load
-        getRedirectResult(auth).catch((error) => {
-            console.error("Error getting redirect result:", error);
-             toast({
-                title: "Authentication Error",
-                description: "Could not complete sign-in. Please ensure your domain is authorized in Firebase.",
-                variant: "destructive",
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result) {
+                    // This means the user has just signed in via redirect.
+                    // onAuthStateChanged will handle setting the user.
+                    // We can redirect them to their profile.
+                    router.push('/profile');
+                }
+            })
+            .catch((error) => {
+                console.error("Error getting redirect result:", error);
+                toast({
+                    title: "Authentication Error",
+                    description: "Could not complete sign-in. Please ensure your domain is authorized in Firebase.",
+                    variant: "destructive",
+                });
             });
-        });
 
         return () => unsubscribe();
-    }, []);
+    }, [router, toast]);
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
+        setLoading(true); // Set loading state before redirect
         try {
-            // We use signInWithRedirect now which is more reliable than popup.
-            // The result is handled by the getRedirectResult in the useEffect.
             await signInWithRedirect(auth, provider);
         } catch (error: any) {
             console.error("Error initiating sign-in with Google", error);
@@ -54,12 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 description: "An error occurred during sign-in. Please try again.",
                 variant: "destructive",
             });
+            setLoading(false); // Reset loading on error
         }
     };
 
     const signOut = async () => {
         try {
             await firebaseSignOut(auth);
+            // Redirect to home or login page after sign out
+            router.push('/login');
         } catch (error) {
             console.error("Error signing out", error);
         }
