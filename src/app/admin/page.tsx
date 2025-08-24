@@ -13,6 +13,27 @@ import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Helper function for timeout
+const withTimeout = <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error(message));
+        }, ms);
+
+        promise.then(
+            (res) => {
+                clearTimeout(timeoutId);
+                resolve(res);
+            },
+            (err) => {
+                clearTimeout(timeoutId);
+                reject(err);
+            }
+        );
+    });
+};
+
+
 export default function AdminPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -79,17 +100,23 @@ export default function AdminPage() {
         try {
             const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
             
-            await addProduct(randomProduct);
+            await withTimeout(
+                addProduct(randomProduct),
+                10000,
+                'Database operation timed out.'
+            );
 
             toast({
                 title: "Sample product added!",
                 description: `${randomProduct.name} has been added to the store.`,
             });
-        } catch (error) {
+        } catch (error: any) {
              console.error("Error adding sample product:", error);
             toast({
-                title: "Error",
-                description: "Could not add sample product. Please try again.",
+                title: "Error Adding Sample Product",
+                description: error.message.includes('timed out') 
+                    ? "Connection timed out. Please ensure Firestore API is enabled in your Firebase project settings."
+                    : "Could not add sample product. Please check console for details.",
                 variant: "destructive",
             });
         } finally {
@@ -100,16 +127,22 @@ export default function AdminPage() {
     const handleTestDatabase = async () => {
         setIsTestLoading(true);
         try {
-            await addTestData();
+             await withTimeout(
+                addTestData(),
+                10000, // 10 seconds timeout
+                'Database operation timed out.'
+            );
             toast({
                 title: "Success!",
                 description: "Saved 'raj kumar' to the database.",
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Database test error:", error);
             toast({
                 title: "Database Test Failed",
-                description: "Could not save data. Check the console for errors.",
+                description: error.message.includes('timed out') 
+                    ? "Connection timed out. Please ensure Firestore API is enabled in your Firebase project settings."
+                    : "Could not save data. Check console for details.",
                 variant: "destructive",
             });
         } finally {
