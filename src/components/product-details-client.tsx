@@ -14,13 +14,50 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export function ProductDetailsClient({ product }: { product: Product }) {
+  const { toast } = useToast();
+  const [quantity, setQuantity] = useState(1);
   const sizes = [38.5, 39, 40, 41, 41.5];
   
   const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const mainImage = allImages[selectedImageIndex];
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: product.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+        toast({
+            title: "Could not share",
+            description: "There was an error trying to share this product.",
+            variant: "destructive"
+        })
+      }
+    } else {
+       toast({
+        title: "Share not supported",
+        description: "Your browser does not support the share feature.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleQuantityChange = (amount: number) => {
+    setQuantity(prev => {
+        const newQuantity = prev + amount;
+        if (newQuantity < 1) return 1;
+        // In a real app, you'd check against product.stock
+        return newQuantity;
+    })
+  }
 
   return (
     <div>
@@ -67,7 +104,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                         <p className="text-muted-foreground font-semibold">{product.category}</p>
                         <h1 className="text-3xl font-bold font-headline">{product.name}</h1>
                     </div>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={handleShare}>
                         <Share2 />
                     </Button>
                 </div>
@@ -79,11 +116,11 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                         <span className="text-sm text-muted-foreground">(235)</span>
                     </div>
                      <div className="flex items-center gap-2 bg-secondary p-1 rounded-full">
-                        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
                             <Minus className="h-4 w-4" />
                         </Button>
-                        <span className="font-bold text-lg w-8 text-center">1</span>
-                         <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                        <span className="font-bold text-lg w-8 text-center">{quantity}</span>
+                         <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(1)}>
                             <Plus className="h-4 w-4" />
                         </Button>
                     </div>
@@ -105,7 +142,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
         </div>
 
         {/* Sticky Footer */}
-        <ProductActions product={product} />
+        <ProductActions product={product} quantity={quantity} />
     </div>
   );
 }

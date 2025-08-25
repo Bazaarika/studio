@@ -10,23 +10,24 @@ import { ShoppingCart, Zap } from "lucide-react";
 
 interface ProductActionsProps {
     product: Product;
+    quantity: number;
 }
 
-export function ProductActions({ product }: ProductActionsProps) {
+export function ProductActions({ product, quantity }: ProductActionsProps) {
     const router = useRouter();
     const { toast } = useToast();
     const { addToCart } = useCart();
 
     const handleAddToCart = () => {
-        addToCart(product);
+        addToCart(product, quantity);
         toast({
             title: "Added to cart!",
-            description: `${product.name} has been added to your cart.`,
+            description: `${quantity} x ${product.name} has been added to your cart.`,
         });
     };
 
     const handleBuyNow = () => {
-        addToCart(product);
+        addToCart(product, quantity);
         router.push('/checkout');
     };
 
