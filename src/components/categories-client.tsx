@@ -8,20 +8,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, ShoppingCart, Loader2 } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
-import { generateCategories } from '@/ai/flows/generate-categories';
+import { generateCategories, type AiCategory } from '@/ai/flows/generate-categories';
 import Link from 'next/link';
 
 interface CategoriesClientProps {
   products: Product[];
 }
 
+const ALL_CATEGORY: AiCategory = { name: 'All', keywords: [] };
+
 export function CategoriesClient({ products }: CategoriesClientProps) {
   const { cart } = useCart();
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [aiCategories, setAiCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<AiCategory>(ALL_CATEGORY);
+  const [aiCategories, setAiCategories] = useState<AiCategory[]>([ALL_CATEGORY]);
   const [isAiLoading, setIsAiLoading] = useState(true);
 
   useEffect(() => {
@@ -31,16 +33,15 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
         try {
           const productDetails = products.map(p => ({ name: p.name, description: p.description }));
           const result = await generateCategories({ products: productDetails });
-          // Ensure "All" is always the first category and there are no duplicates
-          setAiCategories(['All', ...new Set(result.categories)]);
+          setAiCategories([ALL_CATEGORY, ...result.categories]);
         } catch (error) {
           console.error("Failed to fetch AI categories:", error);
-          setAiCategories(['All']); // Fallback to just "All"
+          setAiCategories([ALL_CATEGORY]); // Fallback
         } finally {
           setIsAiLoading(false);
         }
       } else {
-        setAiCategories(['All']);
+        setAiCategories([ALL_CATEGORY]);
         setIsAiLoading(false);
       }
     }
@@ -48,12 +49,13 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let categoryFilteredProducts = products;
+    let results = products;
 
     // 1. Filter by category
-    if (selectedCategory !== 'All') {
-      const lowerCaseCategory = selectedCategory.toLowerCase();
-      categoryFilteredProducts = products.filter(product => {
+    if (selectedCategory.name !== 'All') {
+      const categoryKeywords = [selectedCategory.name.toLowerCase(), ...selectedCategory.keywords.map(k => k.toLowerCase())];
+      
+      results = results.filter(product => {
         const productText = [
           product.name,
           product.description,
@@ -61,21 +63,22 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
           ...(product.tags || [])
         ].join(' ').toLowerCase();
 
-        return productText.includes(lowerCaseCategory);
+        // Check if any of the category keywords appear in the product's text
+        return categoryKeywords.some(keyword => productText.includes(keyword));
       });
     }
 
     // 2. Filter by search query on the already category-filtered results
-    if (searchQuery) {
+    if (searchQuery.trim()) {
       const lowerCaseSearch = searchQuery.toLowerCase();
-      return categoryFilteredProducts.filter(product =>
+      results = results.filter(product =>
         product.name.toLowerCase().includes(lowerCaseSearch) ||
         product.description.toLowerCase().includes(lowerCaseSearch) ||
         (product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
       );
     }
     
-    return categoryFilteredProducts;
+    return results;
   }, [products, selectedCategory, searchQuery]);
 
   return (
@@ -113,14 +116,14 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
                 <span className="text-muted-foreground text-sm">Generating categories...</span>
             </div>
           ) : (
-            aiCategories.map((filter) => (
+            aiCategories.map((category) => (
               <Button
-                key={filter}
-                variant={selectedCategory === filter ? "default" : "secondary"}
+                key={category.name}
+                variant={selectedCategory.name === category.name ? "default" : "secondary"}
                 className="rounded-full flex-shrink-0"
-                onClick={() => setSelectedCategory(filter)}
+                onClick={() => setSelectedCategory(category)}
               >
-                {filter}
+                {category.name}
               </Button>
             ))
           )}
