@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 export function ProductDetailsClient({ product }: { product: Product }) {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const sizes = [38.5, 39, 40, 41, 41.5];
+  const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   
   const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -34,15 +34,14 @@ export function ProductDetailsClient({ product }: { product: Product }) {
           url: window.location.href,
         });
       } catch (error: any) {
-        // Don't log permission errors, as they are expected in non-HTTPS environments
         if (error.name !== 'NotAllowedError') {
             console.error('Error sharing:', error);
+            toast({
+                title: "Could not share",
+                description: "There was an error trying to share. This can happen on non-secure connections.",
+                variant: "destructive"
+            })
         }
-        toast({
-            title: "Could not share",
-            description: "There was an error trying to share. This can happen on non-secure connections.",
-            variant: "destructive"
-        })
       }
     } else {
        toast({
@@ -61,6 +60,10 @@ export function ProductDetailsClient({ product }: { product: Product }) {
         return newQuantity;
     })
   }
+  
+  const handleVariantSelect = (optionName: string, value: string) => {
+    setSelectedVariant(prev => ({ ...prev, [optionName]: value }));
+  };
 
   return (
     <div>
@@ -101,7 +104,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
 
 
             {/* Product Details */}
-            <div className="px-4 space-y-4">
+            <div className="px-4 space-y-6">
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="text-muted-foreground font-semibold">{product.category}</p>
@@ -131,16 +134,31 @@ export function ProductDetailsClient({ product }: { product: Product }) {
 
                 <p className="text-foreground/80 leading-relaxed">{product.description}</p>
                 
-                <div>
-                    <p className="font-semibold mb-2">Size</p>
-                    <div className="flex gap-2">
-                        {sizes.map((size, index) => (
-                            <Button key={size} variant={index === 2 ? "default" : "outline"} className="w-12 h-12 rounded-full">
-                                {size}
-                            </Button>
+                {product.hasVariants && product.variantOptions?.length > 0 && (
+                    <div className="space-y-4">
+                        {product.variantOptions.filter(opt => opt.name && opt.values).map(option => (
+                            <div key={option.name}>
+                                <p className="font-semibold mb-2">{option.name}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {option.values.split(',').map(value => {
+                                        const trimmedValue = value.trim();
+                                        const isSelected = selectedVariant[option.name] === trimmedValue;
+                                        return (
+                                            <Button 
+                                                key={trimmedValue} 
+                                                variant={isSelected ? "default" : "outline"} 
+                                                className="rounded-full"
+                                                onClick={() => handleVariantSelect(option.name, trimmedValue)}
+                                            >
+                                                {trimmedValue}
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
+                )}
             </div>
         </div>
 
