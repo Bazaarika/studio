@@ -14,6 +14,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories' || pathname === '/cart' || pathname === '/wishlist';
   const showHeader = !isImmersivePage;
@@ -21,7 +26,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {showHeader && <Header />}
+      {isClient && showHeader && <Header />}
       <main className="flex-grow pb-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {children}
@@ -30,7 +35,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
       <div className="hidden md:block">
         <Footer />
       </div>
-      {showBottomNav && <BottomNav />}
+      {isClient && showBottomNav && <BottomNav />}
     </div>
   );
 }
@@ -59,7 +64,6 @@ export default function RootLayout({
               {isAdminPage ? (
                 <>
                   {children}
-                  <Toaster />
                 </>
               ) : (
                 <ClientLayout>{children}</ClientLayout>
