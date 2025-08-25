@@ -68,7 +68,7 @@ export default function RootLayout({
     )
   }
 
-  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile';
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories';
   const showHeader = !isImmersivePage;
   const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
 
