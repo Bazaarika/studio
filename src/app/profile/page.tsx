@@ -120,12 +120,14 @@ function ProfileView() {
         const isMessagingSupported = await isSupported();
         if (!messaging || !isMessagingSupported) {
             toast({ title: "Notifications Not Supported", description: "Your browser does not support push notifications.", variant: "destructive" });
+            setIsSubscribing(false);
             return;
         }
 
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
             toast({ title: "Permission Denied", description: "You need to grant permission to receive notifications.", variant: "destructive" });
+            setIsSubscribing(false);
             return;
         }
 

@@ -1,8 +1,10 @@
-// Import the Firebase app and messaging services
+
+// Import and configure the Firebase SDK
+// These scripts are made available when the app is served or deployed on Firebase Hosting
+// If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup
 import { initializeApp } from "firebase/app";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
   authDomain: "bazaarika-lite.firebaseapp.com",
@@ -12,20 +14,16 @@ const firebaseConfig = {
   appId: "1:497294677028:web:d6500602307f6d462c74b1",
 };
 
-
-// Initialize the Firebase app in the service worker
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-// Add an event listener for background messages
 onBackgroundMessage(messaging, (payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-
-  // Customize the notification here
-  const notificationTitle = payload.notification?.title || "New Message";
+  
+  const notificationTitle = payload.notification.title;
   const notificationOptions = {
-    body: payload.notification?.body || "You have a new message.",
-    icon: payload.notification?.icon || '/icon-192x192.svg',
+    body: payload.notification.body,
+    icon: payload.notification.icon || '/icon-192x192.svg'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
