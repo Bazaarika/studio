@@ -14,6 +14,7 @@ import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
+import { generateImageHint } from "@/ai/flows/generate-image-hint";
 import Image from "next/image";
 
 type ImageField = {
@@ -37,6 +38,7 @@ export default function AddProductPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isHintLoading, setIsHintLoading] = useState<number | null>(null);
     const { toast } = useToast();
 
     const handleImageChange = (index: number, field: keyof ImageField, value: string) => {
@@ -167,6 +169,49 @@ export default function AddProductPage() {
         }
     };
 
+    const handleGenerateImageHint = async (index: number) => {
+        const imageUrl = images[index].url;
+        if (!imageUrl) {
+            toast({
+                title: "Image URL is missing",
+                description: "Please enter an image URL to generate a hint.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setIsHintLoading(index);
+        try {
+            // This is a simplified client-side fetch and conversion.
+            // A more robust solution might use a server-side proxy to handle CORS and other issues.
+            const response = await fetch(imageUrl);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                const result = await generateImageHint({ imageDataUri: base64data });
+                handleImageChange(index, 'hint', result.hint);
+                toast({
+                    title: "AI Hint Generated!",
+                    description: `Hint set to "${result.hint}".`,
+                });
+                setIsHintLoading(null);
+            };
+        } catch (error) {
+             console.error("Error generating image hint:", error);
+            toast({
+                title: "AI Hint Generation Failed",
+                description: "Could not analyze the image. Check the URL and try again.",
+                variant: "destructive",
+            });
+            setIsHintLoading(null);
+        }
+    };
+
 
     return (
         <form onSubmit={handleSubmit}>
@@ -203,7 +248,7 @@ export default function AddProductPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {images.map((image, index) => (
-                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-end border p-4 rounded-md relative">
+                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto_auto] gap-2 items-end border p-4 rounded-md relative">
                                     <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center relative overflow-hidden">
                                         {image.url ? (
                                             <Image src={image.url} alt={`Preview ${index}`} fill className="object-cover" />
@@ -217,7 +262,13 @@ export default function AddProductPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor={`aiHint-${index}`}>AI Image Hint</Label>
-                                        <Input id={`aiHint-${index}`} value={image.hint} onChange={(e) => handleImageChange(index, 'hint', e.target.value)} placeholder="e.g., floral dress" />
+                                        <div className="flex gap-2">
+                                            <Input id={`aiHint-${index}`} value={image.hint} onChange={(e) => handleImageChange(index, 'hint', e.target.value)} placeholder="e.g., floral dress" />
+                                            <Button variant="outline" size="icon" type="button" onClick={() => handleGenerateImageHint(index)} disabled={isHintLoading === index}>
+                                                {isHintLoading === index ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                                                <span className="sr-only">Generate Hint</span>
+                                            </Button>
+                                        </div>
                                     </div>
                                     {images.length > 1 && (
                                         <Button variant="ghost" size="icon" onClick={() => removeImageField(index)}>
@@ -357,5 +408,3 @@ export default function AddProductPage() {
             </div>
         </form>
     );
-
-    
