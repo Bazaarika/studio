@@ -134,7 +134,7 @@ export function CheckoutClient() {
   const formattedAddress = address ? [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ') : '';
 
   return (
-    <div className="max-w-xl mx-auto space-y-8">
+    <div className="max-w-xl mx-auto space-y-8 pb-24">
       <header className="text-center">
         <h1 className="text-4xl font-bold font-headline">Checkout</h1>
       </header>
@@ -233,25 +233,27 @@ export function CheckoutClient() {
                 </div>
             </CardContent>
         </Card>
-
-        <div>
-            {isPlacingOrder ? (
-                 <div className="flex justify-center items-center gap-2">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="text-lg font-semibold">Placing Order...</span>
-                 </div>
-            ) : paymentMethod ? (
-                <SwipeButton 
-                    onComplete={handlePlaceOrder}
-                    text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
-                />
-            ) : (
-                <div className="text-center text-muted-foreground font-medium h-14 flex items-center justify-center">
-                    Please select a payment method
-                </div>
-            )}
-        </div>
       </div>
+
+       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t z-50">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-xl py-4">
+                {isPlacingOrder ? (
+                    <div className="flex justify-center items-center gap-2 h-14">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <span className="text-lg font-semibold">Placing Order...</span>
+                    </div>
+                ) : paymentMethod ? (
+                    <SwipeButton 
+                        onComplete={handlePlaceOrder}
+                        text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
+                    />
+                ) : (
+                    <div className="text-center text-muted-foreground font-medium h-14 flex items-center justify-center">
+                        Please select a payment method
+                    </div>
+                )}
+            </div>
+        </div>
     </div>
   );
 }
