@@ -1,6 +1,6 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import type { Product } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
@@ -63,10 +63,15 @@ export interface Address {
     country: string;
 }
 
+// Get user document data
+const getUserDoc = async (userId: string) => {
+    const docRef = doc(db, "users", userId);
+    return await getDoc(docRef);
+}
+
 // Get user address
 export const getUserAddress = async (userId: string): Promise<Address | null> => {
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getUserDoc(userId);
     if (docSnap.exists() && docSnap.data().address) {
         return docSnap.data().address as Address;
     }
@@ -79,4 +84,33 @@ export const updateUserAddress = async (userId: string, address: Address) => {
     await setDoc(userDocRef, { address }, { merge: true });
 };
 
+// --- Wishlist Functions ---
+
+// Get user wishlist
+export const getUserWishlist = async (userId: string): Promise<string[]> => {
+    const docSnap = await getUserDoc(userId);
+    if (docSnap.exists() && docSnap.data().wishlist) {
+        return docSnap.data().wishlist as string[];
+    }
+    return [];
+};
+
+// Add product to user's wishlist
+export const addToUserWishlist = async (userId: string, productId: string) => {
+    const userDocRef = doc(db, "users", userId);
+    await setDoc(userDocRef, { wishlist: arrayUnion(productId) }, { merge: true });
+};
+
+// Remove product from user's wishlist
+export const removeFromUserWishlist = async (userId: string, productId: string) => {
+    const userDocRef = doc(db, "users", userId);
+    await setDoc(userDocRef, { wishlist: arrayRemove(productId) }, { merge: true });
+};
+
+// Merge local wishlist with Firestore wishlist
+export const mergeWishlists = async (userId: string, localWishlist: string[]) => {
+    if (localWishlist.length === 0) return;
+    const userDocRef = doc(db, "users", userId);
+    await setDoc(userDocRef, { wishlist: arrayUnion(...localWishlist) }, { merge: true });
+};
     

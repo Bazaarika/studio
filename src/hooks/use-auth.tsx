@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             })
             .catch((error) => {
-                if (error.code !== 'auth/popup-closed-by-user') {
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
                     console.error("Error getting redirect result:", error);
                     toast({
                         title: "Sign-in failed",
