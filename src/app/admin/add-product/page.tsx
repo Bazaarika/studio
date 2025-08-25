@@ -8,12 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
-import { Loader2, PlusCircle, Sparkles } from "lucide-react";
+import { Loader2, PlusCircle, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
+
+type ImageField = {
+    url: string;
+    hint: string;
+};
 
 export default function AddProductPage() {
     const [name, setName] = useState("");
@@ -21,8 +26,7 @@ export default function AddProductPage() {
     const [price, setPrice] = useState("");
     const [compareAtPrice, setCompareAtPrice] = useState("");
     const [category, setCategory] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
-    const [aiHint, setAiHint] = useState("");
+    const [images, setImages] = useState<ImageField[]>([{ url: "", hint: "" }]);
     const [sku, setSku] = useState("");
     const [stock, setStock] = useState("");
     const [status, setStatus] = useState("Active");
@@ -34,14 +38,31 @@ export default function AddProductPage() {
     const [isAiLoading, setIsAiLoading] = useState(false);
     const { toast } = useToast();
 
+    const handleImageChange = (index: number, field: keyof ImageField, value: string) => {
+        const newImages = [...images];
+        newImages[index][field] = value;
+        setImages(newImages);
+    };
+
+    const addImageField = () => {
+        setImages([...images, { url: "", hint: "" }]);
+    };
+
+    const removeImageField = (index: number) => {
+        const newImages = images.filter((_, i) => i !== index);
+        setImages(newImages);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        if (!name || !description || !price || !category || !imageUrl || !aiHint || !stock || !status) {
+        const mainImage = images[0];
+
+        if (!name || !description || !price || !category || !mainImage?.url || !mainImage?.hint || !stock || !status) {
             toast({
                 title: "Missing fields",
-                description: "Please fill out all required fields.",
+                description: "Please fill out all required fields, including at least one image.",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -49,15 +70,14 @@ export default function AddProductPage() {
         }
 
         try {
-            // This is where you would normally save all the new fields.
-            // For now, we are still using the simplified addProduct function.
+            // TODO: Update addProduct to handle multiple images
             await addProduct({
                 name,
                 description,
                 price: parseFloat(price),
                 category,
-                imageUrl,
-                aiHint,
+                imageUrl: mainImage.url,
+                aiHint: mainImage.hint,
             });
 
             toast({
@@ -71,8 +91,7 @@ export default function AddProductPage() {
             setPrice("");
             setCompareAtPrice("");
             setCategory("");
-            setImageUrl("");
-            setAiHint("");
+            setImages([{ url: "", hint: "" }]);
             setSku("");
             setStock("");
             setStatus("Active");
@@ -128,7 +147,6 @@ export default function AddProductPage() {
         try {
             const result = await generateProductDetails({ productName: name });
             setDescription(result.description);
-            // Find a matching category or default to the first one
             const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
             setCategory(suggestedCategory ? suggestedCategory.id : categories[0]?.id || "");
             setTags(result.tags.join(", "));
@@ -182,17 +200,28 @@ export default function AddProductPage() {
                         <CardHeader>
                             <CardTitle>Media</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="imageUrl">Image URL</Label>
-                                    <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://placehold.co/600x800.png" />
+                        <CardContent className="space-y-4">
+                            {images.map((image, index) => (
+                                <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end border p-4 rounded-md relative">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`imageUrl-${index}`}>Image URL</Label>
+                                        <Input id={`imageUrl-${index}`} value={image.url} onChange={(e) => handleImageChange(index, 'url', e.target.value)} placeholder="https://placehold.co/600x800.png" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`aiHint-${index}`}>AI Image Hint</Label>
+                                        <Input id={`aiHint-${index}`} value={image.hint} onChange={(e) => handleImageChange(index, 'hint', e.target.value)} placeholder="e.g., floral dress" />
+                                    </div>
+                                    {images.length > 1 && (
+                                        <Button variant="ghost" size="icon" onClick={() => removeImageField(index)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                            <span className="sr-only">Remove Image</span>
+                                        </Button>
+                                    )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="aiHint">AI Image Hint</Label>
-                                    <Input id="aiHint" value={aiHint} onChange={(e) => setAiHint(e.target.value)} placeholder="e.g., floral dress" />
-                                </div>
-                            </div>
+                            ))}
+                            <Button type="button" variant="outline" onClick={addImageField}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Image
+                            </Button>
                         </CardContent>
                     </Card>
 
