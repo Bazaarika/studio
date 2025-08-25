@@ -40,17 +40,26 @@ export function ProductCard({ product, isWishlistedDefault = false }: ProductCar
     });
   }
 
+  const imageUrl = (product.images && product.images.length > 0 && product.images[0].url) 
+    ? product.images[0].url 
+    : "https://placehold.co/400x400.png";
+  
+  const aiHint = (product.images && product.images.length > 0 && product.images[0].hint)
+    ? product.images[0].hint
+    : "";
+
+
   return (
     <Link href={`/product/${product.id}`} className="group block">
       <div className="relative overflow-hidden rounded-xl">
         <div className="bg-secondary p-2 rounded-xl">
              <Image
-                src={product.imageUrl}
+                src={imageUrl}
                 alt={product.name}
                 width={400}
                 height={400}
                 className="aspect-[3/4] w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
-                data-ai-hint={product.aiHint}
+                data-ai-hint={aiHint}
                 />
         </div>
         <Button 
