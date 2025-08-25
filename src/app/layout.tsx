@@ -9,7 +9,33 @@ import { CartProvider } from '@/hooks/use-cart';
 import { BottomNav } from '@/components/bottom-nav';
 import { Footer } from '@/components/footer';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+
+function ClientLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories';
+  const showHeader = !isImmersivePage;
+  const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
+
+  return (
+    <CartProvider>
+      <div className="flex flex-col min-h-screen">
+        {showHeader && <Header />}
+        <main className="flex-grow pb-20">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            {children}
+          </div>
+        </main>
+        <div className="hidden md:block">
+          <Footer />
+        </div>
+        {showBottomNav && <BottomNav />}
+      </div>
+      <Toaster />
+    </CartProvider>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -23,82 +49,35 @@ export default function RootLayout({
     setIsMounted(true);
   }, []);
 
-  if (!isMounted) {
-    return (
-       <html lang="en" suppressHydrationWarning>
-        <head>
-            <title>Bazaarika Lite</title>
-            <meta name="description" content="A modern e-commerce experience." />
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
-        </head>
-        <body className="font-body antialiased">
-            <div className="flex flex-col min-h-screen">
-                <main className="flex-grow pb-20">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        {children}
-                    </div>
-                </main>
-            </div>
-        </body>
-      </html>
-    );
-  }
-  
   const isAdminPage = pathname.startsWith('/admin');
-
-  if (isAdminPage) {
-    return (
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <title>Bazaarika Admin</title>
-          <meta name="description" content="Admin dashboard" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
-        </head>
-        <body className="font-body antialiased">
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </body>
-      </html>
-    )
-  }
-
-  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories';
-  const showHeader = !isImmersivePage;
-  const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
-
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Bazaarika Lite</title>
-        <meta name="description" content="A modern e-commerce experience." />
+        <title>{isAdminPage ? "Bazaarika Admin" : "Bazaarika Lite"}</title>
+        <meta name="description" content={isAdminPage ? "Admin dashboard" : "A modern e-commerce experience."} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          <CartProvider>
-            <div className="flex flex-col min-h-screen">
-              {showHeader && <Header />}
-              <main className="flex-grow pb-20">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                  {children}
-                </div>
-              </main>
-              <div className="hidden md:block">
-                 <Footer />
-              </div>
-              {showBottomNav && <BottomNav />}
+          {isAdminPage ? (
+            <>
+              {children}
+              <Toaster />
+            </>
+          ) : isMounted ? (
+            <ClientLayout>{children}</ClientLayout>
+          ) : (
+             <div className="flex flex-col min-h-screen">
+                <main className="flex-grow pb-20">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                        {children}
+                    </div>
+                </main>
             </div>
-            <Toaster />
-          </CartProvider>
+          )}
         </AuthProvider>
       </body>
     </html>
