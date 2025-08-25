@@ -47,12 +47,12 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let categoryFilteredProducts = [...products];
+    let results = [...products];
 
-    // 1. Filter by the selected AI category
+    // Filter by selected category first
     if (selectedCategory !== 'All') {
       const lowerCaseCategory = selectedCategory.toLowerCase();
-      categoryFilteredProducts = products.filter(product => 
+      results = results.filter(product =>
         product.category.toLowerCase().includes(lowerCaseCategory) ||
         product.name.toLowerCase().includes(lowerCaseCategory) ||
         product.description.toLowerCase().includes(lowerCaseCategory) ||
@@ -60,17 +60,17 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
       );
     }
 
-    // 2. Filter by the search query on the result of the category filter
+    // Then, filter by search query on the already filtered results
     if (searchQuery) {
       const lowerCaseSearch = searchQuery.toLowerCase();
-      return categoryFilteredProducts.filter(product =>
+      results = results.filter(product =>
         product.name.toLowerCase().includes(lowerCaseSearch) ||
         product.description.toLowerCase().includes(lowerCaseSearch) ||
         (product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
       );
     }
     
-    return categoryFilteredProducts;
+    return results;
   }, [products, searchQuery, selectedCategory]);
 
   return (
