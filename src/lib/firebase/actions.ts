@@ -1,5 +1,7 @@
 
 'use server';
+import { config } from 'dotenv';
+config();
 
 import { getMessaging } from "firebase-admin/messaging";
 import { initializeFirebaseAdmin } from "./admin-config";
