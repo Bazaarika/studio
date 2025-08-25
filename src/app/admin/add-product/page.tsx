@@ -452,6 +452,20 @@ export default function AddProductPage() {
                             </Button>
                         </CardContent>
                     </Card>
+                    
+                    <Card>
+                        <CardHeader>
+                             <CardTitle>Variants</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="flex items-center space-x-2 mb-4">
+                                <Checkbox id="hasVariants" checked={hasVariants} onCheckedChange={(checked) => setHasVariants(checked as boolean)} />
+                                <label htmlFor="hasVariants" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    This product has multiple options, like different sizes or colors
+                                </label>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                      {!hasVariants && (
                         <>
@@ -489,68 +503,60 @@ export default function AddProductPage() {
                         </>
                     )}
 
-
-                    <Card>
-                        <CardHeader>
-                             <CardTitle>Variants</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <div className="flex items-center space-x-2 mb-4">
-                                <Checkbox id="hasVariants" checked={hasVariants} onCheckedChange={(checked) => setHasVariants(checked as boolean)} />
-                                <label htmlFor="hasVariants" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    This product has multiple options, like different sizes or colors
-                                </label>
-                            </div>
-                            {hasVariants && (
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <Label className="font-semibold">Options</Label>
-                                        {variantOptions.map((option, index) => (
-                                            <div key={index} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-end p-4 border rounded-md">
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`option-name-${index}`}>Option name</Label>
-                                                    <Input id={`option-name-${index}`} value={option.name} onChange={(e) => handleVariantOptionChange(index, 'name', e.target.value)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor={`option-values-${index}`}>Option values</Label>
-                                                    <Input id={`option-values-${index}`} value={option.values} onChange={(e) => handleVariantOptionChange(index, 'values', e.target.value)} placeholder="e.g., S, M, L" />
-                                                </div>
-                                                {variantOptions.length > 1 && (
-                                                    <Button variant="ghost" size="icon" onClick={() => removeVariantOption(index)}>
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                )}
+                    {hasVariants && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Variants</CardTitle>
+                                <CardDescription>Define options and manage price and stock for each combination.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-4">
+                                    <Label className="font-semibold">Options</Label>
+                                    {variantOptions.map((option, index) => (
+                                        <div key={index} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-end p-4 border rounded-md">
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`option-name-${index}`}>Option name</Label>
+                                                <Input id={`option-name-${index}`} value={option.name} onChange={(e) => handleVariantOptionChange(index, 'name', e.target.value)} />
                                             </div>
-                                        ))}
-                                        {variantOptions.length < 2 && (
-                                            <Button type="button" variant="outline" onClick={addVariantOption}>
-                                                <PlusCircle className="mr-2 h-4 w-4" /> Add another option
-                                            </Button>
-                                        )}
-                                    </div>
-                                    {generatedVariants.length > 0 && (
-                                        <div className="space-y-2">
-                                             <Label className="font-semibold">Manage Variants</Label>
-                                             <div className="border rounded-md">
-                                                 <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 font-medium bg-muted">
-                                                     <div>Variant</div>
-                                                     <div>Price (INR)</div>
-                                                     <div>Stock</div>
-                                                 </div>
-                                                 {generatedVariants.map(variant => (
-                                                      <div key={variant.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 items-center border-t">
-                                                          <div>{variant.id}</div>
-                                                          <div><Input type="number" placeholder="e.g., 2499" value={variant.price} onChange={(e) => handleGeneratedVariantChange(variant.id, 'price', e.target.value)} /></div>
-                                                          <div><Input type="number" placeholder="e.g., 100" value={variant.stock} onChange={(e) => handleGeneratedVariantChange(variant.id, 'stock', e.target.value)} /></div>
-                                                      </div>
-                                                 ))}
-                                             </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`option-values-${index}`}>Option values</Label>
+                                                <Input id={`option-values-${index}`} value={option.values} onChange={(e) => handleVariantOptionChange(index, 'values', e.target.value)} placeholder="e.g., S, M, L (comma-separated)" />
+                                            </div>
+                                            {variantOptions.length > 1 && (
+                                                <Button variant="ghost" size="icon" onClick={() => removeVariantOption(index)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            )}
                                         </div>
+                                    ))}
+                                    {variantOptions.length < 2 && (
+                                        <Button type="button" variant="outline" onClick={addVariantOption}>
+                                            <PlusCircle className="mr-2 h-4 w-4" /> Add another option
+                                        </Button>
                                     )}
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                {generatedVariants.length > 0 && (
+                                    <div className="space-y-2">
+                                            <Label className="font-semibold">Variant Pricing & Stock</Label>
+                                            <div className="border rounded-md">
+                                                <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 font-medium bg-muted">
+                                                    <div>Variant</div>
+                                                    <div>Price (INR)</div>
+                                                    <div>Stock</div>
+                                                </div>
+                                                {generatedVariants.map(variant => (
+                                                    <div key={variant.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 items-center border-t">
+                                                        <div>{variant.id}</div>
+                                                        <div><Input type="number" placeholder="e.g., 2499" value={variant.price} onChange={(e) => handleGeneratedVariantChange(variant.id, 'price', e.target.value)} /></div>
+                                                        <div><Input type="number" placeholder="e.g., 100" value={variant.stock} onChange={(e) => handleGeneratedVariantChange(variant.id, 'stock', e.target.value)} /></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
                 <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
                     <Card>
@@ -602,7 +608,7 @@ export default function AddProductPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="tags">Tags</Label>
-                                <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g., summer, new" />
+                                <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g., summer, new (comma-separated)" />
                             </div>
                         </CardContent>
                     </Card>
