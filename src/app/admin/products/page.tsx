@@ -125,7 +125,7 @@ export default function ProductsPage() {
                                             alt={product.name}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
-                                            src={product.images[0]?.url || "https://placehold.co/64x64.png"}
+                                            src={ (product.images && product.images.length > 0 && product.images[0].url) ? product.images[0].url : "https://placehold.co/64x64.png"}
                                             width="64"
                                         />
                                     </TableCell>
