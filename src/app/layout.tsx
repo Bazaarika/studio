@@ -19,21 +19,18 @@ function ClientLayout({ children }: { children: ReactNode }) {
   const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
 
   return (
-    <CartProvider>
-      <div className="flex flex-col min-h-screen">
-        {showHeader && <Header />}
-        <main className="flex-grow pb-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            {children}
-          </div>
-        </main>
-        <div className="hidden md:block">
-          <Footer />
+    <div className="flex flex-col min-h-screen">
+      {showHeader && <Header />}
+      <main className="flex-grow pb-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {children}
         </div>
-        {showBottomNav && <BottomNav />}
+      </main>
+      <div className="hidden md:block">
+        <Footer />
       </div>
-      <Toaster />
-    </CartProvider>
+      {showBottomNav && <BottomNav />}
+    </div>
   );
 }
 
@@ -67,16 +64,21 @@ export default function RootLayout({
               {children}
               <Toaster />
             </>
-          ) : isMounted ? (
-            <ClientLayout>{children}</ClientLayout>
           ) : (
-             <div className="flex flex-col min-h-screen">
-                <main className="flex-grow pb-20">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        {children}
-                    </div>
-                </main>
-            </div>
+            <CartProvider>
+              {isMounted ? (
+                <ClientLayout>{children}</ClientLayout>
+              ) : (
+                 <div className="flex flex-col min-h-screen">
+                    <main className="flex-grow pb-20">
+                        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                            {children}
+                        </div>
+                    </main>
+                </div>
+              )}
+              <Toaster />
+            </CartProvider>
           )}
         </AuthProvider>
       </body>
