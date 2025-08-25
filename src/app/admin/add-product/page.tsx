@@ -13,6 +13,7 @@ import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { generateProductDetails } from "@/ai/flows/generate-product-details";
 
 export default function AddProductPage() {
     const [name, setName] = useState("");
@@ -30,6 +31,7 @@ export default function AddProductPage() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false);
     const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -113,6 +115,39 @@ export default function AddProductPage() {
         }
     };
 
+    const handleGenerateDetails = async () => {
+        if (!name) {
+            toast({
+                title: "Product Name is missing",
+                description: "Please enter a product name to generate details.",
+                variant: "destructive",
+            });
+            return;
+        }
+        setIsAiLoading(true);
+        try {
+            const result = await generateProductDetails({ productName: name });
+            setDescription(result.description);
+            // Find a matching category or default to the first one
+            const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
+            setCategory(suggestedCategory ? suggestedCategory.id : categories[0]?.id || "");
+            setTags(result.tags.join(", "));
+             toast({
+                title: "AI Details Generated!",
+                description: "The product details have been filled in.",
+            });
+        } catch (error) {
+            console.error("Error generating product details:", error);
+            toast({
+                title: "AI Generation Failed",
+                description: "Could not generate details. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
+
 
     return (
         <form onSubmit={handleSubmit}>
@@ -128,7 +163,13 @@ export default function AddProductPage() {
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Product Name</Label>
-                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Elegant Floral Dress" />
+                                <div className="flex gap-2">
+                                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Elegant Floral Dress" />
+                                    <Button variant="outline" size="icon" type="button" onClick={handleGenerateDetails} disabled={isAiLoading}>
+                                        {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                                        <span className="sr-only">Generate with AI</span>
+                                    </Button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Product Description</Label>
@@ -279,5 +320,6 @@ export default function AddProductPage() {
             </div>
         </form>
     );
+}
 
     
