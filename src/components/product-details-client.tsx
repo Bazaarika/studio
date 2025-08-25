@@ -33,11 +33,14 @@ export function ProductDetailsClient({ product }: { product: Product }) {
           text: product.description,
           url: window.location.href,
         });
-      } catch (error) {
-        console.error('Error sharing:', error);
+      } catch (error: any) {
+        // Don't log permission errors, as they are expected in non-HTTPS environments
+        if (error.name !== 'NotAllowedError') {
+            console.error('Error sharing:', error);
+        }
         toast({
             title: "Could not share",
-            description: "There was an error trying to share this product.",
+            description: "There was an error trying to share. This can happen on non-secure connections.",
             variant: "destructive"
         })
       }
