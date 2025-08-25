@@ -1,7 +1,5 @@
 
 import admin from 'firebase-admin';
-import * as fs from 'fs';
-import * as path from 'path';
 
 // This function is designed to be idempotent (safe to call multiple times).
 export function initializeFirebaseAdmin() {
@@ -10,26 +8,31 @@ export function initializeFirebaseAdmin() {
     return;
   }
 
-  // Use a dedicated service account file for credentials.
-  // This is more reliable than environment variables in some serverless environments.
-  const serviceAccountPath = path.resolve(process.cwd(), 'service-account.json');
+  // Get the credentials from the environment variable.
+  const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-  if (!fs.existsSync(serviceAccountPath)) {
-    console.error("Firebase Admin SDK Error: `service-account.json` file not found.");
-    console.error("Please download your service account key from the Firebase console and place it in the root of your project as `service-account.json`.");
+  if (!serviceAccountKey) {
+    console.error("Firebase Admin SDK Error: GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
+    console.error("Please ensure your service account key JSON is correctly set in your .env file.");
     throw new Error("Firebase Admin credentials are not configured on the server.");
   }
 
   try {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    // Parse the JSON string from the environment variable.
+    const serviceAccount = JSON.parse(serviceAccountKey);
     
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+    console.log("Firebase Admin SDK initialized successfully.");
 
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.message);
-    // Re-throw a more user-friendly error to be caught by the action handler.
+    // Provide a more specific error if JSON parsing fails.
+    if (error instanceof SyntaxError) {
+      console.error("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not a valid JSON string.");
+    }
+    // Re-throw a user-friendly error to be caught by the action handler.
     throw new Error("Could not initialize Firebase Admin SDK. Please check server logs for details.");
   }
 }
