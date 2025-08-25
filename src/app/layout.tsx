@@ -1,6 +1,5 @@
 
 import './globals.css';
-import { Header } from '@/components/header';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { CartProvider } from '@/hooks/use-cart';
@@ -31,7 +30,6 @@ export default function RootLayout({
           <CartProvider>
             <WishlistProvider>
               <RecentlyViewedProvider>
-                <Header />
                 <ClientLayout>{children}</ClientLayout>
                 <Toaster />
               </RecentlyViewedProvider>
