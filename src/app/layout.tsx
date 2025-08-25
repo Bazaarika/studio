@@ -28,9 +28,10 @@ function ClientLayout({ children }: { children: ReactNode }) {
   }
   
   const isProductPage = pathname.startsWith('/product/');
+  const isCheckoutPage = pathname === '/checkout';
 
   // Only render BottomNav on the client to avoid hydration errors
-  const showBottomNav = isClient && !isAdminPage && !isProductPage;
+  const showBottomNav = isClient && !isAdminPage && !isProductPage && !isCheckoutPage;
 
   return (
     <div className="flex flex-col min-h-screen">
