@@ -3,12 +3,30 @@
 
 import { useEffect } from 'react';
 import { messaging } from '@/lib/firebase/config';
-import { getToken, isSupported } from 'firebase/messaging';
+import { getToken, isSupported, onMessage } from 'firebase/messaging';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToTopic } from '@/lib/firebase/actions';
 
 export function PushNotificationManager() {
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!messaging) return;
+
+    // Handle incoming messages when the app is in the foreground
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Foreground message received. ', payload);
+      toast({
+        title: payload.notification?.title || "New Notification",
+        description: payload.notification?.body || "",
+      });
+    });
+
+    return () => {
+      unsubscribe(); // Unsubscribe from the onMessage listener when the component unmounts
+    };
+  }, [toast]);
+
 
   useEffect(() => {
     const requestPermission = async () => {

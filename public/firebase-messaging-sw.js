@@ -1,9 +1,8 @@
 
-// Import the Firebase app and messaging libraries
+// Import and initialize the Firebase SDK
 import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging/sw";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
   authDomain: "bazaarika-lite.firebaseapp.com",
@@ -13,11 +12,31 @@ const firebaseConfig = {
   appId: "1:497294677028:web:d6500602307f6d462c74b1",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-console.log("Firebase Messaging Service Worker initialized");
+// Handle background notifications
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push Received.');
+  
+  const notificationPayload = event.data.json();
+  const notificationTitle = notificationPayload.notification.title;
+  const notificationOptions = {
+    body: notificationPayload.notification.body,
+    icon: notificationPayload.notification.icon || '/icon-192x192.svg',
+    image: notificationPayload.notification.image,
+  };
 
-// The rest of your service worker code for caching, etc., can go below.
-// For now, this is all that's needed for background notifications.
+  event.waitUntil(
+    self.registration.showNotification(notificationTitle, notificationOptions)
+  );
+});
+
+// Optional: Handle notification click
+self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification click Received.');
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('/')
+  );
+});
