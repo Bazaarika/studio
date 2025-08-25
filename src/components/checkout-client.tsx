@@ -197,18 +197,23 @@ export function CheckoutClient() {
             </CardHeader>
              <CardContent className="space-y-4">
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                   {cart.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4">
-                            <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0 border">
-                                <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                   {cart.map((item) => {
+                       const imageUrl = (item.images && item.images.length > 0 && item.images[0].url) 
+                           ? item.images[0].url 
+                           : "https://placehold.co/100x100.png";
+                       return (
+                            <div key={item.id} className="flex items-center gap-4">
+                                <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0 border">
+                                    <Image src={imageUrl} alt={item.name} fill className="object-cover" />
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="font-semibold">{item.name}</p>
+                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                </div>
+                                <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
                             </div>
-                            <div className="flex-grow">
-                                <p className="font-semibold">{item.name}</p>
-                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                            </div>
-                            <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
-                        </div>
-                   ))}
+                       );
+                   })}
                 </div>
                 <Separator />
                 <div className="space-y-2">
@@ -250,3 +255,5 @@ export function CheckoutClient() {
     </div>
   );
 }
+
+    
