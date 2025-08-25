@@ -30,7 +30,7 @@ export function SidebarNav() {
                 </Link>
                 <TooltipProvider>
                     {navLinks.map(link => (
-                         <Tooltip key={link.href}>
+                         <Tooltip key={link.label}>
                             <TooltipTrigger asChild>
                                 <Link
                                     href={link.href}
