@@ -1,62 +1,101 @@
-const CACHE_NAME = 'bazaarika-offline-v1';
-const OFFLINE_URL = 'offline.html';
+// A professional, production-ready service worker for a super-fast PWA.
 
+const CACHE_VERSION = 'v1';
+const STATIC_CACHE_NAME = `static-cache-${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `dynamic-cache-${CACHE_VERSION}`;
+const IMAGE_CACHE_NAME = `image-cache-${CACHE_VERSION}`;
+const OFFLINE_URL = '/offline.html';
+
+// On install, pre-cache the offline page and essential assets.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      // Setting {cache: 'reload'} in the new request will ensure that the response
-      // isn't fulfilled from the browser's HTTP cache; i.e., it will be from the network.
-      await cache.add(new Request(OFFLINE_URL, { cache: 'reload' }));
-    })()
+    caches.open(STATIC_CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Pre-caching App Shell');
+      return cache.addAll([
+        OFFLINE_URL,
+        // Add other essential assets here if needed, like a logo or main CSS/JS file.
+        // For Next.js, it's better to let them be cached dynamically on first visit.
+      ]);
+    })
   );
-  // Force the waiting service worker to become the active service worker.
   self.skipWaiting();
 });
 
+// On activation, clean up old caches.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    (async () => {
-      // Enable navigation preload if it's supported.
-      // See https://developers.google.com/web/updates/2017/02/navigation-preload
-      if ('navigationPreload' in self.registration) {
-        await self.registration.navigationPreload.enable();
-      }
-    })()
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME && cacheName !== IMAGE_CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
-
-  // Tell the active service worker to take control of the page immediately.
-  self.clients.claim();
+  return self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // We only want to call event.respondWith() if this is a navigation request
-  // for an HTML page.
-  if (event.request.mode === 'navigate') {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // 1. Handle navigation requests (HTML pages)
+  if (request.mode === 'navigate') {
     event.respondWith(
-      (async () => {
-        try {
-          // First, try to use the navigation preload response if it's supported.
-          const preloadResponse = await event.preloadResponse;
-          if (preloadResponse) {
-            return preloadResponse;
-          }
+      fetch(request)
+        .then((response) => {
+          // If we get a valid response, cache it and return it
+          const responseToCache = response.clone();
+          caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to serve from cache
+          return caches.match(request).then((cachedResponse) => {
+            // If it's in cache, serve it. Otherwise, serve the offline page.
+            return cachedResponse || caches.match(OFFLINE_URL);
+          });
+        })
+    );
+    return;
+  }
 
-          // Always try the network first.
-          const networkResponse = await fetch(event.request);
-          return networkResponse;
-        } catch (error) {
-          // catch is only triggered if an exception is thrown, which is likely
-          // due to a network error.
-          // If fetch() returns a valid HTTP response with a 4xx or 5xx status,
-          // the catch() will NOT be called.
-          console.log('Fetch failed; returning offline page instead.', error);
-
-          const cache = await caches.open(CACHE_NAME);
-          const cachedResponse = await cache.match(OFFLINE_URL);
+  // 2. Handle image requests with a cache-first, then network strategy
+  if (request.destination === 'image') {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
           return cachedResponse;
         }
-      })()
+        return fetch(request).then((networkResponse) => {
+          const responseToCache = networkResponse.clone();
+          caches.open(IMAGE_CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          return networkResponse;
+        });
+      })
     );
+    return;
   }
+  
+  // 3. Handle other requests (CSS, JS, fonts) with a stale-while-revalidate strategy
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request).then((networkResponse) => {
+        const responseToCache = networkResponse.clone();
+        caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
+          cache.put(request, responseToCache);
+        });
+        return networkResponse;
+      });
+      // Return cached response immediately if available, and update cache in background.
+      return cachedResponse || fetchPromise;
+    })
+  );
 });
