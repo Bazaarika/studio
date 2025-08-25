@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/lib/firebase/firestore";
 import { useTheme, themes } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { messaging } from "@/lib/firebase/config";
+import { messaging, VAPID_KEY } from "@/lib/firebase/config";
 import { getToken, isSupported } from "firebase/messaging";
 import { subscribeToTopic } from "@/lib/firebase/actions";
 
@@ -131,19 +131,26 @@ function ProfileView() {
             return;
         }
 
-        const vapidKey = 'BBRz-6gqWxn_FwsA6bQz-u-0Tq-r_sE_hJ-8XyV8Zz-2wL7Y_zC6wR_jX-7Y_o_cK_xG_jQ_gY_hA-1i_xI_e-A';
-        const currentToken = await getToken(messaging, { vapidKey });
+        if (!VAPID_KEY) {
+             throw new Error("VAPID key is not configured. Please check your firebase/config.ts file.");
+        }
+
+        const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
 
         if (currentToken) {
             await subscribeToTopic(currentToken, 'all');
             toast({ title: "Subscribed!", description: "You will now receive all notifications." });
         } else {
-            throw new Error("Could not get registration token.");
+            throw new Error("Could not get registration token. This can happen if the FCM API is not enabled.");
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error during subscription:", error);
-        toast({ title: "Subscription Failed", description: "Could not subscribe to notifications. Please try again.", variant: "destructive" });
+        toast({ 
+            title: "Notification Registration Failed", 
+            description: "Could not register for notifications. Please ensure the Firebase Cloud Messaging API is enabled in your Google Cloud project and your VAPID key is correct.", 
+            variant: "destructive" 
+        });
     } finally {
         setIsSubscribing(false);
     }
