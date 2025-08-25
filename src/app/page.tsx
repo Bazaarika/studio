@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -6,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product } from '@/lib/mock-data';
 import { getProducts } from '@/lib/firebase/firestore';
-import { ArrowRight, Timer } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowRight, Timer, History, Loader2 } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Header } from '@/components/header';
 import { Card, CardContent } from '@/components/ui/card';
+import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 
 // Helper function to get the deal of the day based on the current date
 const getDealOfTheDay = (products: Product[]): Product | null => {
@@ -47,15 +49,25 @@ const useCountdown = () => {
 };
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const timeLeft = useCountdown();
+  const [hasMore, setHasMore] = useState(true);
+  const { recentlyViewedIds } = useRecentlyViewed();
+  const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
 
+  const timeLeft = useCountdown();
+  const loader = useRef<HTMLDivElement | null>(null);
+
+  // Initial fetch for all products
   useEffect(() => {
     async function fetchProducts() {
       try {
+        setLoading(true);
         const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
+        setAllProducts(fetchedProducts);
+        setDisplayedProducts(fetchedProducts.slice(0, 8)); // Load initial 8 products
+        setHasMore(fetchedProducts.length > 8);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       } finally {
@@ -65,7 +77,45 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const dealOfTheDay = getDealOfTheDay(products);
+  // Filter products for "Recently Viewed" section
+  useEffect(() => {
+    if (allProducts.length > 0 && recentlyViewedIds.length > 0) {
+      const viewed = recentlyViewedIds
+        .map(id => allProducts.find(p => p.id === id))
+        .filter((p): p is Product => p !== undefined);
+      setRecentlyViewedProducts(viewed);
+    }
+  }, [allProducts, recentlyViewedIds]);
+
+  // Handle infinite scroll
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasMore) {
+      setDisplayedProducts((prev) => {
+        const nextIndex = prev.length;
+        const newProducts = allProducts.slice(nextIndex, nextIndex + 4);
+        if (nextIndex + newProducts.length >= allProducts.length) {
+          setHasMore(false);
+        }
+        return [...prev, ...newProducts];
+      });
+    }
+  }, [allProducts, hasMore]);
+  
+  useEffect(() => {
+    const option = {
+      root: null,
+      rootMargin: "20px",
+      threshold: 0,
+    };
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (loader.current) observer.observe(loader.current);
+    return () => {
+      if (loader.current) observer.unobserve(loader.current);
+    };
+  }, [handleObserver]);
+
+  const dealOfTheDay = getDealOfTheDay(allProducts);
 
   return (
     <>
@@ -134,6 +184,22 @@ export default function Home() {
           </section>
         )}
 
+        {/* Recently Viewed */}
+        {recentlyViewedProducts.length > 0 && (
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold font-headline flex items-center gap-2">
+                <History className="h-6 w-6"/> Recently Viewed
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {recentlyViewedProducts.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* All Products */}
         <section>
           <div className="flex justify-between items-center mb-4">
@@ -152,10 +218,13 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              products.map((product) => (
+              displayedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
+          </div>
+          <div ref={loader} className="h-10 mt-8 flex justify-center items-center">
+            {hasMore && <Loader2 className="h-8 w-8 animate-spin text-primary"/>}
           </div>
         </section>
 

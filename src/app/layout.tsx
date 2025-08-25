@@ -11,18 +11,25 @@ import { BottomNav } from '@/components/bottom-nav';
 import { Footer } from '@/components/footer';
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
+import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
 
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
-
+  
+  // This effect runs once on the client to set the isClient flag.
+  // This is crucial for preventing hydration errors with components
+  // that rely on client-side state, like the BottomNav cart count.
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const isAdminPage = pathname.startsWith('/admin');
   
-  // The header is now handled by individual pages.
-  // The bottom nav can be controlled here.
-  const isBottomNavHidden = pathname.startsWith('/product/') || pathname.startsWith('/checkout');
+  // Conditionally render based on the page type
+  if (isAdminPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -34,7 +41,8 @@ function ClientLayout({ children }: { children: ReactNode }) {
       <div className="hidden md:block">
         <Footer />
       </div>
-      {isClient && !isBottomNavHidden && <BottomNav />}
+       {/* Only render BottomNav on the client to avoid hydration errors */}
+      {isClient && <BottomNav />}
     </div>
   );
 }
@@ -44,14 +52,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const isAdminPage = pathname.startsWith('/admin');
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>{isAdminPage ? "Bazaarika Admin" : "Bazaarika Lite"}</title>
-        <meta name="description" content={isAdminPage ? "Admin dashboard" : "A modern e-commerce experience."} />
+        <title>Bazaarika Lite</title>
+        <meta name="description" content="A modern e-commerce experience." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
@@ -60,13 +65,9 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              {isAdminPage ? (
-                <>
-                  {children}
-                </>
-              ) : (
+              <RecentlyViewedProvider>
                 <ClientLayout>{children}</ClientLayout>
-              )}
+              </RecentlyViewedProvider>
                <Toaster />
             </WishlistProvider>
           </CartProvider>

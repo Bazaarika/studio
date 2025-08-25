@@ -13,17 +13,25 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 
 export function ProductDetailsClient({ product }: { product: Product }) {
   const { toast } = useToast();
+  const { addProductToRecentlyViewed } = useRecentlyViewed();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   
   const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const mainImage = allImages[selectedImageIndex];
+
+  useEffect(() => {
+    if (product.id) {
+      addProductToRecentlyViewed(product.id);
+    }
+  }, [product.id, addProductToRecentlyViewed]);
 
   const handleShare = async () => {
     if (navigator.share) {
