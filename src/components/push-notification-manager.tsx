@@ -11,7 +11,7 @@ export function PushNotificationManager() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!messaging) return;
+    if (typeof window === 'undefined' || !messaging) return;
 
     // Handle incoming messages when the app is in the foreground
     const unsubscribe = onMessage(messaging, (payload) => {
@@ -30,7 +30,6 @@ export function PushNotificationManager() {
 
   useEffect(() => {
     const requestPermission = async () => {
-      // Ensure messaging is supported by the browser
       const supported = await isSupported();
       if (!messaging || !supported) {
         console.log("Firebase Messaging is not supported in this browser.");
@@ -50,7 +49,6 @@ export function PushNotificationManager() {
 
           if (currentToken) {
             console.log('FCM Token:', currentToken);
-            // Subscribe the user to the 'all_users' topic on the server
             await subscribeToTopic(currentToken);
           } else {
             console.log('No registration token available. Request permission to generate one.');
@@ -58,17 +56,34 @@ export function PushNotificationManager() {
         } else {
           console.log('Unable to get permission to notify.');
         }
-      } catch (error) {
-        console.error('An error occurred while retrieving token. ', error);
-        toast({
-          title: "Notification Error",
-          description: "Could not get permission for notifications. You might need to enable it in your browser settings.",
-          variant: "destructive"
-        })
+      } catch (error: any) {
+        console.error('An error occurred while requesting permission or getting token: ', error);
+        
+        // Provide more specific feedback to the user
+        if (error.code === 'messaging/token-subscribe-failed') {
+             toast({
+                title: "Notification Registration Failed",
+                description: "Could not register for notifications. Please ensure the Firebase Cloud Messaging API is enabled in your Google Cloud project.",
+                variant: "destructive",
+                duration: 10000
+            });
+        } else {
+            toast({
+                title: "Notification Error",
+                description: "Could not get permission for notifications. You might need to enable it in your browser settings.",
+                variant: "destructive"
+            });
+        }
       }
     };
     
-    requestPermission();
+    // Delay the request slightly to ensure everything is loaded.
+    const timer = setTimeout(() => {
+        requestPermission();
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+
   }, [toast]);
 
   return null; // This component does not render anything.
