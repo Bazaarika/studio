@@ -1,5 +1,6 @@
 
 'use server';
+// By explicitly calling config(), we ensure .env variables are loaded for this server action.
 import { config } from 'dotenv';
 config();
 
@@ -33,7 +34,7 @@ export async function subscribeToTopic(token: string) {
  * Sends a push notification to all users subscribed to the 'all_users' topic.
  */
 export async function sendPushNotification(payload: NotificationPayload) {
-  // Initialize on-demand to ensure env vars are loaded.
+  // Initialize on-demand to ensure env vars are loaded and the app is ready.
   initializeFirebaseAdmin();
 
   const message = {
@@ -55,7 +56,8 @@ export async function sendPushNotification(payload: NotificationPayload) {
     console.log("Successfully sent message:", response);
     return { success: true, messageId: response };
   } catch (error) {
-    console.error("Error sending message:", error);
+    console.error("Error sending push notification:", error);
+    // Re-throw the error to be caught by the client-side form handler
     throw new Error("Failed to send push notification.");
   }
 }

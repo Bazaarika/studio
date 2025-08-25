@@ -1,33 +1,31 @@
 
 import admin from 'firebase-admin';
 
+// This function is designed to be idempotent (safe to call multiple times).
 export function initializeFirebaseAdmin() {
-  // If the app is already initialized, don't do it again
+  // If the app is already initialized, don't do it again.
   if (admin.apps.length > 0) {
     return;
   }
 
-  try {
-    const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (!serviceAccountKey) {
-        throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
-    }
+  // The GOOGLE_APPLICATION_CREDENTIALS environment variable is expected to be
+  // a JSON string. It is loaded by `dotenv` in the server action that calls this.
+  const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (!serviceAccountKey) {
+    console.error("Firebase Admin SDK Error: GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
+    throw new Error("Firebase Admin credentials are not configured on the server.");
+  }
 
-    let serviceAccountJson;
-    try {
-        serviceAccountJson = JSON.parse(serviceAccountKey);
-    } catch(e) {
-        console.error("Failed to parse GOOGLE_APPLICATION_CREDENTIALS. Make sure it's a valid JSON string with no extra characters or line breaks.", e);
-        throw new Error("Invalid format for Firebase Admin credentials.");
-    }
+  try {
+    const serviceAccountJson = JSON.parse(serviceAccountKey);
     
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccountJson),
     });
 
-  } catch (error) {
-    console.error('Firebase Admin SDK initialization error:', error);
-    // Re-throw the error to make it clear that initialization failed
-    throw new Error("Could not initialize Firebase Admin SDK.");
+  } catch (error: any) {
+    console.error('Firebase Admin SDK initialization error:', error.message);
+    // Re-throw a more user-friendly error to be caught by the action handler.
+    throw new Error("Could not initialize Firebase Admin SDK. Please check server logs for details.");
   }
 }
