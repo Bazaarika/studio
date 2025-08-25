@@ -10,10 +10,16 @@ import { WishlistProvider } from '@/hooks/use-wishlist';
 import { BottomNav } from '@/components/bottom-nav';
 import { Footer } from '@/components/footer';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   // The header is now handled by individual pages.
   // The bottom nav can be controlled here.
   const isBottomNavHidden = pathname.startsWith('/product/') || pathname.startsWith('/checkout');
@@ -28,7 +34,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
       <div className="hidden md:block">
         <Footer />
       </div>
-      {!isBottomNavHidden && <BottomNav />}
+      {isClient && !isBottomNavHidden && <BottomNav />}
     </div>
   );
 }
