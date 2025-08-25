@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Header } from '@/components/header';
 
 // Helper function to get the deal of the day based on the current date
 const getDealOfTheDay = (products: Product[]): Product | null => {
@@ -131,6 +132,7 @@ export default function Home() {
 
   return (
     <>
+      <Header />
       <div className="space-y-12">
         {/* Hero Section */}
         <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[300px] flex items-center">
@@ -254,5 +256,3 @@ export default function Home() {
     </>
   );
 }
-
-    
