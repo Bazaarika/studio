@@ -15,7 +15,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories' || pathname === '/cart';
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories' || pathname === '/cart' || pathname === '/wishlist';
   const showHeader = !isImmersivePage;
   const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
 
