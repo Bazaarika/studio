@@ -31,10 +31,11 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
         try {
           const productDetails = products.map(p => ({ name: p.name, description: p.description }));
           const result = await generateCategories({ products: productDetails });
-          setAiCategories(['All', ...result.categories]);
+          // Ensure "All" is always the first category and there are no duplicates
+          setAiCategories(['All', ...new Set(result.categories)]);
         } catch (error) {
           console.error("Failed to fetch AI categories:", error);
-          setAiCategories(['All']);
+          setAiCategories(['All']); // Fallback to just "All"
         } finally {
           setIsAiLoading(false);
         }
@@ -47,32 +48,34 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    let categoryFilteredProducts = products;
 
     // 1. Filter by category
     if (selectedCategory !== 'All') {
       const lowerCaseCategory = selectedCategory.toLowerCase();
-      filtered = filtered.filter(product => {
-        // This logic now correctly checks if the product details contain the category name
-        const inName = product.name.toLowerCase().includes(lowerCaseCategory);
-        const inDescription = product.description.toLowerCase().includes(lowerCaseCategory);
-        const inTags = product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseCategory));
-        const inCategory = product.category.toLowerCase().includes(lowerCaseCategory);
-        return inName || inDescription || inTags || inCategory;
+      categoryFilteredProducts = products.filter(product => {
+        const productText = [
+          product.name,
+          product.description,
+          product.category,
+          ...(product.tags || [])
+        ].join(' ').toLowerCase();
+
+        return productText.includes(lowerCaseCategory);
       });
     }
 
     // 2. Filter by search query on the already category-filtered results
     if (searchQuery) {
       const lowerCaseSearch = searchQuery.toLowerCase();
-      filtered = filtered.filter(product =>
+      return categoryFilteredProducts.filter(product =>
         product.name.toLowerCase().includes(lowerCaseSearch) ||
         product.description.toLowerCase().includes(lowerCaseSearch) ||
         (product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
       );
     }
     
-    return filtered;
+    return categoryFilteredProducts;
   }, [products, selectedCategory, searchQuery]);
 
   return (
