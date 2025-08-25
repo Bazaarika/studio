@@ -10,6 +10,7 @@ import { ClientLayout } from '@/components/client-layout';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { ConnectivityProvider } from '@/hooks/use-connectivity';
 import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar';
+import { PushNotificationManager } from '@/components/push-notification-manager';
 
 
 export const metadata: Metadata = {
@@ -33,7 +34,6 @@ export default function RootLayout({
         
         {/* PWA Tags */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#FACC15" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
@@ -41,6 +41,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <ServiceWorkerRegistrar />
+        <PushNotificationManager />
         <ConnectivityProvider>
           <ThemeProvider>
             <AuthProvider>

@@ -2,14 +2,15 @@
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
+  authDomain: "bazaarika-lite.firebaseapp.com",
+  projectId: "bazaarika-lite",
+  storageBucket: "bazaarika-lite.firebasestorage.app",
+  messagingSenderId: "497294677028",
+  appId: "1:497294677028:web:d6500602307f6d462c74b1",
 };
 
 // Initialize Firebase
@@ -17,4 +18,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export { app, db, auth };
+// Initialize Firebase Cloud Messaging and get a reference to the service
+const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
+
+
+export { app, db, auth, messaging };
