@@ -1,8 +1,8 @@
 
 'use server';
 
+import admin from 'firebase-admin';
 import { getMessaging } from "firebase-admin/messaging";
-import { initializeFirebaseAdmin } from "./admin-config";
 
 interface NotificationPayload {
     title: string;
@@ -11,18 +11,48 @@ interface NotificationPayload {
     image?: string;
 }
 
+// This function initializes Firebase Admin SDK on-demand.
+// It's designed to be idempotent (safe to call multiple times).
+function initializeFirebaseAdmin() {
+  if (admin.apps.length > 0) {
+    return;
+  }
+
+  const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+  if (!serviceAccountKey) {
+    console.error("Firebase Admin SDK Error: GOOGLE_APPLICATION_CREDENTIALS env variable is not set.");
+    throw new Error("Firebase Admin credentials are not configured on the server.");
+  }
+
+  try {
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("Firebase Admin SDK initialized successfully.");
+
+  } catch (error: any) {
+    console.error('Firebase Admin SDK initialization error:', error.message);
+    if (error instanceof SyntaxError) {
+      console.error("The GOOGLE_APPLICATION_CREDENTIALS env variable is not a valid JSON string.");
+    }
+    throw new Error("Could not initialize Firebase Admin SDK. Please check server logs for details.");
+  }
+}
+
 /**
  * Subscribes a user's FCM token to the 'all_users' topic.
  */
 export async function subscribeToTopic(token: string) {
     try {
-        // Initialize on-demand
         initializeFirebaseAdmin();
         await getMessaging().subscribeToTopic(token, "all_users");
         console.log(`Successfully subscribed token to topic: all_users`);
     } catch (error) {
         console.error("Error subscribing to topic:", error);
-        // It's okay to not throw here, as it's a background process
+        // We don't throw here to avoid client-side errors for a background process.
     }
 }
 
@@ -31,27 +61,27 @@ export async function subscribeToTopic(token: string) {
  * Sends a push notification to all users subscribed to the 'all_users' topic.
  */
 export async function sendPushNotification(payload: NotificationPayload) {
-  // Initialize on-demand to ensure env vars are loaded and the app is ready.
-  initializeFirebaseAdmin();
-
-  const message = {
-    topic: "all_users",
-    notification: {
-      title: payload.title,
-      body: payload.body,
-    },
-    webpush: {
-      notification: {
-        icon: payload.icon || "/icon-192x192.svg",
-        image: payload.image,
-      },
-    },
-  };
-
   try {
+    initializeFirebaseAdmin();
+
+    const message = {
+      topic: "all_users",
+      notification: {
+        title: payload.title,
+        body: payload.body,
+      },
+      webpush: {
+        notification: {
+          icon: payload.icon || "/icon-192x192.svg",
+          image: payload.image,
+        },
+      },
+    };
+
     const response = await getMessaging().send(message);
     console.log("Successfully sent message:", response);
     return { success: true, messageId: response };
+
   } catch (error) {
     console.error("Error sending push notification:", error);
     // Re-throw the error to be caught by the client-side form handler
