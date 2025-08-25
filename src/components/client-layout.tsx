@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Footer } from '@/components/footer';
 import { BottomNav } from '@/components/bottom-nav';
 import { AnimatePresence, motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -28,7 +29,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-grow">
+      <main className={cn("flex-grow", showBottomNav && "pb-16 md:pb-0")}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {isClient ? (
             <AnimatePresence mode="wait">
