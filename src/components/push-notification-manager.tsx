@@ -23,13 +23,15 @@ export function PushNotificationManager() {
         if (permission === 'granted') {
           console.log('Notification permission granted.');
           
+          // VAPID key is a public key used by push services to identify the application server.
+          // It is safe to expose this in client-side code.
           const currentToken = await getToken(messaging, { 
             vapidKey: 'BBRz-6gqWxn_FwsA6bQz-u-0Tq-r_sE_hJ-8XyV8Zz-2wL7Y_zC6wR_jX-7Y_o_cK_xG_jQ_gY_hA-1i_xI_e-A'
           });
 
           if (currentToken) {
             console.log('FCM Token:', currentToken);
-            // Subscribe the user to the 'all_users' topic
+            // Subscribe the user to the 'all_users' topic on the server
             await subscribeToTopic(currentToken);
           } else {
             console.log('No registration token available. Request permission to generate one.');
