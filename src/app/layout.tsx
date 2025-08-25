@@ -16,20 +16,21 @@ import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
-  
-  // This effect runs once on the client to set the isClient flag.
-  // This is crucial for preventing hydration errors with components
-  // that rely on client-side state, like the BottomNav cart count.
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const isAdminPage = pathname.startsWith('/admin');
-  
-  // Conditionally render based on the page type
+
   if (isAdminPage) {
     return <>{children}</>;
   }
+  
+  const isProductPage = pathname.startsWith('/product/');
+
+  // Only render BottomNav on the client to avoid hydration errors
+  const showBottomNav = isClient && !isAdminPage && !isProductPage;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -41,8 +42,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
       <div className="hidden md:block">
         <Footer />
       </div>
-       {/* Only render BottomNav on the client to avoid hydration errors */}
-      {isClient && <BottomNav />}
+       {showBottomNav && <BottomNav />}
     </div>
   );
 }
