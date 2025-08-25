@@ -74,104 +74,114 @@ export function ProductDetailsClient({ product }: { product: Product }) {
   };
 
   return (
-    <div>
-        <div className="space-y-8 pb-24">
-            {/* Image Gallery */}
-            <div className="bg-secondary rounded-xl p-4 md:p-8">
-                <div className="aspect-square relative">
-                <Image
-                    src={mainImage.url}
-                    alt={product.name}
-                    fill
-                    className="object-contain"
-                    data-ai-hint={mainImage.hint}
-                />
-                </div>
-            </div>
-             <div className="px-8">
-                <Carousel opts={{ align: "start", loop: true, }} className="w-full max-w-sm mx-auto">
-                    <CarouselContent className="-ml-2 md:-ml-4">
-                        {allImages.map((img, i) => (
-                            <CarouselItem key={i} className="pl-2 md:pl-4 basis-1/4">
-                                 <button onClick={() => setSelectedImageIndex(i)} className={`aspect-square relative rounded-lg overflow-hidden border-2 w-full ${i === selectedImageIndex ? 'border-primary' : 'border-transparent'}`}>
-                                    <Image
-                                        src={img.url}
-                                        alt={`${product.name} thumbnail ${i+1}`}
-                                        fill
-                                        className="object-cover"
-                                        data-ai-hint={img.hint}
-                                    />
-                                </button>
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden md:flex" />
-                    <CarouselNext className="hidden md:flex"/>
-                </Carousel>
-            </div>
-
-
-            {/* Product Details */}
-            <div className="px-4 space-y-6">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <p className="text-muted-foreground font-semibold">{product.category}</p>
-                        <h1 className="text-3xl font-bold font-headline">{product.name}</h1>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={handleShare}>
-                        <Share2 />
-                    </Button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                        <Star className="h-5 w-5 fill-yellow-400 text-yellow-400"/>
-                        <span className="font-bold">4.9</span>
-                        <span className="text-sm text-muted-foreground">(235)</span>
-                    </div>
-                     <div className="flex items-center gap-2 bg-secondary p-1 rounded-full">
-                        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
-                            <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="font-bold text-lg w-8 text-center">{quantity}</span>
-                         <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(1)}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                <p className="text-foreground/80 leading-relaxed">{product.description}</p>
-                
-                {product.hasVariants && product.variantOptions?.length > 0 && (
-                    <div className="space-y-4">
-                        {product.variantOptions.filter(opt => opt.name && opt.values).map(option => (
-                            <div key={option.name}>
-                                <p className="font-semibold mb-2">{option.name}</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {option.values.split(',').map(value => {
-                                        const trimmedValue = value.trim();
-                                        const isSelected = selectedVariant[option.name] === trimmedValue;
-                                        return (
-                                            <Button 
-                                                key={trimmedValue} 
-                                                variant={isSelected ? "default" : "outline"} 
-                                                className="rounded-full"
-                                                onClick={() => handleVariantSelect(option.name, trimmedValue)}
-                                            >
-                                                {trimmedValue}
-                                            </Button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+    <div className="md:grid md:grid-cols-2 md:gap-8 lg:gap-12">
+      {/* Image Gallery */}
+      <div className="space-y-4">
+        <div className="bg-secondary rounded-xl p-4 md:p-8">
+            <div className="aspect-square relative">
+            <Image
+                src={mainImage.url}
+                alt={product.name}
+                fill
+                className="object-contain"
+                data-ai-hint={mainImage.hint}
+            />
             </div>
         </div>
+        <div className="px-8 md:px-0">
+            <Carousel opts={{ align: "start", loop: true, }} className="w-full max-w-sm mx-auto md:max-w-none">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                    {allImages.map((img, i) => (
+                        <CarouselItem key={i} className="pl-2 md:pl-4 basis-1/4">
+                              <button onClick={() => setSelectedImageIndex(i)} className={`aspect-square relative rounded-lg overflow-hidden border-2 w-full ${i === selectedImageIndex ? 'border-primary' : 'border-transparent'}`}>
+                                <Image
+                                    src={img.url}
+                                    alt={`${product.name} thumbnail ${i+1}`}
+                                    fill
+                                    className="object-cover"
+                                    data-ai-hint={img.hint}
+                                />
+                            </button>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex"/>
+            </Carousel>
+        </div>
+      </div>
 
-        {/* Sticky Footer */}
-        <ProductActions product={product} quantity={quantity} />
+      {/* Product Details */}
+      <div className="px-4 py-6 md:p-0 space-y-6">
+          <div className="flex justify-between items-start">
+              <div>
+                  <p className="text-muted-foreground font-semibold">{product.category}</p>
+                  <h1 className="text-3xl font-bold font-headline">{product.name}</h1>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleShare}>
+                  <Share2 />
+              </Button>
+          </div>
+
+           <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold font-headline text-primary">₹{product.price.toFixed(2)}</span>
+              {product.compareAtPrice && (
+                  <span className="text-xl text-muted-foreground line-through">₹{product.compareAtPrice.toFixed(2)}</span>
+              )}
+          </div>
+
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400"/>
+                  <span className="font-bold">4.9</span>
+                  <span className="text-sm text-muted-foreground">(235)</span>
+              </div>
+                <div className="flex items-center gap-2 bg-secondary p-1 rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
+                      <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="font-bold text-lg w-8 text-center">{quantity}</span>
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => handleQuantityChange(1)}>
+                      <Plus className="h-4 w-4" />
+                  </Button>
+              </div>
+          </div>
+
+          <p className="text-foreground/80 leading-relaxed">{product.description}</p>
+          
+          {product.hasVariants && product.variantOptions?.length > 0 && (
+              <div className="space-y-4">
+                  {product.variantOptions.filter(opt => opt.name && opt.values).map(option => (
+                      <div key={option.name}>
+                          <p className="font-semibold mb-2">{option.name}</p>
+                          <div className="flex flex-wrap gap-2">
+                              {option.values.split(',').map(value => {
+                                  const trimmedValue = value.trim();
+                                  const isSelected = selectedVariant[option.name] === trimmedValue;
+                                  return (
+                                      <Button 
+                                          key={trimmedValue} 
+                                          variant={isSelected ? "default" : "outline"} 
+                                          className="rounded-full"
+                                          onClick={() => handleVariantSelect(option.name, trimmedValue)}
+                                      >
+                                          {trimmedValue}
+                                      </Button>
+                                  );
+                              })}
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          )}
+
+          <div className="hidden md:block pt-4">
+            <ProductActions product={product} quantity={quantity} />
+          </div>
+      </div>
+       <div className="md:hidden">
+            <ProductActions product={product} quantity={quantity} />
+        </div>
     </div>
   );
 }

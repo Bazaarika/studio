@@ -32,22 +32,23 @@ export function ProductActions({ product, quantity }: ProductActionsProps) {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30 md:hidden">
-            <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between gap-2 h-20">
-                    <div className="flex flex-col items-start">
+        <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30 md:static md:border-0 md:bg-transparent md:p-0">
+            <div className="container mx-auto px-4 md:px-0">
+                <div className="flex items-center justify-between gap-2 h-20 md:h-auto">
+                    <div className="flex flex-col items-start md:hidden">
                         <span className="text-sm text-muted-foreground">Price</span>
                         <span className="text-xl font-bold font-headline">₹{product.price.toFixed(2)}</span>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 w-full">
                         <Button size="lg" variant="outline" className="rounded-full flex-1" onClick={handleAddToCart}>
                            <ShoppingCart className="h-5 w-5 md:mr-2" /> 
                            <span className="hidden md:inline">Add To Cart</span>
+                           <span className="inline md:hidden">Add to Cart</span>
                         </Button>
                         <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-grow" onClick={handleBuyNow}>
                             <Zap className="h-5 w-5 md:mr-2" /> 
                             <span className="hidden md:inline">Buy Now</span>
-                             <span className="inline md:hidden">Buy Now</span>
+                            <span className="inline md:hidden">Buy Now</span>
                         </Button>
                     </div>
                 </div>
