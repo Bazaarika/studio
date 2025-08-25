@@ -16,15 +16,16 @@ export default function SendNotificationPage() {
     const [body, setBody] = useState('');
     const [iconUrl, setIconUrl] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [topic, setTopic] = useState('all'); // New state for topic
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !body) {
+        if (!title || !body || !topic) {
             toast({
                 title: "Missing Fields",
-                description: "Title and Message are required.",
+                description: "Title, Message, and Topic are required.",
                 variant: "destructive"
             });
             return;
@@ -32,15 +33,16 @@ export default function SendNotificationPage() {
         setIsLoading(true);
 
         try {
-            await sendPushNotification({ title, body, icon: iconUrl, image: imageUrl });
+            await sendPushNotification({ title, body, topic, icon: iconUrl, image: imageUrl });
             toast({
                 title: "Notification Sent!",
-                description: "Your notification has been sent to all subscribed users."
+                description: `Your notification has been sent to the "${topic}" topic.`
             });
             setTitle('');
             setBody('');
             setIconUrl('');
             setImageUrl('');
+            // We keep the topic field as is, in case the admin wants to send another to the same topic.
         } catch (error) {
             console.error("Failed to send notification:", error);
             toast({
@@ -59,11 +61,22 @@ export default function SendNotificationPage() {
                 <CardHeader>
                     <CardTitle>Send Push Notification</CardTitle>
                     <CardDescription>
-                        Compose and send a notification to all subscribed users.
+                        Compose and send a notification to all subscribed users in a specific topic.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="topic">Topic</Label>
+                            <Input 
+                                id="topic" 
+                                value={topic} 
+                                onChange={(e) => setTopic(e.target.value)} 
+                                placeholder="e.g., all"
+                                required
+                            />
+                             <p className="text-xs text-muted-foreground">The notification will be sent to users subscribed to this topic.</p>
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="title">Notification Title</Label>
                             <Input 

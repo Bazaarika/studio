@@ -8,6 +8,7 @@ import serviceAccount from '../../../services.json';
 interface NotificationPayload {
     title: string;
     body: string;
+    topic: string;
     icon?: string;
     image?: string;
 }
@@ -22,7 +23,7 @@ function initializeFirebaseAdmin() {
     const serviceAccountParams = {
         projectId: serviceAccount.project_id,
         clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'), // Important for env variables
+        privateKey: serviceAccount.private_key,
     }
 
     return admin.initializeApp({
@@ -36,31 +37,30 @@ function initializeFirebaseAdmin() {
 }
 
 /**
- * Subscribes a user's FCM token to the 'all_users' topic.
+ * Subscribes a user's FCM token to a specific topic.
  * This is a server-only action.
  */
-export async function subscribeToTopic(token: string) {
+export async function subscribeToTopic(token: string, topic: string) {
     try {
         const app = initializeFirebaseAdmin();
-        await getMessaging(app).subscribeToTopic(token, "all_users");
-        console.log(`Successfully subscribed token to topic: all_users`);
+        await getMessaging(app).subscribeToTopic(token, topic);
+        console.log(`Successfully subscribed token to topic: ${topic}`);
     } catch (error) {
-        console.error("Error subscribing to topic:", error);
-        // We don't throw here to avoid client-side errors for a background process,
-        // but we log it to the server console.
+        console.error(`Error subscribing to topic ${topic}:`, error);
+        throw new Error(`Failed to subscribe to topic: ${topic}`);
     }
 }
 
 
 /**
- * Sends a push notification to all users subscribed to the 'all_users' topic.
+ * Sends a push notification to all users subscribed to a specific topic.
  */
 export async function sendPushNotification(payload: NotificationPayload) {
   try {
     const app = initializeFirebaseAdmin();
 
     const message = {
-      topic: "all_users",
+      topic: payload.topic,
       notification: {
         title: payload.title,
         body: payload.body,

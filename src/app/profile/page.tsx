@@ -3,7 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import {
   ChevronRight,
@@ -18,6 +18,7 @@ import {
   Loader2,
   Home,
   Check,
+  Bell,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -29,6 +30,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/lib/firebase/firestore";
 import { useTheme, themes } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
+import { messaging } from "@/lib/firebase/config";
+import { getToken, isSupported } from "firebase/messaging";
+import { subscribeToTopic } from "@/lib/firebase/actions";
 
 
 export default function ProfilePage() {
@@ -59,6 +63,7 @@ function ProfileView() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   
   const [displayName, setDisplayName] = useState('');
   const [shippingAddress, setShippingAddress] = useState<Address>({
@@ -107,6 +112,39 @@ function ProfileView() {
       await saveAddress(shippingAddress);
       setIsSubmitting(false);
       setIsAddressModalOpen(false);
+  }
+
+  const handleSubscription = async () => {
+    setIsSubscribing(true);
+    try {
+        const isMessagingSupported = await isSupported();
+        if (!messaging || !isMessagingSupported) {
+            toast({ title: "Notifications Not Supported", description: "Your browser does not support push notifications.", variant: "destructive" });
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            toast({ title: "Permission Denied", description: "You need to grant permission to receive notifications.", variant: "destructive" });
+            return;
+        }
+
+        const vapidKey = 'BBRz-6gqWxn_FwsA6bQz-u-0Tq-r_sE_hJ-8XyV8Zz-2wL7Y_zC6wR_jX-7Y_o_cK_xG_jQ_gY_hA-1i_xI_e-A';
+        const currentToken = await getToken(messaging, { vapidKey });
+
+        if (currentToken) {
+            await subscribeToTopic(currentToken, 'all');
+            toast({ title: "Subscribed!", description: "You will now receive all notifications." });
+        } else {
+            throw new Error("Could not get registration token.");
+        }
+
+    } catch (error) {
+        console.error("Error during subscription:", error);
+        toast({ title: "Subscription Failed", description: "Could not subscribe to notifications. Please try again.", variant: "destructive" });
+    } finally {
+        setIsSubscribing(false);
+    }
   }
 
   const accountSettings = [
@@ -200,6 +238,23 @@ function ProfileView() {
                 ))}
              </div>
           </CardContent>
+        </Card>
+
+         <Card>
+            <CardHeader>
+                <CardTitle className="text-lg">NOTIFICATION SETTINGS</CardTitle>
+                <CardDescription>Manage how you receive notifications from us.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button onClick={handleSubscription} disabled={isSubscribing} className="w-full">
+                    {isSubscribing ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Bell className="mr-2 h-4 w-4" />
+                    )}
+                    Subscribe to All Notifications
+                </Button>
+            </CardContent>
         </Card>
         
         <Card>
