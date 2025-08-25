@@ -103,12 +103,19 @@ export function CheckoutClient() {
     async function prepareCheckoutItems() {
         setLoadingItems(true);
         if (isBuyNow && productId) {
-            const product = await getProduct(productId);
-            if (product) {
-                setCheckoutItems([{...product, quantity: quantity}]);
-            } else {
-                toast({ title: "Product not found", variant: "destructive"});
-                router.push('/');
+            try {
+                const product = await getProduct(productId);
+                if (product) {
+                    setCheckoutItems([{...product, quantity: quantity}]);
+                } else {
+                    toast({ title: "Product not found", description: "The item you tried to buy is no longer available.", variant: "destructive"});
+                    router.push('/');
+                    return; // Stop execution
+                }
+            } catch (error) {
+                 toast({ title: "Error", description: "Could not fetch product details.", variant: "destructive"});
+                 router.push('/');
+                 return; // Stop execution
             }
         } else {
             setCheckoutItems(mainCart);
@@ -120,14 +127,14 @@ export function CheckoutClient() {
 
 
   useEffect(() => {
-    if (!loadingItems && checkoutItems.length === 0) {
+    if (!loadingItems && !isBuyNow && checkoutItems.length === 0) {
       toast({
           title: "Your cart is empty",
           description: "Add some items to checkout.",
       })
       router.push('/categories');
     }
-  }, [loadingItems, checkoutItems, router, toast]);
+  }, [loadingItems, checkoutItems, router, toast, isBuyNow]);
 
   const handlePlaceOrder = async () => {
     if (isPlacingOrder) return;
