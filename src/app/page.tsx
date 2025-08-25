@@ -9,9 +9,9 @@ import type { Product } from '@/lib/mock-data';
 import { getProducts } from '@/lib/firebase/firestore';
 import { ArrowRight, Timer, History, Loader2 } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Header } from '@/components/header';
-import { Card, CardContent } from '@/components/ui/card';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 // Helper function to get the deal of the day based on the current date
 const getDealOfTheDay = (products: Product[]): Product | null => {
@@ -116,10 +116,21 @@ export default function Home() {
   }, [handleObserver]);
 
   const dealOfTheDay = getDealOfTheDay(allProducts);
+  const discountPercent = dealOfTheDay?.compareAtPrice && dealOfTheDay?.price
+    ? Math.round(((dealOfTheDay.compareAtPrice - dealOfTheDay.price) / dealOfTheDay.compareAtPrice) * 100)
+    : 0;
+
+  const CountdownBlock = ({ value, label }: { value: string, label: string }) => (
+      <div className="flex flex-col items-center">
+          <div className="text-2xl md:text-3xl font-bold text-background bg-primary/20 rounded-lg p-2 w-12 h-12 flex items-center justify-center">
+              {value}
+          </div>
+          <span className="text-xs text-muted-foreground mt-1">{label}</span>
+      </div>
+  );
 
   return (
     <>
-      <Header />
       <div className="space-y-12">
         {/* Hero Section */}
         <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[300px] flex items-center">
@@ -149,38 +160,49 @@ export default function Home() {
         {dealOfTheDay && (
           <section>
              <h2 className="text-2xl font-bold font-headline mb-4">Deal of the Day</h2>
-             <Card className="overflow-hidden bg-primary/5 border-2 border-primary/20">
-              <CardContent className="p-0">
-                <div className="grid md:grid-cols-2">
-                  <div className="relative aspect-[4/3] md:aspect-square">
-                     <Image 
-                        src={dealOfTheDay.images?.[0]?.url || 'https://placehold.co/600x600.png'}
-                        alt={dealOfTheDay.name}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={dealOfTheDay.images?.[0]?.hint || ''}
-                     />
-                  </div>
-                  <div className="p-6 flex flex-col justify-center">
-                    <h3 className="text-2xl md:text-3xl font-bold font-headline">{dealOfTheDay.name}</h3>
-                    <p className="text-muted-foreground mt-2">{dealOfTheDay.description}</p>
-                    <div className="flex items-baseline gap-2 mt-4">
-                        <span className="text-3xl font-bold text-primary">₹{dealOfTheDay.price.toFixed(2)}</span>
-                        {dealOfTheDay.compareAtPrice && (
-                            <span className="text-lg text-muted-foreground line-through">₹{dealOfTheDay.compareAtPrice.toFixed(2)}</span>
-                        )}
-                    </div>
-                     <div className="mt-4 flex items-center gap-2 text-primary font-semibold">
-                        <Timer className="h-6 w-6"/>
-                        <span>Offer ends in: {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}</span>
-                    </div>
-                    <Button asChild size="lg" className="mt-6 rounded-full w-full md:w-auto">
-                      <Link href={`/product/${dealOfTheDay.id}`}>View Deal</Link>
-                    </Button>
-                  </div>
+             <div className={cn(
+                  "grid md:grid-cols-2 gap-6 md:gap-8 rounded-2xl p-4 md:p-6",
+                  "bg-gradient-to-br from-primary/10 via-secondary to-secondary border-2 border-primary/20"
+              )}>
+                <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden">
+                   <Image 
+                      src={dealOfTheDay.images?.[0]?.url || 'https://placehold.co/600x600.png'}
+                      alt={dealOfTheDay.name}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={dealOfTheDay.images?.[0]?.hint || ''}
+                   />
+                   <Badge variant="destructive" className="absolute top-3 left-3 text-sm py-1 px-3">On Sale!</Badge>
                 </div>
-              </CardContent>
-             </Card>
+                <div className="flex flex-col justify-center gap-4">
+                  <h3 className="text-2xl md:text-3xl font-bold font-headline">{dealOfTheDay.name}</h3>
+                  <p className="text-muted-foreground text-sm">{dealOfTheDay.description}</p>
+                  <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-primary">₹{dealOfTheDay.price.toFixed(2)}</span>
+                      {dealOfTheDay.compareAtPrice && (
+                          <>
+                            <span className="text-lg text-muted-foreground line-through">₹{dealOfTheDay.compareAtPrice.toFixed(2)}</span>
+                            <Badge variant="secondary" className="text-primary font-bold">{discountPercent}% OFF</Badge>
+                          </>
+                      )}
+                  </div>
+
+                   <div className="space-y-2">
+                       <p className="font-semibold text-sm flex items-center gap-2"><Timer className="h-5 w-5 text-primary"/> Offer ends in:</p>
+                       <div className="flex items-center gap-2 text-primary">
+                           <CountdownBlock value={timeLeft.hours} label="Hours" />
+                           <span className="text-2xl font-bold pb-4">:</span>
+                           <CountdownBlock value={timeLeft.minutes} label="Mins" />
+                            <span className="text-2xl font-bold pb-4">:</span>
+                           <CountdownBlock value={timeLeft.seconds} label="Secs" />
+                       </div>
+                   </div>
+
+                  <Button asChild size="lg" className="mt-2 rounded-full w-full md:w-auto">
+                    <Link href={`/product/${dealOfTheDay.id}`}>View Deal</Link>
+                  </Button>
+                </div>
+              </div>
           </section>
         )}
 
@@ -232,3 +254,5 @@ export default function Home() {
     </>
   );
 }
+
+    
