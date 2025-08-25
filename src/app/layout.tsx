@@ -46,7 +46,29 @@ export default function RootLayout({
     );
   }
   
-  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/categories' || pathname === '/checkout' || pathname === '/profile';
+  const isAdminPage = pathname.startsWith('/admin');
+
+  if (isAdminPage) {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <title>Bazaarika Admin</title>
+          <meta name="description" content="Admin dashboard" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+        </head>
+        <body className="font-body antialiased">
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </body>
+      </html>
+    )
+  }
+
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile';
   const showHeader = !isImmersivePage;
   const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
 
