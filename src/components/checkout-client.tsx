@@ -17,6 +17,12 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { getProduct, placeOrder } from "@/lib/firebase/firestore";
 import type { Product, OrderItem } from "@/lib/mock-data";
 
+// Extend window interface for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 // Custom SwipeButton component
 const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: string }) => {
@@ -134,29 +140,8 @@ export function CheckoutClient() {
     }
   }, [loadingItems, checkoutItems, router, toast, isBuyNow]);
 
-    const handlePlaceOrder = async () => {
-        if (isPlacingOrder) return;
-        setIsPlacingOrder(true);
-
-        if (!user) {
-            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
-            router.push('/login');
-            setIsPlacingOrder(false);
-            return;
-        }
-
-        if (!address?.address) {
-            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
-            router.push('/profile');
-            setIsPlacingOrder(false);
-            return;
-        }
-        
-        if (!paymentMethod) {
-            toast({ title: "No Payment Method", description: "Please select a payment method.", variant: "destructive" });
-            setIsPlacingOrder(false);
-            return;
-        }
+    const placeOrderInDb = async (paymentId?: string) => {
+        if (!user || !address?.address || !paymentMethod) return;
 
         const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         const shipping = subtotal > 0 ? 50.00 : 0;
@@ -172,7 +157,7 @@ export function CheckoutClient() {
         }));
 
         try {
-            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod);
+            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod, paymentId);
             
             if (!isBuyNow) {
                 clearCart();
@@ -184,8 +169,78 @@ export function CheckoutClient() {
         } catch (error) {
             console.error("Failed to place order:", error);
             toast({ title: "Order Failed", description: "There was an issue placing your order. Please try again.", variant: "destructive" });
-            setIsPlacingOrder(false);
+        } finally {
+             setIsPlacingOrder(false);
         }
+    }
+
+    const handleCodOrder = () => {
+        setIsPlacingOrder(true);
+        if (!user) {
+            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
+            router.push('/login');
+            setIsPlacingOrder(false);
+            return;
+        }
+        if (!address?.address) {
+            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
+            router.push('/profile');
+            setIsPlacingOrder(false);
+            return;
+        }
+        placeOrderInDb("COD");
+    };
+
+    const handleOnlinePayment = () => {
+        setIsPlacingOrder(true);
+        if (!user) {
+            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
+            router.push('/login');
+            setIsPlacingOrder(false);
+            return;
+        }
+        if (!address?.address) {
+            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
+            router.push('/profile');
+            setIsPlacingOrder(false);
+            return;
+        }
+
+        const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        const shipping = subtotal > 0 ? 50.00 : 0;
+        const total = subtotal + shipping;
+
+        const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+            amount: total * 100, // Amount in paise
+            currency: "INR",
+            name: "Bazaarika",
+            description: "E-commerce Transaction",
+            image: "https://bazaarika.in/wp-content/uploads/2024/04/bazaarika-favicon.webp",
+            handler: function (response: any) {
+                placeOrderInDb(response.razorpay_payment_id);
+            },
+            prefill: {
+                name: user.displayName || 'Bazaarika User',
+                email: user.email || '',
+                contact: ''
+            },
+            notes: {
+                address: [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ')
+            },
+            theme: {
+                color: "#FACC15"
+            },
+            modal: {
+                ondismiss: function() {
+                    setIsPlacingOrder(false);
+                    toast({ title: "Payment Canceled", description: "You can try again anytime.", variant: "destructive"});
+                }
+            }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
     };
   
   if (authLoading || loadingItems) {
@@ -201,6 +256,14 @@ export function CheckoutClient() {
   const total = subtotal + shipping;
 
   const formattedAddress = address ? [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ') : '';
+
+  const handleSwipeComplete = () => {
+    if (paymentMethod === 'online') {
+        handleOnlinePayment();
+    } else if (paymentMethod === 'cod') {
+        handleCodOrder();
+    }
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-8 pb-24">
@@ -313,7 +376,7 @@ export function CheckoutClient() {
                     </div>
                 ) : paymentMethod && formattedAddress ? (
                     <SwipeButton 
-                        onComplete={handlePlaceOrder}
+                        onComplete={handleSwipeComplete}
                         text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
                     />
                 ) : (

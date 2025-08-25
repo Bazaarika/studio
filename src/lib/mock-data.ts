@@ -65,6 +65,7 @@ export interface Order {
     items: OrderItem[];
     shippingAddress: Address;
     paymentMethod: string;
+    paymentId?: string;
     trackingHistory: { status: string; date: string; location: string }[];
 }
 

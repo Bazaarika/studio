@@ -123,22 +123,31 @@ export const placeOrder = async (
     items: OrderItem[], 
     total: number, 
     shippingAddress: Address, 
-    paymentMethod: string
+    paymentMethod: string,
+    paymentId?: string
 ): Promise<string> => {
     try {
-        const orderData = {
+        const orderData: Omit<Order, 'id'> = {
             userId,
-            createdAt: serverTimestamp(),
+            createdAt: new Date().toISOString(), // Using ISO string for consistency
             status: 'Processing',
             total,
             items,
             shippingAddress,
             paymentMethod,
+            paymentId: paymentId || 'N/A',
             trackingHistory: [
                 { status: 'Order Placed', date: new Date().toISOString(), location: 'Bazaarika.com' },
             ]
         };
-        const docRef = await addDoc(collection(db, "orders"), orderData);
+        
+        // Add serverTimestamp for Firestore's internal use
+        const dataToSave = {
+            ...orderData,
+            createdAt: serverTimestamp(),
+        };
+
+        const docRef = await addDoc(collection(db, "orders"), dataToSave);
         return docRef.id;
     } catch (error) {
         console.error("Error placing order: ", error);
