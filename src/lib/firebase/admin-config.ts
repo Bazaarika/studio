@@ -10,13 +10,19 @@ export function initializeFirebaseAdmin() {
   try {
     const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
     if (!serviceAccountKey) {
-        console.error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
-        // This is a server-side error, so we can throw to indicate a critical misconfiguration
-        throw new Error("Firebase Admin credentials are not set in the environment.");
+        throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
     }
 
+    let serviceAccountJson;
+    try {
+        serviceAccountJson = JSON.parse(serviceAccountKey);
+    } catch(e) {
+        console.error("Failed to parse GOOGLE_APPLICATION_CREDENTIALS. Make sure it's a valid JSON string with no extra characters or line breaks.", e);
+        throw new Error("Invalid format for Firebase Admin credentials.");
+    }
+    
     admin.initializeApp({
-      credential: admin.credential.cert(JSON.parse(serviceAccountKey)),
+      credential: admin.credential.cert(serviceAccountJson),
     });
 
   } catch (error) {
