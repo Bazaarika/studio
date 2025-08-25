@@ -1,8 +1,8 @@
-
 'use server';
 
 import admin from 'firebase-admin';
 import { getMessaging } from "firebase-admin/messaging";
+import serviceAccount from '../../../services.json';
 
 interface NotificationPayload {
     title: string;
@@ -11,38 +11,27 @@ interface NotificationPayload {
     image?: string;
 }
 
-// This function initializes Firebase Admin SDK on-demand.
-// It's designed to be idempotent (safe to call multiple times).
+// Helper function to initialize Firebase Admin SDK safely
 function initializeFirebaseAdmin() {
   if (admin.apps.length > 0) {
     return;
   }
-
-  const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-  if (!serviceAccountKey) {
-    console.error("Firebase Admin SDK Error: GOOGLE_APPLICATION_CREDENTIALS env variable is not set.");
-    throw new Error("Firebase Admin credentials are not configured on the server.");
-  }
-
+  
   try {
-    const serviceAccount = JSON.parse(serviceAccountKey);
-    
-    // IMPORTANT: Replace escaped newlines in the private key
-    if (serviceAccount.private_key) {
-        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    // Cast the imported JSON to the correct type for the credential method
+    const serviceAccountParams = {
+        projectId: serviceAccount.project_id,
+        clientEmail: serviceAccount.client_email,
+        privateKey: serviceAccount.private_key,
     }
 
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+      credential: admin.credential.cert(serviceAccountParams),
     });
-    console.log("Firebase Admin SDK initialized successfully.");
+    console.log("Firebase Admin SDK initialized successfully from services.json.");
 
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.message);
-    if (error instanceof SyntaxError) {
-      console.error("The GOOGLE_APPLICATION_CREDENTIALS env variable is not a valid JSON string.");
-    }
     throw new Error("Could not initialize Firebase Admin SDK. Please check server logs for details.");
   }
 }
