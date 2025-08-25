@@ -2,7 +2,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Home, Package, PanelLeft, ShoppingCart, Users2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,28 +28,31 @@ export function Header() {
                 </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="sm:max-w-xs">
-                <nav className="grid gap-6 text-lg font-medium">
-                    <Link
-                        href="#"
-                        className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
-                    >
-                       B
-                        <span className="sr-only">Bazaarika Admin</span>
-                    </Link>
-                     {navLinks.map(link => (
-                         <Link
-                            key={link.href}
-                            href={link.href}
-                            className={cn(
-                                "flex items-center gap-4 px-2.5",
-                                pathname === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
+                    <SheetHeader>
+                        <SheetTitle className="sr-only">Menu</SheetTitle>
+                    </SheetHeader>
+                    <nav className="grid gap-6 text-lg font-medium mt-4">
+                        <Link
+                            href="#"
+                            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                         >
-                            <link.icon className="h-5 w-5" />
-                            {link.label}
+                        B
+                            <span className="sr-only">Bazaarika Admin</span>
                         </Link>
-                     ))}
-                </nav>
+                        {navLinks.map(link => (
+                            <Link
+                                key={link.label}
+                                href={link.href}
+                                className={cn(
+                                    "flex items-center gap-4 px-2.5",
+                                    pathname === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <link.icon className="h-5 w-5" />
+                                {link.label}
+                            </Link>
+                        ))}
+                    </nav>
                 </SheetContent>
             </Sheet>
              <div className="hidden sm:block">
