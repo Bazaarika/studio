@@ -1,6 +1,6 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import type { Product } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
@@ -13,6 +13,17 @@ export const addProduct = async (productData: Omit<Product, 'id'>) => {
     throw new Error("Failed to add product");
   }
 };
+
+// Update an existing product
+export const updateProduct = async (id: string, productData: Omit<Product, 'id'>) => {
+    const docRef = doc(db, "products", id);
+    try {
+        await updateDoc(docRef, productData);
+    } catch (e) {
+        console.error("Error updating document: ", e);
+        throw new Error("Failed to update product");
+    }
+}
 
 // Get all products from the "products" collection
 export const getProducts = async (): Promise<Product[]> => {
@@ -67,3 +78,5 @@ export const updateUserAddress = async (userId: string, address: Address) => {
     const userDocRef = doc(db, "users", userId);
     await setDoc(userDocRef, { address }, { merge: true });
 };
+
+    

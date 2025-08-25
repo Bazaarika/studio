@@ -147,7 +147,9 @@ export default function ProductsPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                     className="text-destructive" 
                                                     onClick={() => handleDeleteClick(product.id!)}
@@ -191,3 +193,5 @@ export default function ProductsPage() {
         </div>
     )
 }
+
+    
