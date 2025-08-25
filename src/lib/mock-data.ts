@@ -3,9 +3,47 @@ import type { ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
 import { Shirt, Diamond, Watch, Footprints, Sparkles, ShoppingBag } from 'lucide-react';
 
+// New, more detailed Product structure
+export interface ImageField {
+    url: string;
+    hint: string;
+}
+
+export interface VariantOption {
+    name: string;
+    values: string; // Comma-separated
+}
+
+export interface GeneratedVariant {
+    id: string;
+    [key: string]: string | number; // e.g., Size: 'S', Color: 'Red'
+    price: number;
+    stock: number;
+}
+
 export interface Product {
-  id: string;
+  id?: string; // Optional because it's added by Firestore
   name: string;
+  description: string;
+  category: string;
+  price: number;
+  compareAtPrice?: number;
+  stock: number;
+  sku?: string;
+  images: ImageField[];
+  status: 'Active' | 'Draft';
+  vendor: string;
+  tags: string[];
+  hasVariants: boolean;
+  variantOptions: VariantOption[];
+  variants: GeneratedVariant[];
+}
+
+
+// Simple Product for Cart and Orders for now
+export interface SimpleProduct {
+  id: string;
+  name:string;
   description: string;
   price: number;
   imageUrl: string;
@@ -24,7 +62,7 @@ export interface Order {
     date: string;
     status: 'Delivered' | 'Shipped' | 'Processing';
     total: number;
-    items: (Product & { quantity: number })[];
+    items: (SimpleProduct & { quantity: number })[];
     shippingAddress: string;
     paymentMethod: string;
     trackingHistory: { status: string; date: string; location: string }[];
@@ -39,7 +77,8 @@ export const categories: Category[] = [
   { id: 'bags', name: 'Bags', icon: ShoppingBag },
 ];
 
-export const mockProducts: Omit<Product, 'id'>[] = [
+// This mock data is now for the SimpleProduct type for frontend display
+export const mockProducts: Omit<SimpleProduct, 'id'>[] = [
   {
     name: 'Elegant Floral Dress',
     description: 'A beautiful floral dress perfect for summer occasions. Made from lightweight and breathable fabric.',
@@ -64,7 +103,7 @@ export const mockProducts: Omit<Product, 'id'>[] = [
     category: 'jewelry',
     aiHint: 'silver necklace',
   },
-  {
+   {
     name: 'Running Sneakers',
     description: 'High-performance running sneakers with cushioned soles and a breathable mesh upper. Ideal for daily workouts.',
     price: 4599,
@@ -80,129 +119,9 @@ export const mockProducts: Omit<Product, 'id'>[] = [
     category: 'accessories',
     aiHint: 'silk scarf',
   },
-  {
-    name: 'Modern Linen Shirt',
-    description: 'A stylish and comfortable linen shirt for a relaxed yet sophisticated look. Perfect for warm weather.',
-    price: 2999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'linen shirt',
-  },
-  {
-    name: 'Gold Hoop Earrings',
-    description: 'Classic gold hoop earrings that add a touch of elegance to any outfit. Lightweight and comfortable for all-day wear.',
-    price: 4999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'jewelry',
-    aiHint: 'gold earrings',
-  },
-  {
-    name: 'Leather Ankle Boots',
-    description: 'Chic and versatile leather ankle boots. Features a comfortable block heel and side zipper.',
-    price: 6999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'shoes',
-    aiHint: 'leather boots',
-  },
-  {
-    name: 'Canvas Tote Bag',
-    description: 'A durable and spacious canvas tote bag, perfect for everyday use, from shopping to beach trips.',
-    price: 1599,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'bags',
-    aiHint: 'tote bag',
-  },
-  {
-    name: 'Denim Jacket',
-    description: 'A timeless denim jacket with a modern fit. A versatile piece for any wardrobe.',
-    price: 4299,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'denim jacket',
-  },
-  {
-    name: 'Pearl Stud Earrings',
-    description: 'Elegant freshwater pearl stud earrings, a classic accessory for any formal or casual occasion.',
-    price: 2999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'jewelry',
-    aiHint: 'pearl earrings',
-  },
-  {
-    name: 'Suede Loafers',
-    description: 'Comfortable and stylish suede loafers for a smart-casual look.',
-    price: 3999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'shoes',
-    aiHint: 'suede loafers',
-  },
-  {
-    name: 'Leather Belt',
-    description: 'A high-quality genuine leather belt with a classic buckle.',
-    price: 1999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'accessories',
-    aiHint: 'leather belt',
-  },
-  {
-    name: 'Striped Cotton T-Shirt',
-    description: 'A soft and breathable cotton t-shirt with a classic striped pattern.',
-    price: 1299,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'striped t-shirt',
-  },
-  {
-    name: 'Digital Sports Watch',
-    description: 'A feature-packed digital watch for sports enthusiasts, with a stopwatch, alarm, and backlight.',
-    price: 3599,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'watches',
-    aiHint: 'digital watch',
-  },
-  {
-    name: 'Crossbody Bag',
-    description: 'A compact and stylish crossbody bag, perfect for carrying your essentials on the go.',
-    price: 2799,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'bags',
-    aiHint: 'crossbody bag',
-  },
-  {
-    name: 'Cashmere Sweater',
-    description: 'A luxurious and incredibly soft cashmere sweater, perfect for staying warm in style.',
-    price: 14999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'cashmere sweater',
-  },
-  {
-    name: 'White Canvas Sneakers',
-    description: 'Versatile and comfortable white sneakers that pair well with almost any outfit.',
-    price: 3299,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'shoes',
-    aiHint: 'white sneakers',
-  },
-  {
-    name: ' Aviator Sunglasses',
-    description: 'Classic aviator sunglasses with polarized lenses to protect your eyes from the sun.',
-    price: 2499,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'accessories',
-    aiHint: 'aviator sunglasses',
-  },
-  {
-    name: 'Tailored Chinos',
-    description: 'Smart and comfortable tailored chinos, perfect for both office and casual wear.',
-    price: 3499,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'tailored chinos',
-  },
 ];
 
-export const products: Product[] = mockProducts.map((p, i) => ({ ...p, id: (i + 1).toString() }));
+export const simpleProducts: SimpleProduct[] = mockProducts.map((p, i) => ({ ...p, id: (i + 1).toString() }));
 
 
 export const orders: Order[] = [
@@ -210,10 +129,9 @@ export const orders: Order[] = [
     id: "ORD001",
     date: "June 23, 2024",
     status: "Delivered",
-    total: 249.98,
+    total: 2499,
     items: [
-      { ...products[1], quantity: 1 },
-      { ...products[2], quantity: 1 },
+      { ...simpleProducts[0], quantity: 1 },
     ],
     shippingAddress: '123 Main St, Anytown, 12345, India',
     paymentMethod: 'Credit Card (**** **** **** 1234)',
@@ -228,8 +146,8 @@ export const orders: Order[] = [
     id: "ORD002",
     date: "June 25, 2024",
     status: "Shipped",
-    total: 79.99,
-    items: [{ ...products[0], quantity: 1 }],
+    total: 8999,
+    items: [{ ...simpleProducts[1], quantity: 1 }],
     shippingAddress: '456 Oak Ave, Someville, 67890, India',
     paymentMethod: 'UPI',
     trackingHistory: [

@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
 import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon, Image as ImageIconSparkles } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
-import { categories, mockProducts } from "@/lib/mock-data";
+import { categories } from "@/lib/mock-data";
+import type { Product, ImageField, VariantOption, GeneratedVariant } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
@@ -19,25 +20,13 @@ import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { generateProductDetailsFromImage } from "@/ai/flows/generate-product-details-from-image";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type ImageField = {
-    url: string;
-    hint: string;
-};
-
-type VariantOption = {
-    name: string;
-    values: string; // Comma-separated
-};
-
-type GeneratedVariant = {
-    id: string;
-    [key: string]: string; // e.g., Size: 'S', Color: 'Red'
-    price: string;
-    stock: string;
-};
+import { useRouter } from "next/navigation";
 
 export default function AddProductPage() {
+    const router = useRouter();
+    const { toast } = useToast();
+    
+    // Form State
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("");
@@ -45,26 +34,24 @@ export default function AddProductPage() {
     const [status, setStatus] = useState("Active");
     const [tags, setTags] = useState("");
     const [vendor, setVendor] = useState("");
-
-    const [hasVariants, setHasVariants] = useState(false);
-    const [variantOptions, setVariantOptions] = useState<VariantOption[]>([{ name: "Size", values: "" }]);
-    const [generatedVariants, setGeneratedVariants] = useState<GeneratedVariant[]>([]);
-
-    // State for single product (no variants)
     const [price, setPrice] = useState("");
     const [compareAtPrice, setCompareAtPrice] = useState("");
     const [stock, setStock] = useState("");
     const [sku, setSku] = useState("");
 
+    // Variants State
+    const [hasVariants, setHasVariants] = useState(false);
+    const [variantOptions, setVariantOptions] = useState<VariantOption[]>([{ name: "Size", values: "" }]);
+    const [generatedVariants, setGeneratedVariants] = useState<GeneratedVariant[]>([]);
+
+    // UI State
     const [isLoading, setIsLoading] = useState(false);
-    const [isSampleLoading, setIsSampleLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [isHintLoading, setIsHintLoading] = useState<number | null>(null);
     const [isImageGenLoading, setIsImageGenLoading] = useState(false);
     const [imageUrlForGen, setImageUrlForGen] = useState("");
     const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
-    const { toast } = useToast();
-
+    
     // Generate variant combinations
     const memoizedVariants = useMemo(() => {
         if (!hasVariants || variantOptions.every(opt => !opt.values.trim())) {
@@ -140,16 +127,53 @@ export default function AddProductPage() {
         setGeneratedVariants(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
     };
 
+    const resetForm = () => {
+        setName("");
+        setDescription("");
+        setPrice("");
+        setCompareAtPrice("");
+        setStock("");
+        setSku("");
+        setCategory("");
+        setImages([{ url: "", hint: "" }]);
+        setStatus("Active");
+        setTags("");
+        setVendor("");
+        setHasVariants(false);
+        setVariantOptions([{ name: "Size", values: "" }]);
+        setGeneratedVariants([]);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
         const mainImage = images[0];
 
-        if (!name || !description || !category || !mainImage?.url || !mainImage?.hint || !status || (!hasVariants && (!price || !stock))) {
+        if (!name || !description || !category || !mainImage?.url) {
             toast({
                 title: "Missing fields",
-                description: "Please fill out all required fields.",
+                description: "Please fill out Name, Description, Category, and add at least one image.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
+        
+        if (!hasVariants && (!price || !stock)) {
+             toast({
+                title: "Missing fields",
+                description: "Please provide Price and Stock for the product.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        if (hasVariants && generatedVariants.some(v => !v.price || !v.stock)) {
+            toast({
+                title: "Missing Variant Details",
+                description: "Please fill out Price and Stock for all generated variants.",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -157,15 +181,23 @@ export default function AddProductPage() {
         }
 
         try {
-            const productData = {
+            const productData: Omit<Product, 'id'> = {
                 name,
                 description,
-                price: parseFloat(hasVariants ? generatedVariants[0]?.price || price : price),
-                category,
-                imageUrl: mainImage.url,
-                aiHint: mainImage.hint,
+                category: categories.find(c => c.id === category)?.name || "",
+                status,
+                vendor,
+                tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+                images,
+                price: parseFloat(price) || 0,
+                compareAtPrice: parseFloat(compareAtPrice) || 0,
+                stock: parseInt(stock, 10) || 0,
+                sku,
+                hasVariants,
+                variantOptions: hasVariants ? variantOptions : [],
+                variants: hasVariants ? generatedVariants.map(v => ({...v, price: parseFloat(v.price), stock: parseInt(v.stock, 10)})) : [],
             };
-
+            
             await addProduct(productData);
 
             toast({
@@ -173,22 +205,8 @@ export default function AddProductPage() {
                 description: `${name} has been added to the store.`,
             });
 
-            // Reset form
-            setName("");
-            setDescription("");
-            setPrice("");
-            setCompareAtPrice("");
-            setStock("");
-            setSku("");
-            setCategory("");
-            setImages([{ url: "", hint: "" }]);
-            setStatus("Active");
-            setTags("");
-            setVendor("");
-            setHasVariants(false);
-            setVariantOptions([{ name: "Size", values: "" }]);
-            setGeneratedVariants([]);
-
+            resetForm();
+            router.push('/admin/products');
 
         } catch (error) {
             console.error("Error adding product:", error);
@@ -199,29 +217,6 @@ export default function AddProductPage() {
             });
         } finally {
             setIsLoading(false);
-        }
-    };
-    
-    const handleAddSampleProduct = async () => {
-        setIsSampleLoading(true);
-        try {
-            const randomProduct = mockProducts[Math.floor(Math.random() * mockProducts.length)];
-            
-            await addProduct(randomProduct);
-
-            toast({
-                title: "Sample product added!",
-                description: `${randomProduct.name} has been added to the store.`,
-            });
-        } catch (error: any) {
-             console.error("Error adding sample product:", error);
-            toast({
-                title: "Error Adding Sample Product",
-                description: "Could not add sample product. Please check console for details.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsSampleLoading(false);
         }
     };
 
@@ -453,37 +448,41 @@ export default function AddProductPage() {
                         </CardContent>
                     </Card>
                     
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Pricing</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                <Label htmlFor="price">Price (INR)</Label>
-                                <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="compareAtPrice">Compare-at price (INR)</Label>
-                                <Input id="compareAtPrice" type="number" value={compareAtPrice} onChange={(e) => setCompareAtPrice(e.target.value)} placeholder="e.g., 2999" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {!hasVariants && (
+                        <>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Pricing</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                        <Label htmlFor="price">Price (INR)</Label>
+                                        <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="compareAtPrice">Compare-at price (INR)</Label>
+                                        <Input id="compareAtPrice" type="number" value={compareAtPrice} onChange={(e) => setCompareAtPrice(e.target.value)} placeholder="e.g., 2999" />
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Inventory</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="stock">Stock</Label>
-                                <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="sku">SKU</Label>
-                                <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g., TSHIRT-B-S" />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Inventory</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="stock">Stock</Label>
+                                        <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sku">SKU</Label>
+                                        <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g., TSHIRT-B-S" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </>
+                    )}
 
                     <Card>
                         <CardHeader>
@@ -603,25 +602,7 @@ export default function AddProductPage() {
                             </div>
                         </CardContent>
                     </Card>
-                    
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Sparkles /> Quick Actions
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Button onClick={handleAddSampleProduct} disabled={isSampleLoading} className="w-full" variant="secondary" type="button">
-                                {isSampleLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                                    </>
-                                ) : (
-                                    "Add Sample Product"
-                                )}
-                            </Button>
-                        </CardContent>
-                    </Card>
+
                 </div>
                 <div className="lg:col-span-3 flex justify-end">
                      <Button type="submit" disabled={isLoading} size="lg">
@@ -638,5 +619,3 @@ export default function AddProductPage() {
         </form>
     );
 }
-
-    

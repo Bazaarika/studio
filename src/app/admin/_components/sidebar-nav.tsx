@@ -2,13 +2,14 @@
 "use client"
 
 import Link from "next/link";
-import { Home, Package, ShoppingCart, Users2, Settings } from "lucide-react";
+import { Home, Package, ShoppingCart, Users2, Settings, List } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
     { href: "/admin", icon: Home, label: "Dashboard" },
+    { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
     { href: "#", icon: ShoppingCart, label: "Orders" },
     { href: "#", icon: Users2, label: "Customers" },
