@@ -12,14 +12,22 @@ import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export default function AddProductPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [compareAtPrice, setCompareAtPrice] = useState("");
     const [category, setCategory] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [aiHint, setAiHint] = useState("");
+    const [sku, setSku] = useState("");
+    const [stock, setStock] = useState("");
+    const [status, setStatus] = useState("Active");
+    const [tags, setTags] = useState("");
+    const [vendor, setVendor] = useState("");
+
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
     const { toast } = useToast();
@@ -28,10 +36,10 @@ export default function AddProductPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        if (!name || !description || !price || !category || !imageUrl || !aiHint) {
+        if (!name || !description || !price || !category || !imageUrl || !aiHint || !stock || !status) {
             toast({
                 title: "Missing fields",
-                description: "Please fill out all fields.",
+                description: "Please fill out all required fields.",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -39,6 +47,8 @@ export default function AddProductPage() {
         }
 
         try {
+            // This is where you would normally save all the new fields.
+            // For now, we are still using the simplified addProduct function.
             await addProduct({
                 name,
                 description,
@@ -57,9 +67,16 @@ export default function AddProductPage() {
             setName("");
             setDescription("");
             setPrice("");
+            setCompareAtPrice("");
             setCategory("");
             setImageUrl("");
             setAiHint("");
+            setSku("");
+            setStock("");
+            setStatus("Active");
+            setTags("");
+            setVendor("");
+
 
         } catch (error) {
             console.error("Error adding product:", error);
@@ -98,19 +115,17 @@ export default function AddProductPage() {
 
 
     return (
-        <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <PlusCircle /> Add a New Product
-                        </CardTitle>
-                        <CardDescription>
-                            Fill in the details below to add a new product to your store.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8">
+                <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Product Details</CardTitle>
+                            <CardDescription>
+                                Fill in the details for your new product.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Product Name</Label>
                                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Elegant Floral Dress" />
@@ -119,69 +134,150 @@ export default function AddProductPage() {
                                 <Label htmlFor="description">Product Description</Label>
                                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the product..." />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Media</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="imageUrl">Image URL</Label>
+                                    <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://placehold.co/600x800.png" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="aiHint">AI Image Hint</Label>
+                                    <Input id="aiHint" value={aiHint} onChange={(e) => setAiHint(e.target.value)} placeholder="e.g., floral dress" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Pricing</CardTitle>
+                        </CardHeader>
+                        <CardContent>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="price">Price (INR)</Label>
                                     <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="category">Category</Label>
-                                    <Select value={category} onValueChange={setCategory}>
-                                        <SelectTrigger id="category">
-                                            <SelectValue placeholder="Select a category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {categories.map(cat => (
-                                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="compareAtPrice">Compare-at price (INR)</Label>
+                                    <Input id="compareAtPrice" type="number" value={compareAtPrice} onChange={(e) => setCompareAtPrice(e.target.value)} placeholder="e.g., 2999" />
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+                    
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Inventory</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="sku">SKU</Label>
+                                    <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="FLORAL-DRESS-S" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="stock">Stock</Label>
+                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Product Status</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Select value={status} onValueChange={setStatus}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Set status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Draft">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="secondary">Draft</Badge>
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="Active">
+                                         <div className="flex items-center gap-2">
+                                            <Badge variant="default">Active</Badge>
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Product Organization</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                              <div className="space-y-2">
-                                <Label htmlFor="imageUrl">Image URL</Label>
-                                <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://placehold.co/600x800.png" />
+                                <Label htmlFor="category">Category</Label>
+                                <Select value={category} onValueChange={setCategory}>
+                                    <SelectTrigger id="category">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="aiHint">AI Image Hint</Label>
-                                <Input id="aiHint" value={aiHint} onChange={(e) => setAiHint(e.target.value)} placeholder="e.g., floral dress" />
+                                <Label htmlFor="vendor">Vendor</Label>
+                                <Input id="vendor" value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="e.g., Bazaarika" />
                             </div>
-                            <Button type="submit" disabled={isLoading} className="w-full">
-                                {isLoading ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="tags">Tags</Label>
+                                <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g., summer, new" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Sparkles /> Quick Actions
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Button onClick={handleAddSampleProduct} disabled={isSampleLoading} className="w-full" variant="secondary" type="button">
+                                {isSampleLoading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
                                     </>
                                 ) : (
-                                    "Add Product"
+                                    "Add Sample Product"
                                 )}
                             </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="lg:col-span-3 flex justify-end">
+                     <Button type="submit" disabled={isLoading} size="lg">
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                            </>
+                        ) : (
+                            "Save Product"
+                        )}
+                    </Button>
+                </div>
             </div>
-             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Sparkles /> Quick Actions
-                        </CardTitle>
-                        <CardDescription>
-                            Use this to quickly populate your store with sample data.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={handleAddSampleProduct} disabled={isSampleLoading} className="w-full" variant="secondary">
-                            {isSampleLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
-                                </>
-                            ) : (
-                                "Add Random Sample Product"
-                            )}
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
+        </form>
     );
-}
+
+    
