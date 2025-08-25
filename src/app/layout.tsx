@@ -10,24 +10,16 @@ import { WishlistProvider } from '@/hooks/use-wishlist';
 import { BottomNav } from '@/components/bottom-nav';
 import { Footer } from '@/components/footer';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [showHeader, setShowHeader] = useState(false);
-  const [showBottomNav, setShowBottomNav] = useState(false);
-
-  useEffect(() => {
-    const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories' || pathname === '/cart' || pathname === '/wishlist';
-    setShowHeader(!isImmersivePage);
-
-    const bottomNavHidden = pathname.startsWith('/product/') || pathname.startsWith('/checkout');
-    setShowBottomNav(!bottomNavHidden);
-  }, [pathname]);
+  // The header is now handled by individual pages.
+  // The bottom nav can be controlled here.
+  const isBottomNavHidden = pathname.startsWith('/product/') || pathname.startsWith('/checkout');
 
   return (
     <div className="flex flex-col min-h-screen">
-      {showHeader && <Header />}
       <main className="flex-grow pb-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {children}
@@ -36,7 +28,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
       <div className="hidden md:block">
         <Footer />
       </div>
-      {showBottomNav && <BottomNav />}
+      {!isBottomNavHidden && <BottomNav />}
     </div>
   );
 }
