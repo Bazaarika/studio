@@ -9,12 +9,18 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Input } from './ui/input';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import type { FormEvent } from 'react';
+import { type FormEvent, useState, useEffect } from 'react';
 
 export function Header() {
   const { user } = useAuth();
   const { cart } = useCart();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
   const getInitials = (name: string | null | undefined) => {
@@ -58,7 +64,7 @@ export function Header() {
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href="/cart">
                 <ShoppingCart className="h-6 w-6" />
-                {totalItems > 0 && (
+                {isClient && totalItems > 0 && (
                   <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {totalItems}
                   </span>
