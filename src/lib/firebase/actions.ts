@@ -1,8 +1,5 @@
 
 'use server';
-// By explicitly calling config(), we ensure .env variables are loaded for this server action.
-import { config } from 'dotenv';
-config();
 
 import { getMessaging } from "firebase-admin/messaging";
 import { initializeFirebaseAdmin } from "./admin-config";

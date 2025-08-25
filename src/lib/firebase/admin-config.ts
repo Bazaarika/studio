@@ -1,5 +1,7 @@
 
 import admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // This function is designed to be idempotent (safe to call multiple times).
 export function initializeFirebaseAdmin() {
@@ -8,19 +10,21 @@ export function initializeFirebaseAdmin() {
     return;
   }
 
-  // The GOOGLE_APPLICATION_CREDENTIALS environment variable is expected to be
-  // a JSON string. It is loaded by `dotenv` in the server action that calls this.
-  const serviceAccountKey = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (!serviceAccountKey) {
-    console.error("Firebase Admin SDK Error: GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
+  // Use a dedicated service account file for credentials.
+  // This is more reliable than environment variables in some serverless environments.
+  const serviceAccountPath = path.resolve(process.cwd(), 'service-account.json');
+
+  if (!fs.existsSync(serviceAccountPath)) {
+    console.error("Firebase Admin SDK Error: `service-account.json` file not found.");
+    console.error("Please download your service account key from the Firebase console and place it in the root of your project as `service-account.json`.");
     throw new Error("Firebase Admin credentials are not configured on the server.");
   }
 
   try {
-    const serviceAccountJson = JSON.parse(serviceAccountKey);
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountJson),
+      credential: admin.credential.cert(serviceAccount),
     });
 
   } catch (error: any) {
