@@ -44,6 +44,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty('--background', selectedTheme.colors.background);
       root.style.setProperty('--primary', selectedTheme.colors.primary);
       root.style.setProperty('--accent', selectedTheme.colors.accent);
+
+      // Update the theme-color meta tag
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', `hsl(${selectedTheme.colors.primary})`);
+      }
     }
   }, [theme]);
 
