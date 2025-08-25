@@ -14,7 +14,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories';
+  const isImmersivePage = pathname.startsWith('/product/') || pathname === '/checkout' || pathname === '/profile' || pathname === '/categories' || pathname === '/cart';
   const showHeader = !isImmersivePage;
   const showBottomNav = !pathname.startsWith('/product/') && !pathname.startsWith('/checkout');
 
@@ -59,27 +59,27 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {isAdminPage ? (
-            <>
-              {children}
-              <Toaster />
-            </>
-          ) : (
-            <CartProvider>
-              {isMounted ? (
-                <ClientLayout>{children}</ClientLayout>
-              ) : (
-                 <div className="flex flex-col min-h-screen">
+          <CartProvider>
+            {isAdminPage ? (
+              <>
+                {children}
+                <Toaster />
+              </>
+            ) : (
+              <>
+                {isMounted ? <ClientLayout>{children}</ClientLayout> : (
+                  <div className="flex flex-col min-h-screen">
                     <main className="flex-grow pb-20">
                         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
                             {children}
                         </div>
                     </main>
-                </div>
-              )}
-              <Toaster />
-            </CartProvider>
-          )}
+                  </div>
+                )}
+                <Toaster />
+              </>
+            )}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>
