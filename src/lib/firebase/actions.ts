@@ -4,9 +4,6 @@
 import { getMessaging } from "firebase-admin/messaging";
 import { initializeFirebaseAdmin } from "./admin-config";
 
-// Initialize Firebase Admin
-initializeFirebaseAdmin();
-
 interface NotificationPayload {
     title: string;
     body: string;
@@ -19,6 +16,8 @@ interface NotificationPayload {
  */
 export async function subscribeToTopic(token: string) {
     try {
+        // Initialize on-demand
+        initializeFirebaseAdmin();
         await getMessaging().subscribeToTopic(token, "all_users");
         console.log(`Successfully subscribed token to topic: all_users`);
     } catch (error) {
@@ -32,6 +31,9 @@ export async function subscribeToTopic(token: string) {
  * Sends a push notification to all users subscribed to the 'all_users' topic.
  */
 export async function sendPushNotification(payload: NotificationPayload) {
+  // Initialize on-demand to ensure env vars are loaded.
+  initializeFirebaseAdmin();
+
   const message = {
     topic: "all_users",
     notification: {
