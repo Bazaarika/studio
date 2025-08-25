@@ -6,14 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Truck, Pencil, Loader2, Wallet, CheckCircle, ChevronRight, Banknote } from "lucide-react";
 import Image from "next/image";
-import { useCart } from "@/hooks/use-cart";
-import { useRouter } from "next/navigation";
+import { useCart, type CartItem } from "@/hooks/use-cart";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { getProduct } from "@/lib/firebase/firestore";
+import type { Product } from "@/lib/mock-data";
 
 
 // Custom SwipeButton component
@@ -21,6 +23,7 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
   const x = useMotionValue(0);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [buttonWidth, setButtonWidth] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     if (buttonRef.current) {
@@ -38,6 +41,7 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
       if (buttonWidth > 0) {
         const swipeThreshold = buttonWidth * 0.75;
         if (x.get() > swipeThreshold) {
+            setIsCompleted(true);
             onComplete();
         } else {
             animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
@@ -62,7 +66,7 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
       />
       <motion.div
         className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10 cursor-grab"
-        drag="x"
+        drag={!isCompleted ? "x" : false}
         dragConstraints={dragConstraints}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
@@ -80,19 +84,50 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
 
 
 export function CheckoutClient() {
-  const { cart, clearCart } = useCart();
+  const { cart: mainCart, clearCart } = useCart();
   const { user, address, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+  const productId = searchParams.get('productId');
+  const quantity = parseInt(searchParams.get('quantity') || '1', 10);
 
   useEffect(() => {
-    if (!authLoading && cart.length === 0) {
+    async function prepareCheckoutItems() {
+        setLoadingItems(true);
+        if (isBuyNow && productId) {
+            const product = await getProduct(productId);
+            if (product) {
+                setCheckoutItems([{...product, quantity: quantity}]);
+            } else {
+                toast({ title: "Product not found", variant: "destructive"});
+                router.push('/');
+            }
+        } else {
+            setCheckoutItems(mainCart);
+        }
+        setLoadingItems(false);
+    }
+    prepareCheckoutItems();
+  }, [isBuyNow, productId, quantity, mainCart, router, toast]);
+
+
+  useEffect(() => {
+    if (!loadingItems && checkoutItems.length === 0) {
+      toast({
+          title: "Your cart is empty",
+          description: "Add some items to checkout.",
+      })
       router.push('/categories');
     }
-  }, [authLoading, cart, router]);
+  }, [loadingItems, checkoutItems, router, toast]);
 
   const handlePlaceOrder = async () => {
     if (isPlacingOrder) return;
@@ -110,7 +145,10 @@ export function CheckoutClient() {
 
     // Simulate order placement
     setTimeout(() => {
-      clearCart();
+      // Only clear the main cart if this is not a "Buy Now" purchase
+      if (!isBuyNow) {
+          clearCart();
+      }
       toast({
         title: "Order Placed!",
         description: "Thank you for your purchase.",
@@ -119,7 +157,7 @@ export function CheckoutClient() {
     }, 1500);
   };
   
-  if (authLoading || cart.length === 0) {
+  if (authLoading || loadingItems) {
     return (
         <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -127,7 +165,7 @@ export function CheckoutClient() {
     );
   }
   
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50.00 : 0;
   const total = subtotal + shipping;
 
@@ -197,7 +235,7 @@ export function CheckoutClient() {
             </CardHeader>
              <CardContent className="space-y-4">
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                   {cart.map((item) => {
+                   {checkoutItems.map((item) => {
                        const imageUrl = (item.images && item.images.length > 0 && item.images[0].url) 
                            ? item.images[0].url 
                            : "https://placehold.co/100x100.png";
@@ -242,14 +280,14 @@ export function CheckoutClient() {
                         <Loader2 className="h-6 w-6 animate-spin" />
                         <span className="text-lg font-semibold">Placing Order...</span>
                     </div>
-                ) : paymentMethod ? (
+                ) : paymentMethod && formattedAddress ? (
                     <SwipeButton 
                         onComplete={handlePlaceOrder}
                         text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
                     />
                 ) : (
                     <div className="text-center text-muted-foreground font-medium h-14 flex items-center justify-center">
-                        Please select a payment method
+                       { !formattedAddress ? "Please add a shipping address" : "Please select a payment method" }
                     </div>
                 )}
             </div>
@@ -257,5 +295,3 @@ export function CheckoutClient() {
     </div>
   );
 }
-
-    

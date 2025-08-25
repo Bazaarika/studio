@@ -27,25 +27,23 @@ export function ProductActions({ product, quantity }: ProductActionsProps) {
     };
 
     const handleBuyNow = () => {
-        addToCart(product, quantity);
-        router.push('/checkout');
+        if (!product.id) return;
+        const checkoutUrl = `/checkout?buyNow=true&productId=${product.id}&quantity=${quantity}`;
+        router.push(checkoutUrl);
     };
 
     return (
         <div className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30 md:static md:border-0 md:bg-transparent md:p-0">
             <div className="container mx-auto px-4 md:px-0">
                 <div className="flex items-center justify-between gap-2 h-20 md:h-auto">
-                    <div className="hidden md:flex flex-col items-start">
-                        {/* Desktop view could have price here if needed */}
-                    </div>
-                    {/* Mobile Price Display */}
-                    <div className="flex-shrink-0 md:hidden">
-                        <span className="text-sm text-muted-foreground">Price</span>
+                    {/* Price Display */}
+                    <div className="flex-shrink-0">
+                        <span className="text-sm text-muted-foreground md:hidden">Price</span>
                         <p className="text-xl font-bold font-headline">₹{product.price.toFixed(2)}</p>
                     </div>
 
                     {/* Buttons for both mobile and desktop */}
-                    <div className="flex items-center gap-2 w-full md:w-auto flex-1">
+                    <div className="flex items-center gap-2 flex-grow max-w-[250px] md:max-w-none md:w-auto">
                         <Button size="lg" variant="outline" className="rounded-full w-1/2 md:w-auto md:flex-1" onClick={handleAddToCart}>
                            <ShoppingCart className="h-5 w-5 md:mr-2" /> 
                            <span className="hidden md:inline">Add To Cart</span>
@@ -54,7 +52,7 @@ export function ProductActions({ product, quantity }: ProductActionsProps) {
                         <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground w-1/2 md:w-auto md:flex-grow" onClick={handleBuyNow}>
                             <Zap className="h-5 w-5 md:mr-2" /> 
                             <span className="hidden md:inline">Buy Now</span>
-                            <span className="inline md:hidden">Buy Now</span>
+                            <span className="inline md:hidden">Buy</span>
                         </Button>
                     </div>
                 </div>

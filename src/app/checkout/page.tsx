@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { CheckoutClient } from "@/components/checkout-client";
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -21,4 +21,16 @@ export default function CheckoutPage() {
   }
 
   return <CheckoutClient />;
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        }>
+            <CheckoutPageContent />
+        </Suspense>
+    )
 }
