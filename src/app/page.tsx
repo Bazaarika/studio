@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -66,7 +65,6 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const trendingProducts = products.slice(0, 4);
   const dealOfTheDay = getDealOfTheDay(products);
 
   return (
@@ -136,17 +134,17 @@ export default function Home() {
           </section>
         )}
 
-        {/* Recommended Styles */}
+        {/* All Products */}
         <section>
           <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold font-headline">Recommended Styles</h2>
+              <h2 className="text-2xl font-bold font-headline">All Products</h2>
               <Link href="/categories" className="text-sm font-semibold text-muted-foreground hover:text-primary">
-                  See All
+                  Filter by Category
               </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
+              Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <div className="aspect-[3/4] w-full bg-muted rounded-xl"></div>
                   <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -154,7 +152,7 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              trendingProducts.map((product) => (
+              products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
