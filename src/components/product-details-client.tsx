@@ -13,10 +13,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { useState } from 'react';
 
 export function ProductDetailsClient({ product }: { product: Product }) {
   const sizes = [38.5, 39, 40, 41, 41.5];
-  const allImages = [product.imageUrl, ...[1, 2, 3].map(() => `https://placehold.co/600x600.png`), product.imageUrl];
+  
+  const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const mainImage = allImages[selectedImageIndex];
 
   return (
     <div>
@@ -25,28 +29,28 @@ export function ProductDetailsClient({ product }: { product: Product }) {
             <div className="bg-secondary rounded-xl p-4 md:p-8">
                 <div className="aspect-square relative">
                 <Image
-                    src={product.imageUrl}
+                    src={mainImage.url}
                     alt={product.name}
                     fill
                     className="object-contain"
-                    data-ai-hint={product.aiHint}
+                    data-ai-hint={mainImage.hint}
                 />
                 </div>
             </div>
              <div className="px-8">
                 <Carousel opts={{ align: "start", loop: true, }} className="w-full max-w-sm mx-auto">
                     <CarouselContent className="-ml-2 md:-ml-4">
-                        {allImages.slice(0, 5).map((img, i) => (
+                        {allImages.map((img, i) => (
                             <CarouselItem key={i} className="pl-2 md:pl-4 basis-1/4">
-                                 <div className={`aspect-square relative rounded-lg overflow-hidden border-2 ${i === 0 ? 'border-primary' : 'border-transparent'}`}>
+                                 <button onClick={() => setSelectedImageIndex(i)} className={`aspect-square relative rounded-lg overflow-hidden border-2 w-full ${i === selectedImageIndex ? 'border-primary' : 'border-transparent'}`}>
                                     <Image
-                                        src={img}
+                                        src={img.url}
                                         alt={`${product.name} thumbnail ${i+1}`}
                                         fill
                                         className="object-cover"
-                                        data-ai-hint={product.aiHint}
+                                        data-ai-hint={img.hint}
                                     />
-                                </div>
+                                </button>
                             </CarouselItem>
                         ))}
                     </CarouselContent>
