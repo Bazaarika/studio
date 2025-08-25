@@ -4,17 +4,17 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
+  authDomain: "bazaarika-lite.firebaseapp.com",
+  projectId: "bazaarika-lite",
+  storageBucket: "bazaarika-lite.appspot.com",
+  messagingSenderId: "497294677028",
+  appId: "1:497294677028:web:d6500602307f6d462c74b1",
 };
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getApp ? getAuth(app) : undefined; // Ensure auth is only initialized on client
+const auth = getAuth(app);
 
 export { app, db, auth };

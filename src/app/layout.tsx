@@ -1,52 +1,18 @@
 
-'use client';
-
 import './globals.css';
 import { Header } from '@/components/header';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { CartProvider } from '@/hooks/use-cart';
 import { WishlistProvider } from '@/hooks/use-wishlist';
-import { BottomNav } from '@/components/bottom-nav';
-import { Footer } from '@/components/footer';
-import { usePathname } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
 import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
+import type { Metadata } from 'next';
+import { ClientLayout } from '@/components/client-layout';
 
-function ClientLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const isAdminPage = pathname.startsWith('/admin');
-
-  if (isAdminPage) {
-    return <>{children}</>;
-  }
-  
-  const isProductPage = pathname.startsWith('/product/');
-  const isCheckoutPage = pathname === '/checkout';
-
-  // Only render BottomNav on the client to avoid hydration errors
-  const showBottomNav = isClient && !isAdminPage && !isProductPage && !isCheckoutPage;
-
-  return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-grow pb-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {children}
-        </div>
-      </main>
-      <div className="hidden md:block">
-        <Footer />
-      </div>
-       {showBottomNav && <BottomNav />}
-    </div>
-  );
-}
+export const metadata: Metadata = {
+  title: 'Bazaarika Lite - Modern E-commerce',
+  description: 'Discover the latest trends in fashion and accessories. Your modern e-commerce experience starts here.',
+};
 
 export default function RootLayout({
   children,
@@ -56,8 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Bazaarika Lite</title>
-        <meta name="description" content="A modern e-commerce experience." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
@@ -67,9 +31,10 @@ export default function RootLayout({
           <CartProvider>
             <WishlistProvider>
               <RecentlyViewedProvider>
+                <Header />
                 <ClientLayout>{children}</ClientLayout>
+                <Toaster />
               </RecentlyViewedProvider>
-               <Toaster />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
