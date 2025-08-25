@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, ShoppingCart, Loader2 } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { generateCategories } from '@/ai/flows/generate-categories';
+import Link from 'next/link';
 
 interface CategoriesClientProps {
   products: Product[];
@@ -33,7 +34,6 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
           setAiCategories(['All', ...result.categories]);
         } catch (error) {
           console.error("Failed to fetch AI categories:", error);
-          // Fallback to a default category if AI fails
           setAiCategories(['All']);
         } finally {
           setIsAiLoading(false);
@@ -47,31 +47,33 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let results = [...products];
+    let filtered = products;
 
-    // Filter by selected category first
+    // 1. Filter by category
     if (selectedCategory !== 'All') {
       const lowerCaseCategory = selectedCategory.toLowerCase();
-      results = results.filter(product =>
-        product.category.toLowerCase().includes(lowerCaseCategory) ||
-        product.name.toLowerCase().includes(lowerCaseCategory) ||
-        product.description.toLowerCase().includes(lowerCaseCategory) ||
-        (product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseCategory)))
-      );
+      filtered = filtered.filter(product => {
+        // This logic now correctly checks if the product details contain the category name
+        const inName = product.name.toLowerCase().includes(lowerCaseCategory);
+        const inDescription = product.description.toLowerCase().includes(lowerCaseCategory);
+        const inTags = product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseCategory));
+        const inCategory = product.category.toLowerCase().includes(lowerCaseCategory);
+        return inName || inDescription || inTags || inCategory;
+      });
     }
 
-    // Then, filter by search query on the already filtered results
+    // 2. Filter by search query on the already category-filtered results
     if (searchQuery) {
       const lowerCaseSearch = searchQuery.toLowerCase();
-      results = results.filter(product =>
+      filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(lowerCaseSearch) ||
         product.description.toLowerCase().includes(lowerCaseSearch) ||
         (product.tags && product.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
       );
     }
     
-    return results;
-  }, [products, searchQuery, selectedCategory]);
+    return filtered;
+  }, [products, selectedCategory, searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -89,13 +91,15 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
           <Button variant="ghost" size="icon" className="flex-shrink-0">
             <SlidersHorizontal className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="relative flex-shrink-0">
-            <ShoppingCart className="h-6 w-6" />
-            {totalItems > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {totalItems}
-              </span>
-            )}
+          <Button variant="ghost" size="icon" className="relative flex-shrink-0" asChild>
+            <Link href="/cart">
+                <ShoppingCart className="h-6 w-6" />
+                {totalItems > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {totalItems}
+                </span>
+                )}
+            </Link>
           </Button>
         </div>
 
@@ -110,7 +114,7 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
               <Button
                 key={filter}
                 variant={selectedCategory === filter ? "default" : "secondary"}
-                className="rounded-full"
+                className="rounded-full flex-shrink-0"
                 onClick={() => setSelectedCategory(filter)}
               >
                 {filter}
@@ -122,7 +126,7 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
 
       <section>
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
