@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
 import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon, Image as ImageIconSparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -18,24 +18,41 @@ import { generateImageHint } from "@/ai/flows/generate-image-hint";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { generateProductDetailsFromImage } from "@/ai/flows/generate-product-details-from-image";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type ImageField = {
     url: string;
     hint: string;
 };
 
+type VariantOption = {
+    name: string;
+    values: string; // Comma-separated
+};
+
+type GeneratedVariant = {
+    id: string;
+    [key: string]: string; // e.g., Size: 'S', Color: 'Red'
+    price: string;
+    stock: string;
+};
+
 export default function AddProductPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [price, setPrice] = useState("");
-    const [compareAtPrice, setCompareAtPrice] = useState("");
     const [category, setCategory] = useState("");
     const [images, setImages] = useState<ImageField[]>([{ url: "", hint: "" }]);
-    const [sku, setSku] = useState("");
-    const [stock, setStock] = useState("");
     const [status, setStatus] = useState("Active");
     const [tags, setTags] = useState("");
     const [vendor, setVendor] = useState("");
+
+    const [hasVariants, setHasVariants] = useState(false);
+    const [variantOptions, setVariantOptions] = useState<VariantOption[]>([{ name: "Size", values: "" }]);
+    const [generatedVariants, setGeneratedVariants] = useState<GeneratedVariant[]>([]);
+
+    // State for single product (no variants)
+    const [price, setPrice] = useState("");
+    const [stock, setStock] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
@@ -43,8 +60,47 @@ export default function AddProductPage() {
     const [isHintLoading, setIsHintLoading] = useState<number | null>(null);
     const [isImageGenLoading, setIsImageGenLoading] = useState(false);
     const [imageUrlForGen, setImageUrlForGen] = useState("");
-    const [isGenDialogOpwn, setIsGenDialogOpen] = useState(false);
+    const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
     const { toast } = useToast();
+
+    // Generate variant combinations
+    const memoizedVariants = useMemo(() => {
+        if (!hasVariants || variantOptions.every(opt => !opt.values.trim())) {
+            return [];
+        }
+    
+        const options = variantOptions
+            .filter(opt => opt.name.trim() && opt.values.trim())
+            .map(opt => ({
+                name: opt.name.trim(),
+                values: opt.values.split(',').map(v => v.trim()).filter(v => v),
+            }));
+    
+        if (options.length === 0) return [];
+    
+        const combinations = options.reduce((acc, option) => {
+            if (acc.length === 0) {
+                return option.values.map(value => ({ id: value, [option.name]: value, price: '', stock: '' }));
+            }
+            const newAcc: GeneratedVariant[] = [];
+            acc.forEach(existing => {
+                option.values.forEach(value => {
+                    newAcc.push({
+                        ...existing,
+                        id: `${existing.id} / ${value}`,
+                        [option.name]: value,
+                    });
+                });
+            });
+            return newAcc;
+        }, [] as GeneratedVariant[]);
+    
+        return combinations;
+    }, [hasVariants, variantOptions]);
+
+    useEffect(() => {
+        setGeneratedVariants(memoizedVariants);
+    }, [memoizedVariants]);
 
     const handleImageChange = (index: number, field: keyof ImageField, value: string) => {
         const newImages = [...images];
@@ -60,6 +116,27 @@ export default function AddProductPage() {
         const newImages = images.filter((_, i) => i !== index);
         setImages(newImages);
     };
+    
+    const handleVariantOptionChange = (index: number, field: keyof VariantOption, value: string) => {
+        const newOptions = [...variantOptions];
+        newOptions[index][field] = value;
+        setVariantOptions(newOptions);
+    };
+
+    const addVariantOption = () => {
+        if (variantOptions.length < 2) {
+             setVariantOptions([...variantOptions, { name: "Color", values: "" }]);
+        }
+    };
+
+    const removeVariantOption = (index: number) => {
+        const newOptions = variantOptions.filter((_, i) => i !== index);
+        setVariantOptions(newOptions);
+    };
+
+    const handleGeneratedVariantChange = (id: string, field: 'price' | 'stock', value: string) => {
+        setGeneratedVariants(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,10 +144,10 @@ export default function AddProductPage() {
 
         const mainImage = images[0];
 
-        if (!name || !description || !price || !category || !mainImage?.url || !mainImage?.hint || !stock || !status) {
+        if (!name || !description || !category || !mainImage?.url || !mainImage?.hint || !status || (!hasVariants && (!price || !stock))) {
             toast({
                 title: "Missing fields",
-                description: "Please fill out all required fields, including at least one image.",
+                description: "Please fill out all required fields.",
                 variant: "destructive",
             });
             setIsLoading(false);
@@ -78,15 +155,19 @@ export default function AddProductPage() {
         }
 
         try {
-            // TODO: Update addProduct to handle multiple images
-            await addProduct({
+            // This is where you would structure the data to be saved.
+            // For now, we'll just use the first product's details for the mock addProduct function.
+            const productData = {
                 name,
                 description,
-                price: parseFloat(price),
+                price: parseFloat(hasVariants ? generatedVariants[0]?.price : price),
                 category,
                 imageUrl: mainImage.url,
                 aiHint: mainImage.hint,
-            });
+                // In a real scenario, you'd save variants here
+            };
+
+            await addProduct(productData);
 
             toast({
                 title: "Product added!",
@@ -97,14 +178,15 @@ export default function AddProductPage() {
             setName("");
             setDescription("");
             setPrice("");
-            setCompareAtPrice("");
+            setStock("");
             setCategory("");
             setImages([{ url: "", hint: "" }]);
-            setSku("");
-            setStock("");
             setStatus("Active");
             setTags("");
             setVendor("");
+            setHasVariants(false);
+            setVariantOptions([{ name: "Size", values: "" }]);
+            setGeneratedVariants([]);
 
 
         } catch (error) {
@@ -273,7 +355,7 @@ export default function AddProductPage() {
                                         Fill in the details for your new product.
                                     </CardDescription>
                                 </div>
-                                 <Dialog open={isGenDialogOpwn} onOpenChange={setIsGenDialogOpen}>
+                                 <Dialog open={isGenDialogOpen} onOpenChange={setIsGenDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" type="button">
                                             <ImageIconSparkles className="mr-2 h-4 w-4" />
@@ -334,7 +416,7 @@ export default function AddProductPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {images.map((image, index) => (
-                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto_auto] gap-2 items-end border p-4 rounded-md relative">
+                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-end border p-4 rounded-md relative">
                                     <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center relative overflow-hidden">
                                         {image.url ? (
                                             <Image src={image.url} alt={`Preview ${index}`} fill className="object-cover" />
@@ -372,37 +454,75 @@ export default function AddProductPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Pricing</CardTitle>
+                             <CardTitle>Variants</CardTitle>
+                             <CardDescription>Add options like size or color for this product.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="price">Price (INR)</Label>
-                                    <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
-                                </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="compareAtPrice">Compare-at price (INR)</Label>
-                                    <Input id="compareAtPrice" type="number" value={compareAtPrice} onChange={(e) => setCompareAtPrice(e.target.value)} placeholder="e.g., 2999" />
-                                </div>
+                             <div className="flex items-center space-x-2 mb-4">
+                                <Checkbox id="hasVariants" checked={hasVariants} onCheckedChange={(checked) => setHasVariants(checked as boolean)} />
+                                <label htmlFor="hasVariants" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    This product has multiple options
+                                </label>
                             </div>
-                        </CardContent>
-                    </Card>
-                    
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Inventory</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="sku">SKU</Label>
-                                    <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="FLORAL-DRESS-S" />
+                            {hasVariants ? (
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <Label className="font-semibold">Options</Label>
+                                        {variantOptions.map((option, index) => (
+                                            <div key={index} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-end p-4 border rounded-md">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`option-name-${index}`}>Option name</Label>
+                                                    <Input id={`option-name-${index}`} value={option.name} onChange={(e) => handleVariantOptionChange(index, 'name', e.target.value)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor={`option-values-${index}`}>Option values</Label>
+                                                    <Input id={`option-values-${index}`} value={option.values} onChange={(e) => handleVariantOptionChange(index, 'values', e.target.value)} placeholder="e.g., S, M, L" />
+                                                </div>
+                                                {variantOptions.length > 1 && (
+                                                    <Button variant="ghost" size="icon" onClick={() => removeVariantOption(index)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {variantOptions.length < 2 && (
+                                            <Button type="button" variant="outline" onClick={addVariantOption}>
+                                                <PlusCircle className="mr-2 h-4 w-4" /> Add another option
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {generatedVariants.length > 0 && (
+                                        <div className="space-y-2">
+                                             <Label className="font-semibold">Manage Variants</Label>
+                                             <div className="border rounded-md">
+                                                 <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 font-medium bg-muted">
+                                                     <div>Variant</div>
+                                                     <div>Price (INR)</div>
+                                                     <div>Stock</div>
+                                                 </div>
+                                                 {generatedVariants.map(variant => (
+                                                      <div key={variant.id} className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 py-2 items-center border-t">
+                                                          <div>{variant.id}</div>
+                                                          <div><Input type="number" placeholder="e.g., 2499" value={variant.price} onChange={(e) => handleGeneratedVariantChange(variant.id, 'price', e.target.value)} /></div>
+                                                          <div><Input type="number" placeholder="e.g., 100" value={variant.stock} onChange={(e) => handleGeneratedVariantChange(variant.id, 'stock', e.target.value)} /></div>
+                                                      </div>
+                                                 ))}
+                                             </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="stock">Stock</Label>
-                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
+                            ) : (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="price">Price (INR)</Label>
+                                        <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="stock">Stock</Label>
+                                        <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -495,3 +615,5 @@ export default function AddProductPage() {
         </form>
     );
 }
+
+    
