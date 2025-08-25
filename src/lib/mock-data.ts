@@ -2,6 +2,7 @@
 import type { ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
 import { Shirt, Diamond, Watch, Footprints, Sparkles, ShoppingBag } from 'lucide-react';
+import type { Address } from './firebase/firestore';
 
 // New, more detailed Product structure
 export interface ImageField {
@@ -40,14 +41,12 @@ export interface Product {
 }
 
 
-// Simple Product for Cart and Orders for now
-export interface SimpleProduct {
+export interface OrderItem {
   id: string;
-  name:string;
-  description: string;
+  name: string;
   price: number;
+  quantity: number;
   imageUrl: string;
-  category: string;
   aiHint: string;
 }
 
@@ -59,11 +58,12 @@ export interface Category {
 
 export interface Order {
     id: string;
-    date: string;
+    userId: string;
+    createdAt: string; // Should be a string in ISO format for serialization
     status: 'Delivered' | 'Shipped' | 'Processing';
     total: number;
-    items: (SimpleProduct & { quantity: number })[];
-    shippingAddress: string;
+    items: OrderItem[];
+    shippingAddress: Address;
     paymentMethod: string;
     trackingHistory: { status: string; date: string; location: string }[];
 }
@@ -75,84 +75,4 @@ export const categories: Category[] = [
   { id: 'shoes', name: 'Shoes', icon: Footprints },
   { id: 'accessories', name: 'Accessories', icon: Sparkles },
   { id: 'bags', name: 'Bags', icon: ShoppingBag },
-];
-
-// This mock data is now for the SimpleProduct type for frontend display
-export const mockProducts: Omit<SimpleProduct, 'id'>[] = [
-  {
-    name: 'Elegant Floral Dress',
-    description: 'A beautiful floral dress perfect for summer occasions. Made from lightweight and breathable fabric.',
-    price: 2499,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'clothing',
-    aiHint: 'floral dress',
-  },
-  {
-    name: 'Classic Leather Watch',
-    description: 'A timeless watch with a genuine leather strap and stainless steel case. Water-resistant up to 50m.',
-    price: 8999,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'watches',
-    aiHint: 'leather watch',
-  },
-  {
-    name: 'Silver Heart Necklace',
-    description: 'A delicate sterling silver necklace featuring a heart-shaped pendant. A perfect gift for a loved one.',
-    price: 3499,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'jewelry',
-    aiHint: 'silver necklace',
-  },
-   {
-    name: 'Running Sneakers',
-    description: 'High-performance running sneakers with cushioned soles and a breathable mesh upper. Ideal for daily workouts.',
-    price: 4599,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'shoes',
-    aiHint: 'running shoes',
-  },
-  {
-    name: 'Silk Scarf',
-    description: 'A luxurious 100% silk scarf with a vibrant print. Can be styled in multiple ways.',
-    price: 1899,
-    imageUrl: 'https://placehold.co/600x800.png',
-    category: 'accessories',
-    aiHint: 'silk scarf',
-  },
-];
-
-export const simpleProducts: SimpleProduct[] = mockProducts.map((p, i) => ({ ...p, id: (i + 1).toString() }));
-
-
-export const orders: Order[] = [
-  {
-    id: "ORD001",
-    date: "June 23, 2024",
-    status: "Delivered",
-    total: 2499,
-    items: [
-      { ...simpleProducts[0], quantity: 1 },
-    ],
-    shippingAddress: '123 Main St, Anytown, 12345, India',
-    paymentMethod: 'Credit Card (**** **** **** 1234)',
-    trackingHistory: [
-        { status: 'Delivered', date: 'June 23, 2024', location: 'Anytown, India' },
-        { status: 'Out for Delivery', date: 'June 23, 2024', location: 'Anytown Hub' },
-        { status: 'Shipped', date: 'June 22, 2024', location: 'Main Warehouse' },
-        { status: 'Order Placed', date: 'June 21, 2024', location: 'Bazaarika.com' },
-    ]
-  },
-  {
-    id: "ORD002",
-    date: "June 25, 2024",
-    status: "Shipped",
-    total: 8999,
-    items: [{ ...simpleProducts[1], quantity: 1 }],
-    shippingAddress: '456 Oak Ave, Someville, 67890, India',
-    paymentMethod: 'UPI',
-    trackingHistory: [
-        { status: 'Shipped', date: 'June 25, 2024', location: 'Main Warehouse' },
-        { status: 'Order Placed', date: 'June 25, 2024', location: 'Bazaarika.com' },
-    ]
-  },
 ];

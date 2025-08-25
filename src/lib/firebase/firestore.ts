@@ -1,7 +1,7 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import type { Product } from '@/lib/mock-data';
+import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
+import type { Product, Order, OrderItem } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
 export const addProduct = async (productData: Omit<Product, 'id'>) => {
@@ -112,5 +112,76 @@ export const mergeWishlists = async (userId: string, localWishlist: string[]) =>
     if (localWishlist.length === 0) return;
     const userDocRef = doc(db, "users", userId);
     await setDoc(userDocRef, { wishlist: arrayUnion(...localWishlist) }, { merge: true });
+};
+
+
+// --- Order Functions ---
+
+// Place a new order
+export const placeOrder = async (
+    userId: string, 
+    items: OrderItem[], 
+    total: number, 
+    shippingAddress: Address, 
+    paymentMethod: string
+): Promise<string> => {
+    try {
+        const orderData = {
+            userId,
+            createdAt: serverTimestamp(),
+            status: 'Processing',
+            total,
+            items,
+            shippingAddress,
+            paymentMethod,
+            trackingHistory: [
+                { status: 'Order Placed', date: new Date().toISOString(), location: 'Bazaarika.com' },
+            ]
+        };
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        return docRef.id;
+    } catch (error) {
+        console.error("Error placing order: ", error);
+        throw new Error("Failed to place order");
+    }
+};
+
+// Get all orders for a specific user
+export const getUserOrders = async (userId: string): Promise<Order[]> => {
+    const ordersCollection = collection(db, "orders");
+    const q = query(ordersCollection, where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    
+    const orders: Order[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Convert Firestore Timestamps to serializable strings
+        const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+        
+        orders.push({
+            id: doc.id,
+            ...data,
+            createdAt,
+        } as Order);
+    });
+    return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
+// Get a single order by its ID
+export const getOrder = async (orderId: string): Promise<Order | null> => {
+    const docRef = doc(db, "orders", orderId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString();
+        return { 
+            id: docSnap.id,
+             ...data,
+            createdAt,
+        } as Order;
+    } else {
+        return null;
+    }
 };
     

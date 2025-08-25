@@ -14,8 +14,8 @@ import { useEffect, useState, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { getProduct } from "@/lib/firebase/firestore";
-import type { Product } from "@/lib/mock-data";
+import { getProduct, placeOrder } from "@/lib/firebase/firestore";
+import type { Product, OrderItem } from "@/lib/mock-data";
 
 
 // Custom SwipeButton component
@@ -110,12 +110,10 @@ export function CheckoutClient() {
                 } else {
                     toast({ title: "Product not found", description: "The item you tried to buy is no longer available.", variant: "destructive"});
                     router.push('/');
-                    return; // Stop execution
                 }
             } catch (error) {
                  toast({ title: "Error", description: "Could not fetch product details.", variant: "destructive"});
                  router.push('/');
-                 return; // Stop execution
             }
         } else {
             setCheckoutItems(mainCart);
@@ -136,33 +134,59 @@ export function CheckoutClient() {
     }
   }, [loadingItems, checkoutItems, router, toast, isBuyNow]);
 
-  const handlePlaceOrder = async () => {
-    if (isPlacingOrder) return;
-    setIsPlacingOrder(true);
-    
-    if (!address?.address) {
-        toast({
-            title: "No Address",
-            description: "Please set a shipping address in your profile.",
-            variant: "destructive",
-        });
-        setIsPlacingOrder(false);
-        return;
-    }
+    const handlePlaceOrder = async () => {
+        if (isPlacingOrder) return;
+        setIsPlacingOrder(true);
 
-    // Simulate order placement
-    setTimeout(() => {
-      // Only clear the main cart if this is not a "Buy Now" purchase
-      if (!isBuyNow) {
-          clearCart();
-      }
-      toast({
-        title: "Order Placed!",
-        description: "Thank you for your purchase.",
-      });
-      router.push('/orders');
-    }, 1500);
-  };
+        if (!user) {
+            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
+            router.push('/login');
+            setIsPlacingOrder(false);
+            return;
+        }
+
+        if (!address?.address) {
+            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
+            router.push('/profile');
+            setIsPlacingOrder(false);
+            return;
+        }
+        
+        if (!paymentMethod) {
+            toast({ title: "No Payment Method", description: "Please select a payment method.", variant: "destructive" });
+            setIsPlacingOrder(false);
+            return;
+        }
+
+        const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        const shipping = subtotal > 0 ? 50.00 : 0;
+        const total = subtotal + shipping;
+
+        const orderItems: OrderItem[] = checkoutItems.map(item => ({
+            id: item.id!,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            imageUrl: (item.images && item.images.length > 0 && item.images[0].url) ? item.images[0].url : "https://placehold.co/100x100.png",
+            aiHint: (item.images && item.images.length > 0 && item.images[0].hint) ? item.images[0].hint : "",
+        }));
+
+        try {
+            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod);
+            
+            if (!isBuyNow) {
+                clearCart();
+            }
+
+            toast({ title: "Order Placed!", description: "Thank you for your purchase." });
+            router.push(`/orders/${orderId}`);
+
+        } catch (error) {
+            console.error("Failed to place order:", error);
+            toast({ title: "Order Failed", description: "There was an issue placing your order. Please try again.", variant: "destructive" });
+            setIsPlacingOrder(false);
+        }
+    };
   
   if (authLoading || loadingItems) {
     return (

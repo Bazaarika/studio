@@ -1,13 +1,54 @@
 
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { orders } from "@/lib/mock-data";
-import { Package } from "lucide-react";
+import type { Order } from "@/lib/mock-data";
+import { Loader2, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserOrders } from "@/lib/firebase/firestore";
+import { useRouter } from "next/navigation";
 
 export default function OrdersPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    async function fetchOrders() {
+      try {
+        const userOrders = await getUserOrders(user!.uid);
+        setOrders(userOrders);
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchOrders();
+  }, [user, authLoading, router]);
+  
+  if (loading || authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <header className="text-center">
@@ -17,13 +58,13 @@ export default function OrdersPage() {
       <div className="space-y-6">
         {orders.map((order) => (
           <Card key={order.id}>
-            <CardHeader className="flex flex-row justify-between items-center">
+            <CardHeader className="flex flex-col md:flex-row justify-between md:items-center">
               <div>
-                <CardTitle className="font-headline">Order {order.id}</CardTitle>
-                <CardDescription>Date: {order.date}</CardDescription>
+                <CardTitle className="font-headline text-lg md:text-xl">Order #{order.id.substring(0, 7)}</CardTitle>
+                <CardDescription>Date: {new Date(order.createdAt).toLocaleDateString()}</CardDescription>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">Status: {order.status}</p>
+              <div className="text-left md:text-right mt-2 md:mt-0">
+                <p className="font-semibold">Status: <span className="text-primary">{order.status}</span></p>
                 <p className="text-muted-foreground">Total: ₹{order.total.toFixed(2)}</p>
               </div>
             </CardHeader>
@@ -35,7 +76,7 @@ export default function OrdersPage() {
                     <Image src={item.imageUrl} alt={item.name} fill className="object-cover" data-ai-hint={item.aiHint}/>
                   </div>
                   <div>
-                    <Link href={`/product/${item.id}`} className="font-semibold hover:text-primary">{item.name}</Link>
+                    <p className="font-semibold">{item.name}</p>
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                     <p className="text-sm font-medium">₹{item.price.toFixed(2)}</p>
                   </div>

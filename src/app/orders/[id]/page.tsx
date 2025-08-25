@@ -1,15 +1,54 @@
 
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { orders } from "@/lib/mock-data";
-import { CreditCard, Home, Package, Truck } from "lucide-react";
+import type { Order } from "@/lib/mock-data";
+import { CreditCard, Home, Package, Truck, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getOrder } from "@/lib/firebase/firestore";
+import { useAuth } from "@/hooks/use-auth";
 
-export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-  const order = orders.find(o => o.id === params.id);
+export default function OrderDetailsPage() {
+  const params = useParams();
+  const { user } = useAuth();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const orderId = params.id as string;
+
+  useEffect(() => {
+    if (!orderId) return;
+    
+    async function fetchOrder() {
+      try {
+        const fetchedOrder = await getOrder(orderId);
+        // Security check: Make sure the logged-in user owns this order
+        if (fetchedOrder && user && fetchedOrder.userId === user.uid) {
+          setOrder(fetchedOrder);
+        } else {
+          setOrder(null); // Or redirect, or show an error
+        }
+      } catch (error) {
+        console.error("Failed to fetch order:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchOrder();
+  }, [orderId, user]);
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!order) {
     notFound();
@@ -19,9 +58,9 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
     <div className="max-w-4xl mx-auto">
       <header className="mb-8">
         <h1 className="text-4xl font-bold font-headline">Order Details</h1>
-        <p className="text-muted-foreground">Order ID: {order.id}</p>
+        <p className="text-muted-foreground">Order ID: #{order.id.substring(0, 7)}</p>
         <div className="mt-2 text-sm text-muted-foreground">
-            <span>Placed on {order.date}</span> | <span className="font-semibold text-primary">{order.status}</span>
+            <span>Placed on {new Date(order.createdAt).toLocaleDateString()}</span> | <span className="font-semibold text-primary">{order.status}</span>
         </div>
       </header>
 
@@ -43,7 +82,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                                     <Image src={item.imageUrl} alt={item.name} fill className="object-cover" data-ai-hint={item.aiHint}/>
                                     </div>
                                     <div>
-                                    <Link href={`/product/${item.id}`} className="font-semibold hover:text-primary">{item.name}</Link>
+                                    <p className="font-semibold">{item.name}</p>
                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                     </div>
                                 </div>
@@ -62,8 +101,8 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                     </CardTitle>
                 </CardHeader>
                  <CardContent>
-                    <p className="font-medium">John Doe</p>
-                    <p className="text-muted-foreground">{order.shippingAddress}</p>
+                    <p className="font-medium">{order.shippingAddress.name}</p>
+                    <p className="text-muted-foreground">{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.zip}, {order.shippingAddress.country}</p>
                 </CardContent>
             </Card>
         </div>
@@ -77,11 +116,11 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                 <CardContent className="space-y-2">
                      <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>₹{order.total.toFixed(2)}</span>
+                        <span>₹{(order.total - 50).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span>Shipping</span>
-                        <span>₹0.00</span>
+                        <span>₹50.00</span>
                     </div>
                     <Separator className="my-2"/>
                     <div className="flex justify-between font-bold text-lg">
@@ -99,7 +138,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
                 </CardHeader>
                  <CardContent>
                     <p className="font-medium">Payment Method</p>
-                    <p className="text-muted-foreground">{order.paymentMethod}</p>
+                    <p className="text-muted-foreground capitalize">{order.paymentMethod}</p>
                 </CardContent>
             </Card>
             <Button className="w-full" variant="outline" asChild>
