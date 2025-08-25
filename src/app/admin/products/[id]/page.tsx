@@ -6,19 +6,22 @@ import { getProduct } from '@/lib/firebase/firestore';
 import type { Product } from '@/lib/mock-data';
 import { Loader2 } from 'lucide-react';
 import { ProductForm } from '../../_components/product-form';
+import { useParams } from 'next/navigation';
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage() {
+  const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const id = params.id as string;
   
   useEffect(() => {
-    if (!params.id) return;
+    if (!id) return;
 
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const fetchedProduct = await getProduct(params.id);
+        const fetchedProduct = await getProduct(id);
         if (fetchedProduct) {
           setProduct(fetchedProduct);
         } else {
@@ -33,7 +36,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     };
     
     fetchProduct();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
