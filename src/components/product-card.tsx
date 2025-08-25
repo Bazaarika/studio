@@ -8,26 +8,36 @@ import { Button } from '@/components/ui/button';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 interface ProductCardProps {
   product: Product;
-  isWishlistedDefault?: boolean;
 }
 
-export function ProductCard({ product, isWishlistedDefault = false }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const { addToCart } = useCart();
-  const [isWishlisted, setIsWishlisted] = useState(isWishlistedDefault);
+  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  
+  const isWishlisted = product.id ? wishlist.includes(product.id) : false;
 
   const toggleWishlist = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault(); 
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
-     toast({
-      title: !isWishlisted ? 'Added to wishlist' : 'Removed from wishlist',
-    });
+    if (!product.id) return;
+    
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+      toast({
+        title: 'Removed from wishlist',
+      });
+    } else {
+      addToWishlist(product.id);
+      toast({
+        title: 'Added to wishlist',
+      });
+    }
   }
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {

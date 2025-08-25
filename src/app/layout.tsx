@@ -6,6 +6,7 @@ import { Header } from '@/components/header';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
 import { CartProvider } from '@/hooks/use-cart';
+import { WishlistProvider } from '@/hooks/use-wishlist';
 import { BottomNav } from '@/components/bottom-nav';
 import { Footer } from '@/components/footer';
 import { usePathname } from 'next/navigation';
@@ -40,12 +41,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   const isAdminPage = pathname.startsWith('/admin');
 
   return (
@@ -60,25 +55,17 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AuthProvider>
           <CartProvider>
-            {isAdminPage ? (
-              <>
-                {children}
-                <Toaster />
-              </>
-            ) : (
-              <>
-                {isMounted ? <ClientLayout>{children}</ClientLayout> : (
-                  <div className="flex flex-col min-h-screen">
-                    <main className="flex-grow pb-20">
-                        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                            {children}
-                        </div>
-                    </main>
-                  </div>
-                )}
-                <Toaster />
-              </>
-            )}
+            <WishlistProvider>
+              {isAdminPage ? (
+                <>
+                  {children}
+                  <Toaster />
+                </>
+              ) : (
+                <ClientLayout>{children}</ClientLayout>
+              )}
+               <Toaster />
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

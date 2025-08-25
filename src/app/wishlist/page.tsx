@@ -6,17 +6,18 @@ import { getProducts } from '@/lib/firebase/firestore';
 import { Heart, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/mock-data';
 import { useEffect, useState } from 'react';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 export default function WishlistPage() {
-  const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
+  const { wishlist } = useWishlist();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const allProducts = await getProducts();
-        // Mock wishlist items by taking a slice of all products
-        setWishlistProducts(allProducts.slice(2, 8)); 
+        const products = await getProducts();
+        setAllProducts(products);
       } catch (error) {
         console.error("Failed to fetch products for wishlist:", error);
       } finally {
@@ -25,6 +26,8 @@ export default function WishlistPage() {
     }
     fetchProducts();
   }, []);
+
+  const wishlistProducts = allProducts.filter(product => wishlist.includes(product.id!));
 
   if (loading) {
     return (
@@ -44,7 +47,7 @@ export default function WishlistPage() {
         <section>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
             {wishlistProducts.map((product) => (
-              <ProductCard key={product.id} product={product} isWishlistedDefault={true} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </section>
