@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
-import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon } from "lucide-react";
+import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon, Image as ImageIconSparkles } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
 import { generateImageHint } from "@/ai/flows/generate-image-hint";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { generateProductDetailsFromImage } from "@/ai/flows/generate-product-details-from-image";
 
 type ImageField = {
     url: string;
@@ -39,6 +41,9 @@ export default function AddProductPage() {
     const [isSampleLoading, setIsSampleLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [isHintLoading, setIsHintLoading] = useState<number | null>(null);
+    const [isImageGenLoading, setIsImageGenLoading] = useState(false);
+    const [imageUrlForGen, setImageUrlForGen] = useState("");
+    const [isGenDialogOpwn, setIsGenDialogOpen] = useState(false);
     const { toast } = useToast();
 
     const handleImageChange = (index: number, field: keyof ImageField, value: string) => {
@@ -182,8 +187,6 @@ export default function AddProductPage() {
 
         setIsHintLoading(index);
         try {
-            // This is a simplified client-side fetch and conversion.
-            // A more robust solution might use a server-side proxy to handle CORS and other issues.
             const response = await fetch(imageUrl);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -212,6 +215,50 @@ export default function AddProductPage() {
         }
     };
 
+    const handleGenerateFromImage = async () => {
+        if (!imageUrlForGen) {
+            toast({
+                title: "Image URL is missing",
+                description: "Please enter an image URL to generate details.",
+                variant: "destructive",
+            });
+            return;
+        }
+        setIsImageGenLoading(true);
+        try {
+            const response = await fetch(imageUrlForGen);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                const result = await generateProductDetailsFromImage({ imageDataUri: base64data });
+
+                setName(result.name);
+                setDescription(result.description);
+                const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
+                setCategory(suggestedCategory ? suggestedCategory.id : categories[0]?.id || "");
+                setTags(result.tags.join(", "));
+                setImages([{ url: imageUrlForGen, hint: result.aiHint }]);
+
+                toast({
+                    title: "Product Details Generated!",
+                    description: "All product details have been filled in from the image.",
+                });
+                setIsImageGenLoading(false);
+                setIsGenDialogOpen(false);
+            };
+        } catch (error) {
+            console.error("Error generating details from image:", error);
+            toast({
+                title: "AI Generation Failed",
+                description: "Could not analyze the image. Check the URL and try again.",
+                variant: "destructive",
+            });
+            setIsImageGenLoading(false);
+        }
+    };
 
     return (
         <form onSubmit={handleSubmit}>
@@ -219,10 +266,49 @@ export default function AddProductPage() {
                 <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Product Details</CardTitle>
-                            <CardDescription>
-                                Fill in the details for your new product.
-                            </CardDescription>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle>Product Details</CardTitle>
+                                    <CardDescription>
+                                        Fill in the details for your new product.
+                                    </CardDescription>
+                                </div>
+                                 <Dialog open={isGenDialogOpwn} onOpenChange={setIsGenDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" type="button">
+                                            <ImageIconSparkles className="mr-2 h-4 w-4" />
+                                            Generate from Image
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Generate Product Details from Image</DialogTitle>
+                                            <DialogDescription>
+                                                Enter an image URL, and AI will automatically generate a title, description, category, tags, and more.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="gen-image-url">Image URL</Label>
+                                            <Input 
+                                                id="gen-image-url" 
+                                                placeholder="https://placehold.co/600x800.png" 
+                                                value={imageUrlForGen}
+                                                onChange={(e) => setImageUrlForGen(e.target.value)}
+                                            />
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="button" onClick={handleGenerateFromImage} disabled={isImageGenLoading}>
+                                                {isImageGenLoading ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Generating...
+                                                    </>
+                                                ) : "Generate Details"}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
@@ -408,3 +494,4 @@ export default function AddProductPage() {
             </div>
         </form>
     );
+}
