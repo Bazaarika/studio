@@ -20,7 +20,7 @@ export type GenerateProductDetailsInput = z.infer<typeof GenerateProductDetailsI
 const GenerateProductDetailsOutputSchema = z.object({
   description: z.string().describe('A compelling and detailed product description (2-3 sentences).'),
   category: z.string().describe('The most relevant product category.'),
-  tags: z.array(z.string()).describe('An array of 2-3 relevant tags for the product.'),
+  tags: z.array(z.string()).describe('An array of 3-4 relevant tags for the product.'),
 });
 export type GenerateProductDetailsOutput = z.infer<typeof GenerateProductDetailsOutputSchema>;
 
@@ -45,7 +45,7 @@ const prompt = ai.definePrompt({
   Instructions:
   - The description should be engaging and highlight key features, between 2 and 3 sentences.
   - The category must be one of the "Valid Categories" provided.
-  - Provide 2 to 3 relevant tags as an array of strings.`,
+  - Provide 3 to 4 relevant and specific tags as an array of strings. For clothing, include style, occasion, or material (e.g., "casual", "summer", "cotton", "party wear").`,
 });
 
 const generateProductDetailsFlow = ai.defineFlow(

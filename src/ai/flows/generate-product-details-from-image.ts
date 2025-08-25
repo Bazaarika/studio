@@ -25,7 +25,7 @@ const GenerateProductDetailsFromImageOutputSchema = z.object({
   name: z.string().describe('A concise, appealing, and SEO-friendly product name.'),
   description: z.string().describe('A compelling and detailed product description (2-3 sentences).'),
   category: z.string().describe('The most relevant product category.'),
-  tags: z.array(z.string()).describe('An array of 2-4 relevant and specific tags for the product to improve searchability.'),
+  tags: z.array(z.string()).describe('An array of 3-4 relevant and specific tags for the product to improve searchability.'),
   aiHint: z.string().describe('A two-word descriptive hint for the image, suitable for an image search. E.g., "floral dress" or "leather boots".'),
 });
 export type GenerateProductDetailsFromImageOutput = z.infer<typeof GenerateProductDetailsFromImageOutputSchema>;
@@ -52,7 +52,7 @@ const prompt = ai.definePrompt({
   - Generate a concise, appealing, and SEO-friendly product name.
   - Write an engaging product description that highlights key features, between 2 and 3 sentences.
   - Select the most appropriate category from the "Valid Categories" list provided.
-  - Provide 2 to 4 specific and relevant tags as an array of strings to improve searchability. For clothing, include things like style, occasion, or material (e.g., "casual", "summer", "cotton", "party wear").
+  - Provide 3 to 4 specific and relevant tags as an array of strings to improve searchability. For clothing, include the specific item type (e.g., 't-shirt', 'kurti'), style ('casual', 'formal'), occasion ('party wear', 'summer'), and material if identifiable.
   - Provide a concise, two-word descriptive hint for the image itself (e.g., "floral dress", "leather boots").
   `,
 });
