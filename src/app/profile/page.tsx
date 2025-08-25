@@ -17,6 +17,7 @@ import {
   User as UserIcon,
   Loader2,
   Home,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -26,6 +27,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/lib/firebase/firestore";
+import { useTheme, themes } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
+
 
 export default function ProfilePage() {
   const [isClient, setIsClient] = useState(false);
@@ -48,6 +52,7 @@ function ProfileLoading() {
 
 function ProfileView() {
   const { user, address, loading, signOut, updateUserProfile, saveAddress } = useAuth();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -197,6 +202,32 @@ function ProfileView() {
           </CardContent>
         </Card>
         
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-lg">THEME SETTINGS</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-wrap gap-4">
+                    {themes.map((t) => (
+                        <div key={t.name} className="flex flex-col items-center gap-2">
+                            <button
+                                onClick={() => setTheme(t.name)}
+                                className={cn(
+                                    "h-12 w-12 rounded-full border-2 flex items-center justify-center",
+                                    theme === t.name ? "border-primary" : "border-muted"
+                                )}
+                                style={{ backgroundColor: `hsl(${t.colors.primary})` }}
+                                aria-label={`Select ${t.name} theme`}
+                            >
+                                {theme === t.name && <Check className="h-6 w-6 text-primary-foreground" />}
+                            </button>
+                            <span className="text-xs font-medium text-muted-foreground">{t.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">SUPPORT</CardTitle>

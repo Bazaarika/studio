@@ -7,6 +7,7 @@ import { WishlistProvider } from '@/hooks/use-wishlist';
 import { RecentlyViewedProvider } from '@/hooks/use-recently-viewed';
 import type { Metadata } from 'next';
 import { ClientLayout } from '@/components/client-layout';
+import { ThemeProvider } from '@/hooks/use-theme';
 
 export const metadata: Metadata = {
   title: 'Bazaarika Lite - Modern E-commerce',
@@ -27,16 +28,18 @@ export default function RootLayout({
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <RecentlyViewedProvider>
-                <ClientLayout>{children}</ClientLayout>
-                <Toaster />
-              </RecentlyViewedProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <RecentlyViewedProvider>
+                  <ClientLayout>{children}</ClientLayout>
+                  <Toaster />
+                </RecentlyViewedProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
