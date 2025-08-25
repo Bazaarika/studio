@@ -18,12 +18,8 @@ export function Header() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
   const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
-    }
-    return name[0];
+    if (!name || name.trim() === '') return "U";
+    return name.trim()[0].toUpperCase();
   };
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
