@@ -1,3 +1,4 @@
+
 'use server';
 
 import admin from 'firebase-admin';
@@ -14,21 +15,19 @@ interface NotificationPayload {
 // Helper function to initialize Firebase Admin SDK safely
 function initializeFirebaseAdmin() {
   if (admin.apps.length > 0) {
-    return;
+    return admin.app(); // Return the already initialized app
   }
   
   try {
-    // Cast the imported JSON to the correct type for the credential method
     const serviceAccountParams = {
         projectId: serviceAccount.project_id,
         clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key,
+        privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'), // Important for env variables
     }
 
-    admin.initializeApp({
+    return admin.initializeApp({
       credential: admin.credential.cert(serviceAccountParams),
     });
-    console.log("Firebase Admin SDK initialized successfully from services.json.");
 
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization error:', error.message);
@@ -38,15 +37,17 @@ function initializeFirebaseAdmin() {
 
 /**
  * Subscribes a user's FCM token to the 'all_users' topic.
+ * This is a server-only action.
  */
 export async function subscribeToTopic(token: string) {
     try {
-        initializeFirebaseAdmin();
-        await getMessaging().subscribeToTopic(token, "all_users");
+        const app = initializeFirebaseAdmin();
+        await getMessaging(app).subscribeToTopic(token, "all_users");
         console.log(`Successfully subscribed token to topic: all_users`);
     } catch (error) {
         console.error("Error subscribing to topic:", error);
-        // We don't throw here to avoid client-side errors for a background process.
+        // We don't throw here to avoid client-side errors for a background process,
+        // but we log it to the server console.
     }
 }
 
@@ -56,7 +57,7 @@ export async function subscribeToTopic(token: string) {
  */
 export async function sendPushNotification(payload: NotificationPayload) {
   try {
-    initializeFirebaseAdmin();
+    const app = initializeFirebaseAdmin();
 
     const message = {
       topic: "all_users",
@@ -72,7 +73,7 @@ export async function sendPushNotification(payload: NotificationPayload) {
       },
     };
 
-    const response = await getMessaging().send(message);
+    const response = await getMessaging(app).send(message);
     console.log("Successfully sent message:", response);
     return { success: true, messageId: response };
 
