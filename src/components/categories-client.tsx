@@ -47,10 +47,21 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
 
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const matchesCategory = selectedCategory === 'All' || product.category.toLowerCase() === selectedCategory.toLowerCase() || product.tags.some(tag => tag.toLowerCase() === selectedCategory.toLowerCase());
+      const lowerCaseCategory = selectedCategory.toLowerCase();
+      
+      // If 'All' is selected, category always matches.
+      // Otherwise, check if the product's own category, name, description, or tags include the selected filter term.
+      // This is more robust for AI-generated categories like "Dresses" matching a product named "Floral Dress".
+      const matchesCategory = selectedCategory === 'All' ||
+                              product.category.toLowerCase().includes(lowerCaseCategory) ||
+                              product.name.toLowerCase().includes(lowerCaseCategory) ||
+                              product.description.toLowerCase().includes(lowerCaseCategory) ||
+                              product.tags.some(tag => tag.toLowerCase().includes(lowerCaseCategory));
+
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+                            
       return matchesCategory && matchesSearch;
     });
   }, [products, searchQuery, selectedCategory]);
