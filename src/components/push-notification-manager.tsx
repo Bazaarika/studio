@@ -12,6 +12,7 @@ export function PushNotificationManager() {
 
   useEffect(() => {
     const requestPermission = async () => {
+      // Ensure messaging is supported by the browser
       const supported = await isSupported();
       if (!messaging || !supported) {
         console.log("Firebase Messaging is not supported in this browser.");
