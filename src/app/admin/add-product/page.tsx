@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { addProduct } from "@/lib/firebase/firestore";
-import { Loader2, PlusCircle, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { categories, mockProducts } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
+import Image from "next/image";
 
 type ImageField = {
     url: string;
@@ -202,7 +203,14 @@ export default function AddProductPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {images.map((image, index) => (
-                                <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end border p-4 rounded-md relative">
+                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-end border p-4 rounded-md relative">
+                                    <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center relative overflow-hidden">
+                                        {image.url ? (
+                                            <Image src={image.url} alt={`Preview ${index}`} fill className="object-cover" />
+                                        ) : (
+                                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                        )}
+                                    </div>
                                     <div className="space-y-2">
                                         <Label htmlFor={`imageUrl-${index}`}>Image URL</Label>
                                         <Input id={`imageUrl-${index}`} value={image.url} onChange={(e) => handleImageChange(index, 'url', e.target.value)} placeholder="https://placehold.co/600x800.png" />
@@ -349,6 +357,5 @@ export default function AddProductPage() {
             </div>
         </form>
     );
-}
 
     
