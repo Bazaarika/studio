@@ -52,7 +52,9 @@ export default function AddProductPage() {
 
     // State for single product (no variants)
     const [price, setPrice] = useState("");
+    const [compareAtPrice, setCompareAtPrice] = useState("");
     const [stock, setStock] = useState("");
+    const [sku, setSku] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSampleLoading, setIsSampleLoading] = useState(false);
@@ -155,8 +157,6 @@ export default function AddProductPage() {
         }
 
         try {
-            // This is where you would structure the data to be saved.
-            // For now, we'll just use the first product's details for the mock addProduct function.
             const productData = {
                 name,
                 description,
@@ -164,7 +164,6 @@ export default function AddProductPage() {
                 category,
                 imageUrl: mainImage.url,
                 aiHint: mainImage.hint,
-                // In a real scenario, you'd save variants here
             };
 
             await addProduct(productData);
@@ -178,7 +177,9 @@ export default function AddProductPage() {
             setName("");
             setDescription("");
             setPrice("");
+            setCompareAtPrice("");
             setStock("");
+            setSku("");
             setCategory("");
             setImages([{ url: "", hint: "" }]);
             setStatus("Active");
@@ -452,19 +453,55 @@ export default function AddProductPage() {
                         </CardContent>
                     </Card>
 
+                     {!hasVariants && (
+                        <>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Pricing</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="price">Price (INR)</Label>
+                                        <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="compareAtPrice">Compare-at price (INR)</Label>
+                                        <Input id="compareAtPrice" type="number" value={compareAtPrice} onChange={(e) => setCompareAtPrice(e.target.value)} placeholder="e.g., 2999" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Inventory</CardTitle>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="stock">Stock</Label>
+                                        <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sku">SKU</Label>
+                                        <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g., TSHIRT-B-S" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </>
+                    )}
+
+
                     <Card>
                         <CardHeader>
                              <CardTitle>Variants</CardTitle>
-                             <CardDescription>Add options like size or color for this product.</CardDescription>
                         </CardHeader>
                         <CardContent>
                              <div className="flex items-center space-x-2 mb-4">
                                 <Checkbox id="hasVariants" checked={hasVariants} onCheckedChange={(checked) => setHasVariants(checked as boolean)} />
                                 <label htmlFor="hasVariants" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    This product has multiple options
+                                    This product has multiple options, like different sizes or colors
                                 </label>
                             </div>
-                            {hasVariants ? (
+                            {hasVariants && (
                                 <div className="space-y-6">
                                     <div className="space-y-4">
                                         <Label className="font-semibold">Options</Label>
@@ -510,17 +547,6 @@ export default function AddProductPage() {
                                              </div>
                                         </div>
                                     )}
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="price">Price (INR)</Label>
-                                        <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g., 2499" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="stock">Stock</Label>
-                                        <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="100" />
-                                    </div>
                                 </div>
                             )}
                         </CardContent>
