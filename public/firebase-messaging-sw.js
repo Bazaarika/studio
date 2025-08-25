@@ -1,8 +1,11 @@
 
-// Import and initialize the Firebase SDK
+// Import the Firebase app and messaging libraries
 import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging/sw";
 
+// IMPORTANT: This file needs to be in the public directory.
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
   authDomain: "bazaarika-lite.firebaseapp.com",
@@ -12,31 +15,19 @@ const firebaseConfig = {
   appId: "1:497294677028:web:d6500602307f6d462c74b1",
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-// Handle background notifications
-self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push Received.');
-  
-  const notificationPayload = event.data.json();
-  const notificationTitle = notificationPayload.notification.title;
-  const notificationOptions = {
-    body: notificationPayload.notification.body,
-    icon: notificationPayload.notification.icon || '/icon-192x192.svg',
-    image: notificationPayload.notification.image,
-  };
+// Optional: If you want to handle background notifications here, you can add a listener.
+// self.addEventListener('push', (event) => {
+//   const payload = event.data.json();
+//   console.log('[firebase-messaging-sw.js] Received background message ', payload);
+//   const notificationTitle = payload.notification.title;
+//   const notificationOptions = {
+//     body: payload.notification.body,
+//     icon: payload.notification.icon || '/icon-192x192.svg',
+//   };
 
-  event.waitUntil(
-    self.registration.showNotification(notificationTitle, notificationOptions)
-  );
-});
-
-// Optional: Handle notification click
-self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification click Received.');
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/')
-  );
-});
+//   event.waitUntil(self.registration.showNotification(notificationTitle, notificationOptions));
+// });
