@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
+import { sendPushNotification } from "@/lib/firebase/actions";
 
 export default function SendNotificationPage() {
     const [title, setTitle] = useState('');
@@ -30,24 +31,26 @@ export default function SendNotificationPage() {
         }
         setIsLoading(true);
 
-        // NOTE: This is a placeholder.
-        // In a real application, you would create a server action
-        // that uses the Firebase Admin SDK to send the notification to all users.
-        // This is a complex setup that requires a secure server environment.
-        console.log("Sending notification:", { title, body, iconUrl, imageUrl });
-
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        setIsLoading(false);
-        toast({
-            title: "Notification Sent (Simulated)",
-            description: "Your notification has been sent to all subscribed users."
-        });
-        setTitle('');
-        setBody('');
-        setIconUrl('');
-        setImageUrl('');
+        try {
+            await sendPushNotification({ title, body, icon: iconUrl, image: imageUrl });
+            toast({
+                title: "Notification Sent!",
+                description: "Your notification has been sent to all subscribed users."
+            });
+            setTitle('');
+            setBody('');
+            setIconUrl('');
+            setImageUrl('');
+        } catch (error) {
+            console.error("Failed to send notification:", error);
+            toast({
+                title: "Failed to Send",
+                description: "There was an error sending the notification. Check the server logs.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

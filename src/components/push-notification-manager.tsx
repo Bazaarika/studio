@@ -3,15 +3,20 @@
 
 import { useEffect } from 'react';
 import { messaging } from '@/lib/firebase/config';
-import { getToken } from 'firebase/messaging';
+import { getToken, isSupported } from 'firebase/messaging';
 import { useToast } from '@/hooks/use-toast';
+import { subscribeToTopic } from '@/lib/firebase/actions';
 
 export function PushNotificationManager() {
   const { toast } = useToast();
 
   useEffect(() => {
     const requestPermission = async () => {
-      if (!messaging || typeof window === 'undefined') return;
+      const supported = await isSupported();
+      if (!messaging || !supported) {
+        console.log("Firebase Messaging is not supported in this browser.");
+        return;
+      }
       
       try {
         const permission = await Notification.requestPermission();
@@ -24,7 +29,8 @@ export function PushNotificationManager() {
 
           if (currentToken) {
             console.log('FCM Token:', currentToken);
-            // You can send this token to your server to store it.
+            // Subscribe the user to the 'all_users' topic
+            await subscribeToTopic(currentToken);
           } else {
             console.log('No registration token available. Request permission to generate one.');
           }
@@ -41,7 +47,6 @@ export function PushNotificationManager() {
       }
     };
     
-    // We only want to ask for permission once, when the component mounts.
     requestPermission();
   }, [toast]);
 
