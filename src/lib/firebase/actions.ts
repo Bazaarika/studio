@@ -28,6 +28,11 @@ function initializeFirebaseAdmin() {
   try {
     const serviceAccount = JSON.parse(serviceAccountKey);
     
+    // IMPORTANT: Replace escaped newlines in the private key
+    if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
