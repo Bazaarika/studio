@@ -9,10 +9,13 @@ import type { Metadata } from 'next';
 import { ClientLayout } from '@/components/client-layout';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { ConnectivityProvider } from '@/hooks/use-connectivity';
+import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar';
+
 
 export const metadata: Metadata = {
   title: 'Bazaarika Lite - Modern E-commerce',
   description: 'Discover the latest trends in fashion and accessories. Your modern e-commerce experience starts here.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -29,6 +32,7 @@ export default function RootLayout({
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
       <body className="font-body antialiased">
+        <ServiceWorkerRegistrar />
         <ConnectivityProvider>
           <ThemeProvider>
             <AuthProvider>
