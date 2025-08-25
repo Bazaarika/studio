@@ -7,13 +7,50 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product } from '@/lib/mock-data';
 import { getProducts } from '@/lib/firebase/firestore';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Timer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
+import { Card, CardContent } from '@/components/ui/card';
+
+// Helper function to get the deal of the day based on the current date
+const getDealOfTheDay = (products: Product[]): Product | null => {
+  if (products.length === 0) {
+    return null;
+  }
+  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return products[dayOfYear % products.length];
+};
+
+// Custom hook for the countdown timer
+const useCountdown = () => {
+    const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' });
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date();
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+            const distance = endOfDay.getTime() - now.getTime();
+
+            if (distance < 0) {
+                setTimeLeft({ hours: '00', minutes: '00', seconds: '00' });
+            } else {
+                const hours = Math.floor((distance / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+                const minutes = Math.floor((distance / 1000 / 60) % 60).toString().padStart(2, '0');
+                const seconds = Math.floor((distance / 1000) % 60).toString().padStart(2, '0');
+                setTimeLeft({ hours, minutes, seconds });
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    return timeLeft;
+};
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const timeLeft = useCountdown();
 
   useEffect(() => {
     async function fetchProducts() {
@@ -30,6 +67,7 @@ export default function Home() {
   }, []);
 
   const trendingProducts = products.slice(0, 4);
+  const dealOfTheDay = getDealOfTheDay(products);
 
   return (
     <>
@@ -58,6 +96,45 @@ export default function Home() {
                />
           </div>
         </section>
+
+        {/* Deal of the Day Section */}
+        {dealOfTheDay && (
+          <section>
+             <h2 className="text-2xl font-bold font-headline mb-4">Deal of the Day</h2>
+             <Card className="overflow-hidden bg-primary/5 border-2 border-primary/20">
+              <CardContent className="p-0">
+                <div className="grid md:grid-cols-2">
+                  <div className="relative aspect-[4/3] md:aspect-square">
+                     <Image 
+                        src={dealOfTheDay.images?.[0]?.url || 'https://placehold.co/600x600.png'}
+                        alt={dealOfTheDay.name}
+                        fill
+                        className="object-cover"
+                        data-ai-hint={dealOfTheDay.images?.[0]?.hint || ''}
+                     />
+                  </div>
+                  <div className="p-6 flex flex-col justify-center">
+                    <h3 className="text-2xl md:text-3xl font-bold font-headline">{dealOfTheDay.name}</h3>
+                    <p className="text-muted-foreground mt-2">{dealOfTheDay.description}</p>
+                    <div className="flex items-baseline gap-2 mt-4">
+                        <span className="text-3xl font-bold text-primary">₹{dealOfTheDay.price.toFixed(2)}</span>
+                        {dealOfTheDay.compareAtPrice && (
+                            <span className="text-lg text-muted-foreground line-through">₹{dealOfTheDay.compareAtPrice.toFixed(2)}</span>
+                        )}
+                    </div>
+                     <div className="mt-4 flex items-center gap-2 text-primary font-semibold">
+                        <Timer className="h-6 w-6"/>
+                        <span>Offer ends in: {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}</span>
+                    </div>
+                    <Button asChild size="lg" className="mt-6 rounded-full w-full md:w-auto">
+                      <Link href={`/product/${dealOfTheDay.id}`}>View Deal</Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+             </Card>
+          </section>
+        )}
 
         {/* Recommended Styles */}
         <section>
