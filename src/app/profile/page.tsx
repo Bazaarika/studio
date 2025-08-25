@@ -131,8 +131,8 @@ function ProfileView() {
             return;
         }
 
-        if (!VAPID_KEY) {
-             throw new Error("VAPID key is not configured. Please check your firebase/config.ts file.");
+        if (!VAPID_KEY || VAPID_KEY === '...') {
+             throw new Error("VAPID key is not configured. Please check your firebase/config.ts file and the README for instructions.");
         }
 
         const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
@@ -141,14 +141,14 @@ function ProfileView() {
             await subscribeToTopic(currentToken, 'all');
             toast({ title: "Subscribed!", description: "You will now receive all notifications." });
         } else {
-            throw new Error("Could not get registration token. This can happen if the FCM API is not enabled.");
+            throw new Error("Could not get registration token. This can happen if the FCM API is not enabled in your Google Cloud project.");
         }
 
     } catch (error: any) {
         console.error("Error during subscription:", error);
         toast({ 
             title: "Notification Registration Failed", 
-            description: "Could not register for notifications. Please ensure the Firebase Cloud Messaging API is enabled in your Google Cloud project and your VAPID key is correct.", 
+            description: error.message || "Could not register for notifications. Please ensure the Firebase Cloud Messaging API is enabled in your Google Cloud project and your VAPID key is correct.", 
             variant: "destructive" 
         });
     } finally {

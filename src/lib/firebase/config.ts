@@ -14,7 +14,7 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 // **IMPORTANT**: Replace this with your own VAPID key from your Firebase project settings.
-export const VAPID_KEY = 'BBRW5TymPqPDP2_jMxrUznjS3JfAF6f5QOhuY7HQTAWfhcFWWX9CzoRIHwJ_52OdOlbu1bj3A2d3WowZjtsIa1Q';
+export const VAPID_KEY = '...';
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
