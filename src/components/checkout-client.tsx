@@ -229,7 +229,7 @@ export function CheckoutClient() {
                 address: [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ')
             },
             theme: {
-                color: "#9333ea" // Purple theme color for Razorpay modal
+                color: "#A020F0" // Purple theme color for Razorpay modal
             },
             modal: {
                 ondismiss: function() {
@@ -408,5 +408,3 @@ export function CheckoutClient() {
     </div>
   );
 }
-
-    

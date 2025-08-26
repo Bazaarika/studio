@@ -5,16 +5,16 @@ import { getAuth } from "firebase/auth";
 // Removed getMessaging from here to prevent premature initialization
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
-  authDomain: "bazaarika-lite.firebaseapp.com",
-  projectId: "bazaarika-lite",
-  storageBucket: "bazaarika-lite.firebasestorage.app",
-  messagingSenderId: "497294677028",
-  appId: "1:497294677028:web:d6500602307f6d462c74b1",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // **IMPORTANT**: Replace this with your own VAPID key from your Firebase project settings.
-export const VAPID_KEY = 'BBRW5TymPqPDP2_jMxrUznjS3JfAF6f5QOhuY7HQTAWfhcFWWX9CzoRIHwJ_52OdOlbu1bj3A2d3WowZjtsIa1Q';
+export const VAPID_KEY = '...';
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
