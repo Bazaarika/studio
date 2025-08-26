@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { categories } from '@/lib/mock-data';
+import { googleAI } from '@genkit-ai/googleai';
 
 const GenerateProductDetailsInputSchema = z.object({
   productName: z.string().describe('The name of the product.'),
@@ -32,6 +33,7 @@ const validCategories = categories.map(c => c.name).join(', ');
 
 const prompt = ai.definePrompt({
   name: 'generateProductDetailsPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateProductDetailsInputSchema},
   output: {schema: GenerateProductDetailsOutputSchema},
   prompt: `You are an expert e-commerce copywriter.

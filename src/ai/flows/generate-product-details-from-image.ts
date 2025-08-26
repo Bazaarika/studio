@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { categories } from '@/lib/mock-data';
+import { googleAI } from '@genkit-ai/googleai';
 
 const GenerateProductDetailsFromImageInputSchema = z.object({
   imageDataUri: z
@@ -38,6 +39,7 @@ const validCategories = categories.map(c => c.name).join(', ');
 
 const prompt = ai.definePrompt({
   name: 'generateProductDetailsFromImagePrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateProductDetailsFromImageInputSchema},
   output: {schema: GenerateProductDetailsFromImageOutputSchema},
   prompt: `You are an expert e-commerce merchandiser and copywriter.

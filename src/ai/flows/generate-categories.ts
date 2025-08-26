@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 // Define a schema for a single product's essential details for categorization
 const ProductDetailSchema = z.object({
@@ -40,6 +41,7 @@ export async function generateCategories(input: GenerateCategoriesInput): Promis
 
 const prompt = ai.definePrompt({
   name: 'generateCategoriesPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateCategoriesInputSchema},
   output: {schema: GenerateCategoriesOutputSchema},
   prompt: `You are an expert e-commerce merchandiser responsible for organizing products into categories.

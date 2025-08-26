@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 const StyleSuggestionsInputSchema = z.object({
   outfitImageDataUri: z
@@ -32,6 +33,7 @@ export async function getStyleSuggestions(input: StyleSuggestionsInput): Promise
 
 const prompt = ai.definePrompt({
   name: 'styleSuggestionsPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: StyleSuggestionsInputSchema},
   output: {schema: StyleSuggestionsOutputSchema},
   prompt: `You are a personal stylist providing fashion advice.

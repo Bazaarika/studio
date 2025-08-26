@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 const GenerateImageHintInputSchema = z.object({
   imageDataUri: z
@@ -31,6 +32,7 @@ export async function generateImageHint(input: GenerateImageHintInput): Promise<
 
 const prompt = ai.definePrompt({
   name: 'generateImageHintPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateImageHintInputSchema},
   output: {schema: GenerateImageHintOutputSchema},
   prompt: `You are an expert in product tagging and image analysis.
