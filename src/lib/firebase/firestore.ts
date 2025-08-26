@@ -78,11 +78,27 @@ export const getUserAddress = async (userId: string): Promise<Address | null> =>
     return null;
 };
 
+// Get user phone
+export const getUserPhone = async (userId: string): Promise<string | null> => {
+    const docSnap = await getUserDoc(userId);
+    if (docSnap.exists() && docSnap.data().phone) {
+        return docSnap.data().phone as string;
+    }
+    return null;
+};
+
 // Save or update user address
 export const updateUserAddress = async (userId: string, address: Address) => {
     const userDocRef = doc(db, "users", userId);
     await setDoc(userDocRef, { address }, { merge: true });
 };
+
+// Save or update user phone
+export const updateUserPhone = async (userId: string, phone: string) => {
+    const userDocRef = doc(db, "users", userId);
+    await setDoc(userDocRef, { phone }, { merge: true });
+};
+
 
 // --- Wishlist Functions ---
 

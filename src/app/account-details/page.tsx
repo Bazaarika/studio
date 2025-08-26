@@ -14,11 +14,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 export default function AccountDetailsPage() {
-    const { user, loading, updateUserProfile } = useAuth();
+    const { user, loading, updateUserProfile, phone, savePhone } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     
     const [displayName, setDisplayName] = useState('');
+    const [mobileNumber, setMobileNumber] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -26,8 +27,9 @@ export default function AccountDetailsPage() {
             router.push('/login');
         } else if (user) {
             setDisplayName(user.displayName || '');
+            setMobileNumber(phone || '');
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, phone]);
 
     const getInitials = (name: string | null | undefined) => {
         if (!name || name.trim() === '') return "U";
@@ -37,8 +39,24 @@ export default function AccountDetailsPage() {
     const handleProfileUpdate = async (e: FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        await updateUserProfile({ displayName });
-        setIsSubmitting(false);
+        try {
+            await Promise.all([
+                updateUserProfile({ displayName }),
+                savePhone(mobileNumber)
+            ]);
+            toast({
+                title: "Profile Updated!",
+                description: "Your changes have been saved successfully."
+            });
+        } catch (error) {
+             toast({
+                title: "Update Failed",
+                description: "Could not save your changes. Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (loading || !user) {
@@ -85,7 +103,17 @@ export default function AccountDetailsPage() {
                                     onChange={(e) => setDisplayName(e.target.value)} 
                                 />
                             </div>
-                             <div className="space-y-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="mobileNumber">Mobile Number</Label>
+                                <Input 
+                                    id="mobileNumber" 
+                                    type="tel"
+                                    value={mobileNumber} 
+                                    onChange={(e) => setMobileNumber(e.target.value)} 
+                                    placeholder="e.g., +91 98765 43210"
+                                />
+                            </div>
+                             <div className="space-y-2 sm:col-span-2">
                                 <Label htmlFor="email">Email Address</Label>
                                 <Input 
                                     id="email" 

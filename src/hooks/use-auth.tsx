@@ -18,7 +18,7 @@ import {
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getUserAddress, updateUserAddress, type Address } from "@/lib/firebase/firestore";
+import { getUserAddress, updateUserAddress, type Address, getUserPhone, updateUserPhone } from "@/lib/firebase/firestore";
 
 
 interface UserUpdatePayload {
@@ -29,6 +29,7 @@ interface UserUpdatePayload {
 interface AuthContextType {
     user: User | null;
     address: Address | null;
+    phone: string | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
@@ -36,6 +37,7 @@ interface AuthContextType {
     signInWithEmail: (email: string, pass: string) => Promise<void>;
     updateUserProfile: (payload: UserUpdatePayload) => Promise<void>;
     saveAddress: (address: Address) => Promise<void>;
+    savePhone: (phone: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +47,7 @@ const auth = getAuth(app);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [address, setAddress] = useState<Address | null>(null);
+    const [phone, setPhone] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
@@ -52,14 +55,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // User is signed in, fetch address concurrently
-                const userAddress = await getUserAddress(user.uid);
+                // User is signed in, fetch address and phone concurrently
+                const [userAddress, userPhone] = await Promise.all([
+                    getUserAddress(user.uid),
+                    getUserPhone(user.uid)
+                ]);
                 setAddress(userAddress);
+                setPhone(userPhone);
                 setUser(user);
             } else {
                 // User is signed out
                 setUser(null);
                 setAddress(null);
+                setPhone(null);
             }
             // Only set loading to false after all initial data is fetched
             setLoading(false);
@@ -199,8 +207,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const savePhone = async (phone: string) => {
+        if (!user) {
+            toast({ title: "Not signed in", variant: "destructive" });
+            return;
+        }
+        try {
+            await updateUserPhone(user.uid, phone);
+            setPhone(phone);
+            toast({ title: "Phone number saved!" });
+        } catch (error) {
+            toast({ title: "Error saving phone number", variant: "destructive" });
+        }
+    };
+
+
     return (
-        <AuthContext.Provider value={{ user, address, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress }}>
+        <AuthContext.Provider value={{ user, address, phone, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress, savePhone }}>
             {children}
         </AuthContext.Provider>
     );
