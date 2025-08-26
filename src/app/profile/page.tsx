@@ -55,17 +55,15 @@ function ProfileLoading() {
 
 
 function ProfileView() {
-  const { user, address, loading, signOut, updateUserProfile, saveAddress } = useAuth();
+  const { user, address, loading, signOut, saveAddress } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
   
-  const [displayName, setDisplayName] = useState('');
   const [shippingAddress, setShippingAddress] = useState<Address>({
     name: '',
     address: '',
@@ -81,13 +79,10 @@ function ProfileView() {
   }, [user, loading, router]);
   
   useEffect(() => {
-     if (user) {
-        setDisplayName(user.displayName || '');
-    }
     if (address) {
         setShippingAddress(address);
     }
-  }, [user, address]);
+  }, [address]);
 
   if (loading || !user) {
     return <ProfileLoading />;
@@ -98,14 +93,6 @@ function ProfileView() {
     return name.trim()[0].toUpperCase();
   };
 
-  const handleProfileUpdate = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    await updateUserProfile({ displayName });
-    setIsSubmitting(false);
-    setIsProfileModalOpen(false);
-  };
-  
   const handleAddressUpdate = async (e: FormEvent) => {
       e.preventDefault();
       setIsSubmitting(true);
@@ -162,7 +149,7 @@ function ProfileView() {
   const accountSettings = [
     { icon: Clock, label: "Order History", href: "/orders" },
     { icon: ShoppingBag, label: "Shop Preference - Menswear", onClick: () => toast({ title: "Feature coming soon!" }) },
-    { icon: UserIcon, label: "Account Details", onClick: () => setIsProfileModalOpen(true) },
+    { icon: UserIcon, label: "Account Details", href: "/account-details" },
     { icon: MapPin, label: "Manage Address", onClick: () => setIsAddressModalOpen(true) },
   ];
 
@@ -208,32 +195,9 @@ function ProfileView() {
                 <p className="text-2xl font-semibold font-headline">{user.displayName || "User"}</p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
-                <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
-                  <DialogTrigger asChild>
-                     <Button variant="outline" className="rounded-full bg-secondary hover:bg-secondary/80 w-full max-w-xs mx-auto">
-                        Edit Profile
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Profile</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleProfileUpdate} className="space-y-4">
-                        <div>
-                            <Label htmlFor="displayName">Display Name</Label>
-                            <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-                        </div>
-                        <DialogFooter>
-                            <DialogClose asChild>
-                                <Button type="button" variant="ghost">Cancel</Button>
-                            </DialogClose>
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Changes'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button variant="outline" className="rounded-full bg-secondary hover:bg-secondary/80 w-full max-w-xs mx-auto" asChild>
+                    <Link href="/account-details">Edit Profile</Link>
+                </Button>
             </div>
         </CardContent>
       </Card>
