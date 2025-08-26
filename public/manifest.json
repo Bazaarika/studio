@@ -1,22 +1,24 @@
+
 {
-  "short_name": "Bazaarika",
   "name": "Bazaarika Lite - Modern E-commerce",
+  "short_name": "Bazaarika",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF0FF",
+  "theme_color": "#A020F0",
   "description": "Discover the latest trends in fashion and accessories. Your modern e-commerce experience starts here.",
   "icons": [
     {
       "src": "/icon-192x192.svg",
+      "sizes": "192x192",
       "type": "image/svg+xml",
-      "sizes": "192x192"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.svg",
+      "sizes": "512x512",
       "type": "image/svg+xml",
-      "sizes": "512x512"
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "theme_color": "#FACC15",
-  "background_color": "#ffffff"
+  ]
 }
