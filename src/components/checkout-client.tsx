@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { getProduct, placeOrder } from "@/lib/firebase/firestore";
-import type { Product, OrderItem } from "@/lib/mock-data";
+import type { OrderItem } from "@/lib/mock-data";
 
 // Extend window interface for Razorpay
 declare global {
@@ -162,9 +162,9 @@ export function CheckoutClient() {
             if (!isBuyNow) {
                 clearCart();
             }
-
-            toast({ title: "Order Placed!", description: "Thank you for your purchase." });
-            router.push(`/orders/${orderId}`);
+            
+            // Redirect to the new order success page
+            router.push(`/order-success/${orderId}`);
 
         } catch (error) {
             console.error("Failed to place order:", error);
@@ -229,7 +229,7 @@ export function CheckoutClient() {
                 address: [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ')
             },
             theme: {
-                color: "#FACC15"
+                color: "#9333ea" // Purple theme color for Razorpay modal
             },
             modal: {
                 ondismiss: function() {
@@ -239,8 +239,27 @@ export function CheckoutClient() {
             }
         };
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+        try {
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response: any){
+                console.error("Razorpay payment failed:", response.error);
+                toast({
+                    title: "Payment Failed",
+                    description: response.error.description || "An error occurred during payment.",
+                    variant: "destructive"
+                });
+                setIsPlacingOrder(false);
+            });
+            rzp.open();
+        } catch (error) {
+            console.error("Razorpay Error:", error);
+            toast({
+                title: "Payment Error",
+                description: "Could not initialize online payment. Please try again.",
+                variant: "destructive"
+            });
+            setIsPlacingOrder(false);
+        }
     };
   
   if (authLoading || loadingItems) {
@@ -389,3 +408,5 @@ export function CheckoutClient() {
     </div>
   );
 }
+
+    
