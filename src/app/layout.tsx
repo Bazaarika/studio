@@ -11,6 +11,23 @@ import { ThemeProvider } from '@/hooks/use-theme';
 import { ConnectivityProvider } from '@/hooks/use-connectivity';
 import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar';
 import { PushNotificationManager } from '@/components/push-notification-manager';
+import { Playfair_Display, PT_Sans } from 'next/font/google';
+import { cn } from '@/lib/utils';
+
+// Font setup
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+  weight: ['400', '700']
+});
+
+const ptSans = PT_Sans({
+  subsets: ['latin'],
+  variable: '--font-pt-sans',
+  display: 'swap',
+  weight: ['400', '700']
+});
 
 
 export const metadata: Metadata = {
@@ -27,9 +44,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         
         {/* PWA Tags */}
@@ -39,7 +53,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className="font-body antialiased">
+      <body className={cn("font-body antialiased", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
         <PushNotificationManager />
         <ConnectivityProvider>
