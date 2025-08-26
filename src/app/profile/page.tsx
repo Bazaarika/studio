@@ -30,8 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/lib/firebase/firestore";
 import { useTheme, themes } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { messaging, VAPID_KEY } from "@/lib/firebase/config";
-import { getToken, isSupported } from "firebase/messaging";
+import { VAPID_KEY, app } from "@/lib/firebase/config";
+import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { subscribeToTopic } from "@/lib/firebase/actions";
 
 
@@ -118,11 +118,14 @@ function ProfileView() {
     setIsSubscribing(true);
     try {
         const isMessagingSupported = await isSupported();
-        if (!messaging || !isMessagingSupported) {
+        if (!isMessagingSupported) {
             toast({ title: "Notifications Not Supported", description: "Your browser does not support push notifications.", variant: "destructive" });
             setIsSubscribing(false);
             return;
         }
+
+        // Initialize messaging on-demand
+        const messaging = getMessaging(app);
 
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {

@@ -2,7 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getMessaging } from "firebase/messaging";
+// Removed getMessaging from here to prevent premature initialization
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyCWpvks_5q1nSBhsrYlNLIRX9UBZ-ZkbXA",
@@ -21,8 +21,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Initialize Firebase Cloud Messaging and get a reference to the service
-const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
+// messaging is no longer initialized here.
+// It will be initialized on-demand in the component that needs it.
 
-
-export { app, db, auth, messaging };
+export { app, db, auth };
