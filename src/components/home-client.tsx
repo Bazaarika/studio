@@ -91,31 +91,20 @@ const useCountdown = () => {
     return timeLeft;
 };
 
-// Helper to shuffle an array
-const shuffleArray = <T,>(array: T[]): T[] => {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-  }
-  return array;
-};
-
 interface HomeClientProps {
     allProducts: Product[];
     suggestedProducts: Product[];
     trendingProducts: Product[];
-    initialFestiveSale: GenerateFestiveSaleOutput | null;
+    initialFestiveSaleData: GenerateFestiveSaleOutput | null;
+    initialFestiveProducts: Product[];
 }
 
-export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialFestiveSale }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialFestiveSaleData, initialFestiveProducts }: HomeClientProps) {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const { recentlyViewedIds } = useRecentlyViewed();
   
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
-  const [festiveProducts, setFestiveProducts] = useState<Product[]>([]);
   
   const [isClient, setIsClient] = useState(false);
 
@@ -137,24 +126,6 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
       setRecentlyViewedProducts(viewed);
     }
   }, [allProducts, recentlyViewedIds, isClient]);
-
-   // Festive Sale Logic (now uses initial data)
-  useEffect(() => {
-    if (initialFestiveSale && allProducts.length > 0) {
-        const keywords = initialFestiveSale.suggestedProductKeywords.map(k => k.toLowerCase());
-        const filteredProducts = allProducts.filter(product => {
-            const productText = [
-            product.name,
-            product.description,
-            product.category,
-            ...(product.tags || [])
-        ].join(' ').toLowerCase();
-        return keywords.some(keyword => productText.includes(keyword));
-        });
-        setFestiveProducts(shuffleArray(filteredProducts).slice(0, 4));
-    }
-  }, [initialFestiveSale, allProducts]);
-
 
   // Handle infinite scroll
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -271,18 +242,18 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
         )}
 
         {/* AI Festive Sale Section */}
-        {initialFestiveSale && festiveProducts.length > 0 && (
+        {initialFestiveSaleData && initialFestiveProducts.length > 0 && (
           <section>
              <div className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden">
                 <div className="relative z-10">
                     <h2 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary flex items-center gap-2">
                         <PartyPopper className="h-8 w-8 text-accent"/>
-                        {initialFestiveSale.saleTitle}
+                        {initialFestiveSaleData.saleTitle}
                     </h2>
-                    <p className="text-muted-foreground mt-2 max-w-lg">{initialFestiveSale.saleDescription}</p>
+                    <p className="text-muted-foreground mt-2 max-w-lg">{initialFestiveSaleData.saleDescription}</p>
                 </div>
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {festiveProducts.map((product) => (
+                    {initialFestiveProducts.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
                 </div>

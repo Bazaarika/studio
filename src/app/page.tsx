@@ -21,6 +21,7 @@ export default async function Home() {
   const allProducts = await getProducts();
   
   let festiveSaleData: GenerateFestiveSaleOutput | null = null;
+  let festiveProducts: Product[] = [];
   
   try {
     const settings = await getFestiveSaleSettings();
@@ -34,6 +35,21 @@ export default async function Home() {
             suggestedProductKeywords: settings.manualKeywords.split(',').map(k => k.trim()),
         };
     }
+
+    if (festiveSaleData && allProducts.length > 0) {
+        const keywords = festiveSaleData.suggestedProductKeywords.map(k => k.toLowerCase());
+        const filteredProducts = allProducts.filter(product => {
+            const productText = [
+                product.name,
+                product.description,
+                product.category,
+                ...(product.tags || [])
+            ].join(' ').toLowerCase();
+            return keywords.some(keyword => productText.includes(keyword));
+        });
+        festiveProducts = shuffleArray(filteredProducts).slice(0, 4);
+    }
+
   } catch (error) {
       console.error("Failed to get festive sale data:", error);
       // Silently fail, the section won't be rendered
@@ -62,6 +78,7 @@ export default async function Home() {
     allProducts={allProducts} 
     suggestedProducts={suggestedProducts} 
     trendingProducts={trendingProducts}
-    initialFestiveSale={festiveSaleData} 
+    initialFestiveSaleData={festiveSaleData} 
+    initialFestiveProducts={festiveProducts}
   />;
 }
