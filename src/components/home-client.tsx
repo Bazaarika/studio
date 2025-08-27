@@ -237,6 +237,20 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
           </section>
         )}
 
+        {/* Suggested for You */}
+        {suggestedProducts.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {suggestedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Trending Products */}
         {trendingProducts && trendingProducts.length > 0 && (
           <section>
