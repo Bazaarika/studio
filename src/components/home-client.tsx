@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product, Category } from '@/lib/mock-data';
 import { categories } from '@/lib/mock-data';
-import { ArrowRight, Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
+import { ArrowRight, Timer, History, Sparkles, Loader2, Hand, TrendingUp, PartyPopper } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ import { RecentlyViewedCard } from '@/components/recently-viewed-card';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generateFestiveSale, type GenerateFestiveSaleOutput } from '@/ai/flows/generate-festive-sale';
 
 function HomeHeader() {
   const { user, loading } = useAuth();
@@ -113,6 +114,10 @@ export function HomeClient({ allProducts }: HomeClientProps) {
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
+  const [festiveSale, setFestiveSale] = useState<GenerateFestiveSaleOutput | null>(null);
+  const [festiveProducts, setFestiveProducts] = useState<Product[]>([]);
+  const [isAiLoading, setIsAiLoading] = useState(true);
+
 
   const [isClient, setIsClient] = useState(false);
 
@@ -123,7 +128,7 @@ export function HomeClient({ allProducts }: HomeClientProps) {
     setIsClient(true);
     setDisplayedProducts(allProducts.slice(0, 8)); // Load initial 8 products
     setHasMore(allProducts.length > 8);
-    // Set initial trending products
+    // Set initial trending products by shuffling
     setTrendingProducts(shuffleArray([...allProducts]).slice(0, 4));
   }, [allProducts]);
 
@@ -143,10 +148,41 @@ export function HomeClient({ allProducts }: HomeClientProps) {
           setSuggestedProducts(shuffleArray(suggested).slice(0, 4));
       } else {
           // Fallback if no recently viewed items
-          setSuggestedProducts(allProducts.slice(0, 4));
+          setSuggestedProducts(shuffleArray([...allProducts]).slice(0, 4));
       }
     }
   }, [allProducts, recentlyViewedIds]);
+
+   // AI Festive Sale Logic
+  useEffect(() => {
+    async function fetchFestiveSale() {
+      if (allProducts.length > 0) {
+        setIsAiLoading(true);
+        try {
+          const saleData = await generateFestiveSale();
+          setFestiveSale(saleData);
+
+          const keywords = saleData.suggestedProductKeywords.map(k => k.toLowerCase());
+          const filteredProducts = allProducts.filter(product => {
+             const productText = [
+                product.name,
+                product.description,
+                product.category,
+                ...(product.tags || [])
+            ].join(' ').toLowerCase();
+            return keywords.some(keyword => productText.includes(keyword));
+          });
+          setFestiveProducts(shuffleArray(filteredProducts).slice(0, 4));
+
+        } catch (error) {
+          console.error("Failed to fetch festive sale:", error);
+        } finally {
+          setIsAiLoading(false);
+        }
+      }
+    }
+    fetchFestiveSale();
+  }, [allProducts]);
 
   // Handle infinite scroll
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -262,6 +298,27 @@ export function HomeClient({ allProducts }: HomeClientProps) {
           </section>
         )}
 
+        {/* AI Festive Sale Section */}
+        {!isAiLoading && festiveSale && festiveProducts.length > 0 && (
+          <section>
+             <div className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden">
+                <div className="relative z-10">
+                    <h2 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary flex items-center gap-2">
+                        <PartyPopper className="h-8 w-8 text-accent"/>
+                        {festiveSale.saleTitle}
+                    </h2>
+                    <p className="text-muted-foreground mt-2 max-w-lg">{festiveSale.saleDescription}</p>
+                </div>
+                <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {festiveProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+             </div>
+          </section>
+        )}
+
+
         {/* Suggested for You */}
         {isClient && suggestedProducts.length > 0 && (
           <section>
@@ -289,31 +346,6 @@ export function HomeClient({ allProducts }: HomeClientProps) {
             </div>
           </section>
         )}
-
-        {/* Special Collection Banner */}
-        <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[250px] flex items-center">
-          <div className="flex flex-col items-start gap-4 z-10 relative">
-            <div className="bg-background/80 text-foreground p-4 rounded-lg shadow-lg">
-              <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary">
-                Festive Collection
-              </h1>
-              <p className="text-sm mt-2">Discover styles for the celebration.</p>
-            </div>
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full">
-              <Link href="/categories">Shop The Collection <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
-          </div>
-          <div className="absolute inset-y-0 right-0 w-1/2">
-               <Image 
-                  src="https://picsum.photos/400/400?random=2" 
-                  alt="Festive model"
-                  fill
-                  className="object-cover object-center"
-                  data-ai-hint="festive fashion"
-               />
-          </div>
-        </section>
-
 
         {/* Recently Viewed */}
         {isClient && recentlyViewedProducts.length > 0 && (
