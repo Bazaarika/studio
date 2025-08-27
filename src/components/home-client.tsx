@@ -16,7 +16,7 @@ import { RecentlyViewedCard } from '@/components/recently-viewed-card';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateFestiveSale, type GenerateFestiveSaleOutput } from '@/ai/flows/generate-festive-sale';
+import type { GenerateFestiveSaleOutput } from '@/ai/flows/generate-festive-sale';
 
 function HomeHeader() {
   const { user, loading } = useAuth();
@@ -104,21 +104,19 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 interface HomeClientProps {
     allProducts: Product[];
+    suggestedProducts: Product[]; // Now passed from server
+    initialFestiveSale: GenerateFestiveSaleOutput | null;
 }
 
-export function HomeClient({ allProducts }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, initialFestiveSale }: HomeClientProps) {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const { recentlyViewedIds } = useRecentlyViewed();
   
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
-  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
-  const [festiveSale, setFestiveSale] = useState<GenerateFestiveSaleOutput | null>(null);
   const [festiveProducts, setFestiveProducts] = useState<Product[]>([]);
-  const [isAiLoading, setIsAiLoading] = useState(true);
-
-
+  
   const [isClient, setIsClient] = useState(false);
 
   const timeLeft = useCountdown();
@@ -132,57 +130,33 @@ export function HomeClient({ allProducts }: HomeClientProps) {
     setTrendingProducts(shuffleArray([...allProducts]).slice(0, 4));
   }, [allProducts]);
 
-  // Logic for Recently Viewed and Suggested Products
+  // Logic for Recently Viewed Products
   useEffect(() => {
     if (allProducts.length > 0) {
-      // Filter products for "Recently Viewed" section
       const viewed = recentlyViewedIds
         .map(id => allProducts.find(p => p.id === id))
         .filter((p): p is Product => p !== undefined);
       setRecentlyViewedProducts(viewed);
-      
-      // Logic for "Suggested for you"
-      if (viewed.length > 0) {
-          const lastViewed = viewed[0];
-          const suggested = allProducts.filter(p => p.category === lastViewed.category && p.id !== lastViewed.id);
-          setSuggestedProducts(shuffleArray(suggested).slice(0, 4));
-      } else {
-          // Fallback if no recently viewed items
-          setSuggestedProducts(shuffleArray([...allProducts]).slice(0, 4));
-      }
     }
   }, [allProducts, recentlyViewedIds]);
 
-   // AI Festive Sale Logic
+   // Festive Sale Logic (now uses initial data)
   useEffect(() => {
-    async function fetchFestiveSale() {
-      if (allProducts.length > 0) {
-        setIsAiLoading(true);
-        try {
-          const saleData = await generateFestiveSale();
-          setFestiveSale(saleData);
-
-          const keywords = saleData.suggestedProductKeywords.map(k => k.toLowerCase());
-          const filteredProducts = allProducts.filter(product => {
-             const productText = [
-                product.name,
-                product.description,
-                product.category,
-                ...(product.tags || [])
-            ].join(' ').toLowerCase();
-            return keywords.some(keyword => productText.includes(keyword));
-          });
-          setFestiveProducts(shuffleArray(filteredProducts).slice(0, 4));
-
-        } catch (error) {
-          console.error("Failed to fetch festive sale:", error);
-        } finally {
-          setIsAiLoading(false);
-        }
-      }
+    if (initialFestiveSale && allProducts.length > 0) {
+        const keywords = initialFestiveSale.suggestedProductKeywords.map(k => k.toLowerCase());
+        const filteredProducts = allProducts.filter(product => {
+            const productText = [
+            product.name,
+            product.description,
+            product.category,
+            ...(product.tags || [])
+        ].join(' ').toLowerCase();
+        return keywords.some(keyword => productText.includes(keyword));
+        });
+        setFestiveProducts(shuffleArray(filteredProducts).slice(0, 4));
     }
-    fetchFestiveSale();
-  }, [allProducts]);
+  }, [initialFestiveSale, allProducts]);
+
 
   // Handle infinite scroll
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -299,15 +273,15 @@ export function HomeClient({ allProducts }: HomeClientProps) {
         )}
 
         {/* AI Festive Sale Section */}
-        {!isAiLoading && festiveSale && festiveProducts.length > 0 && (
+        {initialFestiveSale && festiveProducts.length > 0 && (
           <section>
              <div className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden">
                 <div className="relative z-10">
                     <h2 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary flex items-center gap-2">
                         <PartyPopper className="h-8 w-8 text-accent"/>
-                        {festiveSale.saleTitle}
+                        {initialFestiveSale.saleTitle}
                     </h2>
-                    <p className="text-muted-foreground mt-2 max-w-lg">{festiveSale.saleDescription}</p>
+                    <p className="text-muted-foreground mt-2 max-w-lg">{initialFestiveSale.saleDescription}</p>
                 </div>
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     {festiveProducts.map((product) => (
