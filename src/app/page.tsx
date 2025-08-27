@@ -26,7 +26,7 @@ export default async function Home() {
     const settings = await getFestiveSaleSettings();
     if (settings?.aiMode) {
         festiveSaleData = await generateFestiveSale();
-    } else if (settings) {
+    } else if (settings && settings.manualTitle) { // Only use manual if title is set
         festiveSaleData = {
             festivalName: 'Special Sale',
             saleTitle: settings.manualTitle,
@@ -53,8 +53,15 @@ export default async function Home() {
     )
   }
 
-  // Suggest some products on the server to avoid layout shifts on the client
-  const suggestedProducts = shuffleArray([...allProducts]).slice(0, 4);
+  // Pre-calculate dynamic sections on the server to prevent layout shifts
+  const shuffledProducts = shuffleArray([...allProducts]);
+  const suggestedProducts = shuffledProducts.slice(0, 4);
+  const trendingProducts = shuffleArray([...allProducts]).slice(0, 4);
 
-  return <HomeClient allProducts={allProducts} suggestedProducts={suggestedProducts} initialFestiveSale={festiveSaleData} />;
+  return <HomeClient 
+    allProducts={allProducts} 
+    suggestedProducts={suggestedProducts} 
+    trendingProducts={trendingProducts}
+    initialFestiveSale={festiveSaleData} 
+  />;
 }

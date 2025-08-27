@@ -104,17 +104,17 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 interface HomeClientProps {
     allProducts: Product[];
-    suggestedProducts: Product[]; // Now passed from server
+    suggestedProducts: Product[];
+    trendingProducts: Product[];
     initialFestiveSale: GenerateFestiveSaleOutput | null;
 }
 
-export function HomeClient({ allProducts, suggestedProducts, initialFestiveSale }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialFestiveSale }: HomeClientProps) {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const { recentlyViewedIds } = useRecentlyViewed();
   
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
-  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [festiveProducts, setFestiveProducts] = useState<Product[]>([]);
   
   const [isClient, setIsClient] = useState(false);
@@ -126,19 +126,17 @@ export function HomeClient({ allProducts, suggestedProducts, initialFestiveSale 
     setIsClient(true);
     setDisplayedProducts(allProducts.slice(0, 8)); // Load initial 8 products
     setHasMore(allProducts.length > 8);
-    // Set initial trending products by shuffling
-    setTrendingProducts(shuffleArray([...allProducts]).slice(0, 4));
   }, [allProducts]);
 
   // Logic for Recently Viewed Products
   useEffect(() => {
-    if (allProducts.length > 0) {
+    if (allProducts.length > 0 && isClient) {
       const viewed = recentlyViewedIds
         .map(id => allProducts.find(p => p.id === id))
         .filter((p): p is Product => p !== undefined);
       setRecentlyViewedProducts(viewed);
     }
-  }, [allProducts, recentlyViewedIds]);
+  }, [allProducts, recentlyViewedIds, isClient]);
 
    // Festive Sale Logic (now uses initial data)
   useEffect(() => {
@@ -294,7 +292,7 @@ export function HomeClient({ allProducts, suggestedProducts, initialFestiveSale 
 
 
         {/* Suggested for You */}
-        {isClient && suggestedProducts.length > 0 && (
+        {suggestedProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
@@ -308,7 +306,7 @@ export function HomeClient({ allProducts, suggestedProducts, initialFestiveSale 
         )}
 
         {/* Trending Products */}
-        {isClient && trendingProducts.length > 0 && (
+        {trendingProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
               <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
