@@ -2,7 +2,6 @@
 import { getProducts } from '@/lib/firebase/firestore';
 import { ProductCardSkeleton } from '@/components/product-card-skeleton';
 import { HomeClient } from '@/components/home-client';
-import type { Product } from '@/lib/mock-data';
 
 export default async function Home() {
   const allProducts = await getProducts();
@@ -21,8 +20,5 @@ export default async function Home() {
     )
   }
 
-  // Prepare data on the server
-  const suggestedProducts = allProducts.slice(0, 4);
-
-  return <HomeClient allProducts={allProducts} suggestedProducts={suggestedProducts} />;
+  return <HomeClient allProducts={allProducts} />;
 }

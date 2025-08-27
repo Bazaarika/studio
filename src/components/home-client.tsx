@@ -8,7 +8,7 @@ import { ProductCard } from '@/components/product-card';
 import type { Product, Category } from '@/lib/mock-data';
 import { categories } from '@/lib/mock-data';
 import { ArrowRight, Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -90,16 +90,30 @@ const useCountdown = () => {
     return timeLeft;
 };
 
+// Helper to shuffle an array
+const shuffleArray = <T,>(array: T[]): T[] => {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+};
+
 interface HomeClientProps {
     allProducts: Product[];
-    suggestedProducts: Product[];
 }
 
-export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) {
+export function HomeClient({ allProducts }: HomeClientProps) {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const { recentlyViewedIds } = useRecentlyViewed();
+  
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
+
   const [isClient, setIsClient] = useState(false);
 
   const timeLeft = useCountdown();
@@ -109,15 +123,28 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
     setIsClient(true);
     setDisplayedProducts(allProducts.slice(0, 8)); // Load initial 8 products
     setHasMore(allProducts.length > 8);
+    // Set initial trending products
+    setTrendingProducts(shuffleArray([...allProducts]).slice(0, 4));
   }, [allProducts]);
 
-  // Filter products for "Recently Viewed" section
+  // Logic for Recently Viewed and Suggested Products
   useEffect(() => {
-    if (allProducts.length > 0 && recentlyViewedIds.length > 0) {
+    if (allProducts.length > 0) {
+      // Filter products for "Recently Viewed" section
       const viewed = recentlyViewedIds
         .map(id => allProducts.find(p => p.id === id))
         .filter((p): p is Product => p !== undefined);
       setRecentlyViewedProducts(viewed);
+      
+      // Logic for "Suggested for you"
+      if (viewed.length > 0) {
+          const lastViewed = viewed[0];
+          const suggested = allProducts.filter(p => p.category === lastViewed.category && p.id !== lastViewed.id);
+          setSuggestedProducts(shuffleArray(suggested).slice(0, 4));
+      } else {
+          // Fallback if no recently viewed items
+          setSuggestedProducts(allProducts.slice(0, 4));
+      }
     }
   }, [allProducts, recentlyViewedIds]);
 
@@ -149,13 +176,11 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
     };
   }, [handleObserver]);
 
-  const dealOfTheDay = getDealOfTheDay(allProducts);
+  const dealOfTheDay = useMemo(() => getDealOfTheDay(allProducts), [allProducts]);
   const discountPercent = dealOfTheDay?.compareAtPrice && dealOfTheDay?.price
     ? Math.round(((dealOfTheDay.compareAtPrice - dealOfTheDay.price) / dealOfTheDay.compareAtPrice) * 100)
     : 0;
   
-  const trendingProducts = allProducts.slice(1, 5); // Example: take next 4 products as trending
-
   const CountdownBlock = ({ value, label }: { value: string, label: string }) => (
       <div className="flex flex-col items-center">
           <div className="text-2xl md:text-3xl font-bold text-background bg-primary/20 rounded-lg p-2 w-12 h-12 flex items-center justify-center">
@@ -238,7 +263,7 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
         )}
 
         {/* Suggested for You */}
-        {suggestedProducts.length > 0 && (
+        {isClient && suggestedProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
@@ -252,7 +277,7 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
         )}
 
         {/* Trending Products */}
-        {trendingProducts && trendingProducts.length > 0 && (
+        {isClient && trendingProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
               <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
@@ -326,5 +351,3 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
       </div>
   );
 }
-
-    
