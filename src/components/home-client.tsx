@@ -6,13 +6,52 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product } from '@/lib/mock-data';
-import { ArrowRight, Timer, History, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowRight, Timer, History, Sparkles, Loader2, Hand } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RecentlyViewedCard } from '@/components/recently-viewed-card';
-import { HomeHeader } from '@/components/home-header';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+
+
+function HomeHeader() {
+  const { user, loading } = useAuth();
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name || name.trim() === '') return "U";
+    return name.trim()[0].toUpperCase();
+  };
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-between">
+            <div className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-12 w-12 rounded-full" />
+        </div>
+    )
+  }
+
+  return (
+    <section className="flex items-center justify-between">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          Hi, {user?.displayName || 'User'} <Hand className="h-6 w-6 text-yellow-400" />
+        </h2>
+        <p className="text-muted-foreground">Elevate your complexion care</p>
+      </div>
+      <Avatar className="h-12 w-12">
+        <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+        <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+      </Avatar>
+    </section>
+  );
+}
 
 
 // Helper function to get the deal of the day based on the current date
