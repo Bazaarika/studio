@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import type { Product } from '@/lib/mock-data';
-import { ArrowRight, Timer, History, Sparkles, Loader2, Hand } from 'lucide-react';
+import type { Product, Category } from '@/lib/mock-data';
+import { categories } from '@/lib/mock-data';
+import { ArrowRight, Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,6 @@ import { RecentlyViewedCard } from '@/components/recently-viewed-card';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-
 
 function HomeHeader() {
   const { user, loading } = useAuth();
@@ -43,16 +43,17 @@ function HomeHeader() {
         <h2 className="text-2xl font-bold flex items-center gap-2">
           Hi, {user?.displayName || 'User'} <Hand className="h-6 w-6 text-yellow-400" />
         </h2>
-        <p className="text-muted-foreground">Elevate your complexion care</p>
+        <p className="text-muted-foreground">Find your next favorite thing</p>
       </div>
-      <Avatar className="h-12 w-12">
-        <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-        <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-      </Avatar>
+       <Link href="/profile">
+        <Avatar className="h-12 w-12">
+            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+        </Avatar>
+       </Link>
     </section>
   );
 }
-
 
 // Helper function to get the deal of the day based on the current date
 const getDealOfTheDay = (products: Product[]): Product | null => {
@@ -152,6 +153,8 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
   const discountPercent = dealOfTheDay?.compareAtPrice && dealOfTheDay?.price
     ? Math.round(((dealOfTheDay.compareAtPrice - dealOfTheDay.price) / dealOfTheDay.compareAtPrice) * 100)
     : 0;
+  
+  const trendingProducts = allProducts.slice(1, 5); // Example: take next 4 products as trending
 
   const CountdownBlock = ({ value, label }: { value: string, label: string }) => (
       <div className="flex flex-col items-center">
@@ -161,33 +164,28 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
           <span className="text-xs text-muted-foreground mt-1">{label}</span>
       </div>
   );
+  
+  const CategoryCard = ({ category }: { category: Category }) => (
+    <Link href={`/categories?category=${category.id}`} className="flex flex-col items-center gap-2 flex-shrink-0 w-20 group">
+        <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <category.icon className="h-8 w-8 text-primary group-hover:text-primary/80" />
+        </div>
+        <p className="text-sm font-medium text-center text-muted-foreground group-hover:text-primary">{category.name}</p>
+    </Link>
+  );
 
   return (
     <div className="space-y-12">
         <HomeHeader />
-        {/* Hero Section */}
-        <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[300px] flex items-center">
-          <div className="flex flex-col items-start gap-4 z-10 relative">
-            <div className="bg-background/80 text-foreground p-4 rounded-lg shadow-lg">
-              <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary">
-                Summer Collection is Here
-              </h1>
-              <p className="text-sm mt-2">Find your perfect style for the season.</p>
+        
+        {/* Category Section */}
+        <section>
+            <h2 className="text-2xl font-bold font-headline mb-4">Categories</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
+                {categories.map(cat => <CategoryCard key={cat.id} category={cat} />)}
             </div>
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full">
-              <Link href="/categories">Shop Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
-          </div>
-          <div className="absolute inset-y-0 right-0 w-1/2">
-               <Image 
-                  src="https://picsum.photos/400/400" 
-                  alt="Sale model"
-                  fill
-                  className="object-cover object-center"
-                  data-ai-hint="fashion model"
-               />
-          </div>
         </section>
+
 
         {/* Deal of the Day Section */}
         {dealOfTheDay && (
@@ -239,19 +237,43 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
           </section>
         )}
 
-        {/* Suggest for you */}
-        {suggestedProducts && suggestedProducts.length > 0 && (
+        {/* Trending Products */}
+        {trendingProducts && trendingProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-accent" /> Suggest for you
+              <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {suggestedProducts.map((product) => (
+              {trendingProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </section>
         )}
+
+        {/* Special Collection Banner */}
+        <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[250px] flex items-center">
+          <div className="flex flex-col items-start gap-4 z-10 relative">
+            <div className="bg-background/80 text-foreground p-4 rounded-lg shadow-lg">
+              <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary">
+                Festive Collection
+              </h1>
+              <p className="text-sm mt-2">Discover styles for the celebration.</p>
+            </div>
+            <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full">
+              <Link href="/categories">Shop The Collection <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+          </div>
+          <div className="absolute inset-y-0 right-0 w-1/2">
+               <Image 
+                  src="https://picsum.photos/400/400?random=2" 
+                  alt="Festive model"
+                  fill
+                  className="object-cover object-center"
+                  data-ai-hint="festive fashion"
+               />
+          </div>
+        </section>
 
 
         {/* Recently Viewed */}
@@ -275,7 +297,7 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
           <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold font-headline">All Products</h2>
               <Link href="/categories" className="text-sm font-semibold text-muted-foreground hover:text-primary">
-                  Filter by Category
+                  View All
               </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -290,3 +312,5 @@ export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) 
       </div>
   );
 }
+
+    
