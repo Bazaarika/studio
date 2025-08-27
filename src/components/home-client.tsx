@@ -6,17 +6,14 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product } from '@/lib/mock-data';
-import { ArrowRight, Timer, History, Sparkles } from 'lucide-react';
+import { ArrowRight, Timer, History, Sparkles, Loader2 } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RecentlyViewedCard } from '@/components/recently-viewed-card';
-import { ProductCardSkeleton } from './product-card-skeleton';
+import { HomeHeader } from '@/components/home-header';
 
-interface HomeClientProps {
-    allProducts: Product[];
-}
 
 // Helper function to get the deal of the day based on the current date
 const getDealOfTheDay = (products: Product[]): Product | null => {
@@ -53,7 +50,12 @@ const useCountdown = () => {
     return timeLeft;
 };
 
-export function HomeClient({ allProducts }: HomeClientProps) {
+interface HomeClientProps {
+    allProducts: Product[];
+    suggestedProducts: Product[];
+}
+
+export function HomeClient({ allProducts, suggestedProducts }: HomeClientProps) {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const { recentlyViewedIds } = useRecentlyViewed();
@@ -65,7 +67,7 @@ export function HomeClient({ allProducts }: HomeClientProps) {
 
   useEffect(() => {
     setIsClient(true);
-    setDisplayedProducts(allProducts.slice(0, 8));
+    setDisplayedProducts(allProducts.slice(0, 8)); // Load initial 8 products
     setHasMore(allProducts.length > 8);
   }, [allProducts]);
 
@@ -112,8 +114,6 @@ export function HomeClient({ allProducts }: HomeClientProps) {
     ? Math.round(((dealOfTheDay.compareAtPrice - dealOfTheDay.price) / dealOfTheDay.compareAtPrice) * 100)
     : 0;
 
-  const suggestedProducts = allProducts.slice(0, 4);
-
   const CountdownBlock = ({ value, label }: { value: string, label: string }) => (
       <div className="flex flex-col items-center">
           <div className="text-2xl md:text-3xl font-bold text-background bg-primary/20 rounded-lg p-2 w-12 h-12 flex items-center justify-center">
@@ -125,6 +125,7 @@ export function HomeClient({ allProducts }: HomeClientProps) {
 
   return (
     <div className="space-y-12">
+        <HomeHeader />
         {/* Hero Section */}
         <section className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden min-h-[300px] flex items-center">
           <div className="flex flex-col items-start gap-4 z-10 relative">
@@ -200,7 +201,7 @@ export function HomeClient({ allProducts }: HomeClientProps) {
         )}
 
         {/* Suggest for you */}
-        {suggestedProducts.length > 0 && (
+        {suggestedProducts && suggestedProducts.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-accent" /> Suggest for you
@@ -239,16 +240,12 @@ export function HomeClient({ allProducts }: HomeClientProps) {
               </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {!isClient ? (
-              Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            ) : (
-              displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))
-            )}
+            {displayedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
           <div ref={loader} className="h-10 mt-8 flex justify-center items-center">
-            {isClient && hasMore && <ProductCardSkeleton />}
+            {isClient && hasMore && <Loader2 className="h-8 w-8 animate-spin text-primary"/>}
           </div>
         </section>
       </div>
