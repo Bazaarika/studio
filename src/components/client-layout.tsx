@@ -2,7 +2,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { Footer } from '@/components/footer';
 import { BottomNav } from '@/components/bottom-nav';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,6 +10,12 @@ import { cn } from '@/lib/utils';
 
 export function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const isAdminPage = pathname.startsWith('/admin');
 
@@ -30,7 +36,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
               <motion.div
                 key={pathname}
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{ opacity: isClient ? 1 : 0, y: isClient ? 0 : 10 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
               >
