@@ -39,7 +39,7 @@ export function ProductActions({ product, quantity }: ProductActionsProps) {
                     {/* Price Display */}
                     <div className="flex-shrink-0">
                         <span className="text-sm text-muted-foreground md:hidden">Price</span>
-                        <p className="text-xl font-bold font-headline">₹{product.price.toFixed(2)}</p>
+                        <p className="text-xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
                     </div>
 
                     {/* Buttons for both mobile and desktop */}

@@ -66,7 +66,7 @@ export default function CartPage() {
                         <div>
                             <Link href={`/product/${item.id}`} className="font-semibold text-lg hover:text-primary">{item.name}</Link>
                             <p className="text-sm text-muted-foreground">{item.category}</p>
-                            <p className="font-bold text-primary mt-1">₹{item.price.toFixed(2)}</p>
+                            <p className="font-bold text-primary mt-1">&#8377;{item.price.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
@@ -95,16 +95,16 @@ export default function CartPage() {
             <CardContent className="space-y-4">
                  <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>₹{subtotal.toFixed(2)}</span>
+                    <span>&#8377;{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
-                    <span>₹{shipping.toFixed(2)}</span>
+                    <span>&#8377;{shipping.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>₹{total.toFixed(2)}</span>
+                    <span>&#8377;{total.toFixed(2)}</span>
                 </div>
                 <Button size="lg" className="w-full bg-accent text-accent-foreground rounded-full" asChild>
                     <Link href="/checkout">Proceed to Checkout</Link>

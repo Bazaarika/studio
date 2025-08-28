@@ -65,7 +65,7 @@ export default function OrdersPage() {
               </div>
               <div className="text-left md:text-right mt-2 md:mt-0">
                 <p className="font-semibold">Status: <span className="text-primary">{order.status}</span></p>
-                <p className="text-muted-foreground">Total: ₹{order.total.toFixed(2)}</p>
+                <p className="text-muted-foreground">Total: &#8377;{order.total.toFixed(2)}</p>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -78,7 +78,7 @@ export default function OrdersPage() {
                   <div>
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                    <p className="text-sm font-medium">₹{item.price.toFixed(2)}</p>
+                    <p className="text-sm font-medium">&#8377;{item.price.toFixed(2)}</p>
                   </div>
                 </div>
               ))}

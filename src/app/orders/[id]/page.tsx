@@ -86,7 +86,7 @@ export default function OrderDetailsPage() {
                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                     </div>
                                 </div>
-                                <p className="font-medium text-right">₹{(item.price * item.quantity).toFixed(2)}</p>
+                                <p className="font-medium text-right">&#8377;{(item.price * item.quantity).toFixed(2)}</p>
                             </div>
                         ))}
                     </div>
@@ -116,16 +116,16 @@ export default function OrderDetailsPage() {
                 <CardContent className="space-y-2">
                      <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span>₹{(order.total - 50).toFixed(2)}</span>
+                        <span>&#8377;{(order.total - 50).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span>Shipping</span>
-                        <span>₹50.00</span>
+                        <span>&#8377;50.00</span>
                     </div>
                     <Separator className="my-2"/>
                     <div className="flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>₹{order.total.toFixed(2)}</span>
+                        <span>&#8377;{order.total.toFixed(2)}</span>
                     </div>
                 </CardContent>
             </Card>

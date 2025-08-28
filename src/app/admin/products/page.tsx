@@ -135,7 +135,7 @@ export default function ProductsPage() {
                                             {product.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                                    <TableCell>&#8377;{product.price.toFixed(2)}</TableCell>
                                     <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>

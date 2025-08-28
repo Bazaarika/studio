@@ -84,7 +84,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="mt-2 space-y-1">
         <h3 className="text-sm font-semibold text-foreground">{product.name}</h3>
         <div className="flex items-center justify-between gap-4">
-            <p className="text-base font-bold text-foreground">₹{product.price.toFixed(2)}</p>
+            <p className="text-base font-bold text-foreground">&#8377;{product.price.toFixed(2)}</p>
              <Button 
                 size="icon" 
                 variant="ghost" 

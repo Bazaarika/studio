@@ -124,9 +124,9 @@ export function ProductDetailsClient({ product }: { product: Product }) {
           </div>
 
            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold font-headline text-primary">₹{product.price.toFixed(2)}</span>
+              <span className="text-4xl font-bold font-headline text-primary">&#8377;{product.price.toFixed(2)}</span>
               {product.compareAtPrice && (
-                  <span className="text-xl text-muted-foreground line-through">₹{product.compareAtPrice.toFixed(2)}</span>
+                  <span className="text-xl text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</span>
               )}
           </div>
 

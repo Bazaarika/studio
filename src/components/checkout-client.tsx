@@ -361,7 +361,7 @@ export function CheckoutClient() {
                                     <p className="font-semibold">{item.name}</p>
                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                 </div>
-                                <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+                                <p className="font-medium">&#8377;{(item.price * item.quantity).toFixed(2)}</p>
                             </div>
                        );
                    })}
@@ -370,16 +370,16 @@ export function CheckoutClient() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-muted-foreground">
                       <span>Subtotal</span>
-                      <span>₹{subtotal.toFixed(2)}</span>
+                      <span>&#8377;{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                       <span>Shipping</span>
-                      <span>₹{shipping.toFixed(2)}</span>
+                      <span>&#8377;{shipping.toFixed(2)}</span>
                   </div>
                   <Separator className="my-2"/>
                   <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>₹{total.toFixed(2)}</span>
+                      <span>&#8377;{total.toFixed(2)}</span>
                   </div>
                 </div>
             </CardContent>
