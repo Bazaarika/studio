@@ -100,32 +100,25 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialFestiveSaleData, initialFestiveProducts }: HomeClientProps) {
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const { recentlyViewedIds } = useRecentlyViewed();
+  // Initialize state directly with server-provided props to prevent hydration mismatch
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>(() => allProducts.slice(0, 8));
+  const [hasMore, setHasMore] = useState(() => allProducts.length > 8);
   
+  const { recentlyViewedIds } = useRecentlyViewed();
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   
-  const [isClient, setIsClient] = useState(false);
-
   const timeLeft = useCountdown();
   const loader = useRef<HTMLDivElement | null>(null);
 
+  // Logic for Recently Viewed Products - runs only on the client
   useEffect(() => {
-    setIsClient(true);
-    setDisplayedProducts(allProducts.slice(0, 8)); // Load initial 8 products
-    setHasMore(allProducts.length > 8);
-  }, [allProducts]);
-
-  // Logic for Recently Viewed Products
-  useEffect(() => {
-    if (allProducts.length > 0 && isClient) {
+    if (allProducts.length > 0) {
       const viewed = recentlyViewedIds
         .map(id => allProducts.find(p => p.id === id))
         .filter((p): p is Product => p !== undefined);
       setRecentlyViewedProducts(viewed);
     }
-  }, [allProducts, recentlyViewedIds, isClient]);
+  }, [allProducts, recentlyViewedIds]);
 
   // Handle infinite scroll
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -149,9 +142,10 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
       threshold: 0,
     };
     const observer = new IntersectionObserver(handleObserver, option);
-    if (loader.current) observer.observe(loader.current);
+    const currentLoader = loader.current;
+    if (currentLoader) observer.observe(currentLoader);
     return () => {
-      if (loader.current) observer.unobserve(loader.current);
+      if (currentLoader) observer.unobserve(currentLoader);
     };
   }, [handleObserver]);
 
@@ -291,7 +285,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
         )}
 
         {/* Recently Viewed */}
-        {isClient && recentlyViewedProducts.length > 0 && (
+        {recentlyViewedProducts.length > 0 && (
           <section>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold font-headline flex items-center gap-2">
@@ -320,7 +314,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
             ))}
           </div>
           <div ref={loader} className="h-10 mt-8 flex justify-center items-center">
-            {isClient && hasMore && <Loader2 className="h-8 w-8 animate-spin text-primary"/>}
+            {hasMore && <Loader2 className="h-8 w-8 animate-spin text-primary"/>}
           </div>
         </section>
       </div>
