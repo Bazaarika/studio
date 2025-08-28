@@ -2,7 +2,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode } from 'react';
 import { Footer } from '@/components/footer';
 import { BottomNav } from '@/components/bottom-nav';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,11 +10,6 @@ import { cn } from '@/lib/utils';
 
 export function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const isAdminPage = pathname.startsWith('/admin');
 
@@ -25,13 +20,12 @@ export function ClientLayout({ children }: { children: ReactNode }) {
   const isProductPage = pathname.startsWith('/product/');
   const isCheckoutPage = pathname === '/checkout';
   
-  const showBottomNav = isClient && !isProductPage && !isCheckoutPage;
+  const showBottomNav = !isProductPage && !isCheckoutPage;
 
   return (
     <div className="flex flex-col min-h-screen">
       <main className={cn("flex-grow", showBottomNav && "pb-16 md:pb-0")}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {isClient ? (
             <AnimatePresence mode="wait">
               <motion.div
                 key={pathname}
@@ -43,10 +37,6 @@ export function ClientLayout({ children }: { children: ReactNode }) {
                 {children}
               </motion.div>
             </AnimatePresence>
-          ) : (
-             // Render children without animation on the server to prevent mismatch
-            <>{children}</>
-          )}
         </div>
       </main>
       <div className="hidden md:block">
