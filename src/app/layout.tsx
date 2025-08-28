@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 // Font setup
 const playfair = Playfair_Display({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'], // Added 'latin-ext' to support the Rupee symbol
   variable: '--font-playfair',
   display: 'swap',
   weight: ['400', '700']
