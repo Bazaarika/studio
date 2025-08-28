@@ -18,25 +18,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function HomeHeader() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   const getInitials = (name: string | null | undefined) => {
     if (!name || name.trim() === '') return "U";
     return name.trim()[0].toUpperCase();
   };
-
-  if (loading) {
-    return (
-        <div className="flex items-center justify-between">
-            <div className="space-y-2">
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-48" />
-            </div>
-            <Skeleton className="h-12 w-12 rounded-full" />
-        </div>
-    )
-  }
-
+  
   return (
     <section className="flex items-center justify-between">
       <div className="space-y-1">
