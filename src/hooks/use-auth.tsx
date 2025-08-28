@@ -46,14 +46,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
 
-// Initialize user state synchronously from the currentUser cache
-const initialUser = auth.currentUser;
+// Helper functions for localStorage
+const getUserFromCache = (): User | null => {
+    if (typeof window === 'undefined') return null;
+    const cachedUser = localStorage.getItem('bazaarika-user');
+    return cachedUser ? JSON.parse(cachedUser) : null;
+};
+
+const setUserInCache = (user: User | null) => {
+    if (typeof window === 'undefined') return;
+    if (user) {
+        localStorage.setItem('bazaarika-user', JSON.stringify(user));
+    } else {
+        localStorage.removeItem('bazaarika-user');
+    }
+};
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(initialUser);
+    const [user, setUser] = useState<User | null>(getUserFromCache);
     const [address, setAddress] = useState<Address | null>(null);
     const [phone, setPhone] = useState<string | null>(null);
-    const [loading, setLoading] = useState(!initialUser); // Only load if there's no cached user
+    const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -68,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (user) {
                 setUser(user);
-                // Set up a new real-time listener for the user's profile data
+                setUserInCache(user);
+                
                 const userDocRef = doc(db, "users", user.uid);
                 unsubscribeFromFirestore = onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
@@ -76,22 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         setAddress(data.address || null);
                         setPhone(data.phone || null);
                     } else {
-                        // Document doesn't exist, reset profile info
                         setAddress(null);
                         setPhone(null);
                     }
-                    setLoading(false); // Stop loading once we have data or know it doesn't exist
+                    if (loading) setLoading(false);
                 }, (error) => {
                     console.error("Error with Firestore listener:", error);
-                    setLoading(false);
+                    if (loading) setLoading(false);
                 });
 
             } else {
-                // User is signed out
                 setUser(null);
+                setUserInCache(null);
                 setAddress(null);
                 setPhone(null);
-                setLoading(false);
+                if (loading) setLoading(false);
             }
         });
 
@@ -113,14 +127,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             });
 
-        // Cleanup function
         return () => {
             unsubscribeFromAuth();
             if (unsubscribeFromFirestore) {
                 unsubscribeFromFirestore();
             }
         };
-    }, [router, toast]);
+    }, [router, toast, loading]);
 
     const handleAuthError = (error: AuthError) => {
         let title = "Authentication Error";
@@ -192,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signOut = async () => {
         try {
             await firebaseSignOut(auth);
+            setUserInCache(null); // Clear cache on sign out
             router.push('/login');
         } catch (error) {
             console.error("Error signing out", error);
@@ -199,14 +213,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const updateUserProfile = async (payload: UserUpdatePayload) => {
-        if (!auth.currentUser) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
             toast({ title: "Not signed in", description: "You must be signed in to update your profile.", variant: "destructive"});
             return;
         }
         try {
-            await updateProfile(auth.currentUser, payload);
-            // Manually update the user state to reflect changes immediately
-            setUser({ ...auth.currentUser });
+            await updateProfile(currentUser, payload);
+            // Manually update the user state and cache to reflect changes immediately
+            const updatedUser = { ...currentUser, ...payload } as User;
+            setUser(updatedUser);
+            setUserInCache(updatedUser);
             toast({
                 title: "Profile Updated!",
                 description: "Your changes have been saved successfully."
@@ -228,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         try {
             await updateUserAddress(user.uid, address);
-            // No need to setAddress here, onSnapshot will handle it
+            // onSnapshot will handle the state update
             toast({ title: "Address saved!" });
         } catch (error) {
             toast({ title: "Error saving address", variant: "destructive" });
@@ -242,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         try {
             await updateUserPhone(user.uid, phone);
-            // No need to setPhone here, onSnapshot will handle it
+            // onSnapshot will handle the state update
             toast({ title: "Phone number saved!" });
         } catch (error) {
             toast({ title: "Error saving phone number", variant: "destructive" });
