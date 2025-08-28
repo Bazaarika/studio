@@ -209,34 +209,3 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
         return null;
     }
 };
-
-// --- Site Settings Functions ---
-
-export interface FestiveSaleSettings {
-    aiMode: boolean;
-    manualTitle: string;
-    manualDescription: string;
-    manualKeywords: string;
-}
-
-// Get festive sale settings
-export const getFestiveSaleSettings = async (): Promise<FestiveSaleSettings | null> => {
-    const docRef = doc(db, "site_settings", "festive_sale");
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return docSnap.data() as FestiveSaleSettings;
-    }
-    // Return default settings if document doesn't exist
-    return {
-        aiMode: true,
-        manualTitle: "",
-        manualDescription: "",
-        manualKeywords: "",
-    };
-};
-
-// Save festive sale settings
-export const saveFestiveSaleSettings = async (settings: FestiveSaleSettings) => {
-    const docRef = doc(db, "site_settings", "festive_sale");
-    await setDoc(docRef, settings, { merge: true });
-};

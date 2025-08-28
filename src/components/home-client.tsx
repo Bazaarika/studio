@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product, Category } from '@/lib/mock-data';
 import { categories } from '@/lib/mock-data';
-import { ArrowRight, Timer, History, Sparkles, Loader2, Hand, TrendingUp, PartyPopper } from 'lucide-react';
+import { Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,6 @@ import { RecentlyViewedCard } from '@/components/recently-viewed-card';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { GenerateFestiveSaleOutput } from '@/ai/flows/generate-festive-sale';
 
 function HomeHeader() {
   const { user, loading } = useAuth();
@@ -95,11 +94,9 @@ interface HomeClientProps {
     allProducts: Product[];
     suggestedProducts: Product[];
     trendingProducts: Product[];
-    initialFestiveSaleData: GenerateFestiveSaleOutput | null;
-    initialFestiveProducts: Product[];
 }
 
-export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialFestiveSaleData, initialFestiveProducts }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, trendingProducts }: HomeClientProps) {
   // Initialize state directly with server-provided props to prevent hydration mismatch
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>(() => allProducts.slice(0, 8));
   const [hasMore, setHasMore] = useState(() => allProducts.length > 8);
@@ -234,27 +231,6 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
               </div>
           </section>
         )}
-
-        {/* AI Festive Sale Section */}
-        {initialFestiveSaleData && initialFestiveProducts.length > 0 && (
-          <section>
-             <div className="bg-secondary rounded-lg p-6 md:p-8 text-secondary-foreground relative overflow-hidden">
-                <div className="relative z-10">
-                    <h2 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-primary flex items-center gap-2">
-                        <PartyPopper className="h-8 w-8 text-accent"/>
-                        {initialFestiveSaleData.saleTitle}
-                    </h2>
-                    <p className="text-muted-foreground mt-2 max-w-lg">{initialFestiveSaleData.saleDescription}</p>
-                </div>
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {initialFestiveProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-             </div>
-          </section>
-        )}
-
 
         {/* Suggested for You */}
         {suggestedProducts.length > 0 && (

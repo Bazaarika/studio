@@ -1,9 +1,8 @@
 
-import { getProducts, getFestiveSaleSettings } from '@/lib/firebase/firestore';
+import { getProducts } from '@/lib/firebase/firestore';
 import { ProductCardSkeleton } from '@/components/product-card-skeleton';
 import { HomeClient } from '@/components/home-client';
 import type { Product } from '@/lib/mock-data';
-import { generateFestiveSale, type GenerateFestiveSaleOutput } from '@/ai/flows/generate-festive-sale';
 
 // Helper to shuffle an array for random product selection
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -20,41 +19,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 export default async function Home() {
   const allProducts = await getProducts();
   
-  let festiveSaleData: GenerateFestiveSaleOutput | null = null;
-  let festiveProducts: Product[] = [];
-  
-  try {
-    const settings = await getFestiveSaleSettings();
-    if (settings?.aiMode) {
-        festiveSaleData = await generateFestiveSale();
-    } else if (settings && settings.manualTitle) { // Only use manual if title is set
-        festiveSaleData = {
-            festivalName: 'Special Sale',
-            saleTitle: settings.manualTitle,
-            saleDescription: settings.manualDescription,
-            suggestedProductKeywords: settings.manualKeywords.split(',').map(k => k.trim()),
-        };
-    }
-
-    if (festiveSaleData && allProducts.length > 0) {
-        const keywords = festiveSaleData.suggestedProductKeywords.map(k => k.toLowerCase());
-        const filteredProducts = allProducts.filter(product => {
-            const productText = [
-                product.name,
-                product.description,
-                product.category,
-                ...(product.tags || [])
-            ].join(' ').toLowerCase();
-            return keywords.some(keyword => productText.includes(keyword));
-        });
-        festiveProducts = shuffleArray(filteredProducts).slice(0, 4);
-    }
-
-  } catch (error) {
-      console.error("Failed to get festive sale data:", error);
-      // Silently fail, the section won't be rendered
-  }
-
   if (!allProducts || allProducts.length === 0) {
      return (
         <div className="space-y-12">
@@ -78,7 +42,5 @@ export default async function Home() {
     allProducts={allProducts} 
     suggestedProducts={suggestedProducts} 
     trendingProducts={trendingProducts}
-    initialFestiveSaleData={festiveSaleData} 
-    initialFestiveProducts={festiveProducts}
   />;
 }
