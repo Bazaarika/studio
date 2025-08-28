@@ -53,7 +53,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className={cn("font-body antialiased", playfair.variable, ptSans.variable)}>
+      <body className={cn("antialiased", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
         <PushNotificationManager />
         <ConnectivityProvider>
