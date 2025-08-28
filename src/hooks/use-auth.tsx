@@ -46,11 +46,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const auth = getAuth(app);
 
+// Initialize user state synchronously from the currentUser cache
+const initialUser = auth.currentUser;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(initialUser);
     const [address, setAddress] = useState<Address | null>(null);
     const [phone, setPhone] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!initialUser); // Only load if there's no cached user
     const { toast } = useToast();
     const router = useRouter();
 
