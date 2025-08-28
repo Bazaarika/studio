@@ -18,7 +18,9 @@ import {
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getUserAddress, updateUserAddress, type Address, getUserPhone, updateUserPhone } from "@/lib/firebase/firestore";
+import { doc, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
+import { updateUserAddress, type Address, updateUserPhone } from "@/lib/firebase/firestore";
 
 
 interface UserUpdatePayload {
@@ -53,24 +55,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        let unsubscribeFromFirestore: Unsubscribe | null = null;
+
+        const unsubscribeFromAuth = onAuthStateChanged(auth, (user) => {
+            // Unsubscribe from any previous Firestore listener
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore();
+            }
+
             if (user) {
-                // User is signed in, fetch address and phone concurrently
-                const [userAddress, userPhone] = await Promise.all([
-                    getUserAddress(user.uid),
-                    getUserPhone(user.uid)
-                ]);
-                setAddress(userAddress);
-                setPhone(userPhone);
                 setUser(user);
+                // Set up a new real-time listener for the user's profile data
+                const userDocRef = doc(db, "users", user.uid);
+                unsubscribeFromFirestore = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        setAddress(data.address || null);
+                        setPhone(data.phone || null);
+                    } else {
+                        // Document doesn't exist, reset profile info
+                        setAddress(null);
+                        setPhone(null);
+                    }
+                    setLoading(false); // Stop loading once we have data or know it doesn't exist
+                }, (error) => {
+                    console.error("Error with Firestore listener:", error);
+                    setLoading(false);
+                });
+
             } else {
                 // User is signed out
                 setUser(null);
                 setAddress(null);
                 setPhone(null);
+                setLoading(false);
             }
-            // Only set loading to false after all initial data is fetched
-            setLoading(false);
         });
 
         getRedirectResult(auth)
@@ -91,7 +110,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             });
 
-        return () => unsubscribe();
+        // Cleanup function
+        return () => {
+            unsubscribeFromAuth();
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore();
+            }
+        };
     }, [router, toast]);
 
     const handleAuthError = (error: AuthError) => {
@@ -200,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         try {
             await updateUserAddress(user.uid, address);
-            setAddress(address);
+            // No need to setAddress here, onSnapshot will handle it
             toast({ title: "Address saved!" });
         } catch (error) {
             toast({ title: "Error saving address", variant: "destructive" });
@@ -214,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         try {
             await updateUserPhone(user.uid, phone);
-            setPhone(phone);
+            // No need to setPhone here, onSnapshot will handle it
             toast({ title: "Phone number saved!" });
         } catch (error) {
             toast({ title: "Error saving phone number", variant: "destructive" });
