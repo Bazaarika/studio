@@ -2,7 +2,7 @@
 "use client"
 
 import Link from "next/link";
-import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate } from "lucide-react";
+import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const navLinks = [
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },
+    { href: "/admin/pages", icon: FileText, label: "Pages" },
     { href: "/admin/send-notification", icon: Send, label: "Send Notification" },
     { href: "#", icon: ShoppingCart, label: "Orders" },
     { href: "#", icon: Users2, label: "Customers" },
@@ -39,7 +40,7 @@ export function SidebarNav() {
                                     href={link.href}
                                     className={cn(
                                         "flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8",
-                                        pathname === link.href ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                                        pathname.startsWith(link.href) ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
                                     <link.icon className="h-5 w-5" />

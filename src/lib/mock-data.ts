@@ -56,6 +56,15 @@ export interface Category {
   icon: string; // Icon name from lucide-react
 }
 
+export interface Page {
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Order {
     id: string;
     userId: string;

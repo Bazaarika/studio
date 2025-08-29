@@ -22,17 +22,17 @@ export function Footer() {
           <div>
             <h4 className="font-headline font-semibold mb-4">About</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">About Us</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">Careers</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">Contact</Link></li>
+              <li><Link href="/about-us" className="text-muted-foreground hover:text-primary">About Us</Link></li>
+              <li><Link href="/careers" className="text-muted-foreground hover:text-primary">Careers</Link></li>
+              <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Contact</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-headline font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">Shipping & Returns</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-primary">Track Order</Link></li>
+              <li><Link href="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
+              <li><Link href="/shipping-returns" className="text-muted-foreground hover:text-primary">Shipping & Returns</Link></li>
+              <li><Link href="/track-order" className="text-muted-foreground hover:text-primary">Track Order</Link></li>
             </ul>
           </div>
         </div>

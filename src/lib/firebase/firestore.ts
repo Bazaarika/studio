@@ -1,7 +1,7 @@
 
 import { db } from './config';
 import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp, writeBatch, orderBy } from 'firebase/firestore';
-import type { Product, Order, OrderItem, HomeSection, Category } from '@/lib/mock-data';
+import type { Product, Order, OrderItem, HomeSection, Category, Page } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
 export const addProduct = async (productData: Omit<Product, 'id'>) => {
@@ -276,4 +276,72 @@ export const updateCategory = async (id: string, data: Partial<Category>) => {
 // Delete a category
 export const deleteCategory = async (id: string) => {
     await deleteDoc(doc(db, "categories", id));
+}
+
+// --- Custom Page Functions ---
+
+// Get all pages
+export const getPages = async (): Promise<Page[]> => {
+    const querySnapshot = await getDocs(collection(db, "pages"));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Page));
+}
+
+// Get a single page by its ID
+export const getPage = async (id: string): Promise<Page | null> => {
+    const docRef = doc(db, "pages", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return { 
+            id: docSnap.id, 
+            ...data,
+            createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
+            updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString(),
+        } as Page;
+    }
+    return null;
+}
+
+// Get a single page by its slug
+export const getPageBySlug = async (slug: string): Promise<Page | null> => {
+    const q = query(collection(db, "pages"), where("slug", "==", slug));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        const data = docSnap.data();
+        return {
+            id: docSnap.id,
+            ...data,
+            createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
+            updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString(),
+        } as Page;
+    }
+    return null;
+}
+
+
+// Add a new page
+export const addPage = async (pageData: Omit<Page, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    const dataToSave = {
+        ...pageData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    };
+    const docRef = await addDoc(collection(db, "pages"), dataToSave);
+    return docRef.id;
+}
+
+// Update an existing page
+export const updatePage = async (id: string, pageData: Partial<Omit<Page, 'id' | 'createdAt'>>) => {
+    const docRef = doc(db, "pages", id);
+    const dataToUpdate = {
+        ...pageData,
+        updatedAt: serverTimestamp(),
+    };
+    await updateDoc(docRef, dataToUpdate);
+}
+
+// Delete a page
+export const deletePage = async (id: string) => {
+    await deleteDoc(doc(db, "pages", id));
 }

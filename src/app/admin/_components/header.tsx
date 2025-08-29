@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Home, Package, PanelLeft, ShoppingCart, Users2, List, Send, LayoutTemplate } from "lucide-react";
+import { Home, Package, PanelLeft, ShoppingCart, Users2, List, Send, LayoutTemplate, FileText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const navLinks = [
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },
+    { href: "/admin/pages", icon: FileText, label: "Pages" },
     { href: "/admin/send-notification", icon: Send, label: "Send Notification" },
     { href: "#", icon: ShoppingCart, label: "Orders" },
     { href: "#", icon: Users2, label: "Customers" },
@@ -48,7 +49,7 @@ export function Header() {
                                 href={link.href}
                                 className={cn(
                                     "flex items-center gap-4 px-2.5",
-                                    pathname === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                    pathname.startsWith(link.href) && link.href !== '/admin' || pathname === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 <link.icon className="h-5 w-5" />
@@ -60,7 +61,7 @@ export function Header() {
             </Sheet>
              <div className="hidden sm:block">
                 <h1 className="text-xl font-semibold">
-                    {navLinks.find(link => link.href === pathname)?.label || "Dashboard"}
+                    {navLinks.find(link => pathname.startsWith(link.href))?.label || "Dashboard"}
                 </h1>
             </div>
         </header>
