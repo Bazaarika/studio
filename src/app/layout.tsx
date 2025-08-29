@@ -13,6 +13,7 @@ import { ServiceWorkerRegistrar } from '@/components/service-worker-registrar';
 import { PushNotificationManager } from '@/components/push-notification-manager';
 import { Playfair_Display, PT_Sans } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import { Header } from '@/components/header';
 
 // Font setup
 const playfair = Playfair_Display({
@@ -53,7 +54,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className={cn("antialiased", playfair.variable, ptSans.variable)}>
+      <body className={cn("antialiased font-body", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
         <PushNotificationManager />
         <ConnectivityProvider>
@@ -62,7 +63,9 @@ export default function RootLayout({
               <CartProvider>
                 <WishlistProvider>
                   <RecentlyViewedProvider>
-                    <ClientLayout>{children}</ClientLayout>
+                    <ClientLayout>
+                        {children}
+                    </ClientLayout>
                     <Toaster />
                   </RecentlyViewedProvider>
                 </WishlistProvider>
