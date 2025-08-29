@@ -74,8 +74,14 @@ export function Header() {
             </Button>
              <Link href="/profile">
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                    {isClient ? (
+                        <>
+                            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                        </>
+                    ) : (
+                        <AvatarFallback>U</AvatarFallback>
+                    )}
                 </Avatar>
              </Link>
           </div>
@@ -95,8 +101,14 @@ export function Header() {
                     </Button>
                     <Link href="/profile">
                         <Avatar className="h-9 w-9">
-                            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                             {isClient ? (
+                                <>
+                                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                                </>
+                            ) : (
+                                <AvatarFallback>U</AvatarFallback>
+                            )}
                         </Avatar>
                     </Link>
                 </div>
