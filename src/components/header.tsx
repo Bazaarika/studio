@@ -9,17 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Input } from './ui/input';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useState, useEffect } from 'react';
+import { type FormEvent } from 'react';
 
 export function Header() {
   const { user } = useAuth();
   const { cart } = useCart();
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -64,7 +59,7 @@ export function Header() {
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href="/cart">
                 <ShoppingCart className="h-6 w-6" />
-                {isClient && totalItems > 0 && (
+                {totalItems > 0 && (
                   <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                     {totalItems}
                   </span>
@@ -74,14 +69,8 @@ export function Header() {
             </Button>
              <Link href="/profile">
                 <Avatar className="h-9 w-9">
-                    {isClient ? (
-                        <>
-                            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-                        </>
-                    ) : (
-                        <AvatarFallback>U</AvatarFallback>
-                    )}
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
                 </Avatar>
              </Link>
           </div>
@@ -101,14 +90,8 @@ export function Header() {
                     </Button>
                     <Link href="/profile">
                         <Avatar className="h-9 w-9">
-                             {isClient ? (
-                                <>
-                                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                                    <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
-                                </>
-                            ) : (
-                                <AvatarFallback>U</AvatarFallback>
-                            )}
+                            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
                         </Avatar>
                     </Link>
                 </div>

@@ -18,13 +18,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function HomeHeader() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const getInitials = (name: string | null | undefined) => {
     if (!name || name.trim() === '') return "U";
     return name.trim()[0].toUpperCase();
   };
   
+  if (loading) {
+    return (
+        <section className="flex items-center justify-between">
+            <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-12 w-12 rounded-full" />
+        </section>
+    )
+  }
+
   return (
     <section className="flex items-center justify-between">
       <div className="space-y-1">
@@ -85,11 +97,6 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ allProducts, suggestedProducts, trendingProducts }: HomeClientProps) {
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   // Initialize state directly with server-provided props to prevent hydration mismatch
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>(() => allProducts.slice(0, 8));
   const [hasMore, setHasMore] = useState(() => allProducts.length > 8);
@@ -164,15 +171,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts }:
 
   return (
     <div className="space-y-12">
-        {isClient ? <HomeHeader /> : (
-            <section className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-64" />
-                </div>
-                <Skeleton className="h-12 w-12 rounded-full" />
-            </section>
-        )}
+        <HomeHeader />
         
         {/* Category Section */}
         <section>
