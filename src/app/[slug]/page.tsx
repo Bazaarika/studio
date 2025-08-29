@@ -21,39 +21,36 @@ export default async function CustomPage({ params }: { params: { slug: string } 
         const blocks = content.split(/\n\s*\n/); // Split by one or more empty lines
 
         return blocks.map((block, blockIndex) => {
-            const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
-            if (lines.length === 0) {
-                return null;
-            }
+            const trimmedBlock = block.trim();
+            if (!trimmedBlock) return null;
 
-            // Check for list items
-            const isList = lines.every(line => line.startsWith('* '));
-            if (isList) {
+            // Check for list items first
+            if (trimmedBlock.startsWith('* ')) {
+                const listItems = trimmedBlock.split('\n').map(line => line.trim().substring(2));
                 return (
                     <ul key={blockIndex} className="list-disc pl-5 my-4 space-y-1">
-                        {lines.map((line, lineIndex) => (
-                            <li key={lineIndex}>{line.substring(2)}</li>
+                        {listItems.map((item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
                         ))}
                     </ul>
                 );
             }
 
             // Check for headings
-            const firstLine = lines[0];
-            if (firstLine.startsWith('### ')) {
-                return <h3 key={blockIndex} className="text-xl font-semibold mt-4 mb-2">{firstLine.substring(4)}</h3>;
+            if (trimmedBlock.startsWith('# ')) {
+                return <h1 key={blockIndex} className="text-3xl font-bold font-headline mt-8 mb-4">{trimmedBlock.substring(2)}</h1>;
             }
-            if (firstLine.startsWith('## ')) {
-                return <h2 key={blockIndex} className="text-2xl font-bold mt-6 mb-3">{firstLine.substring(3)}</h2>;
+            if (trimmedBlock.startsWith('## ')) {
+                return <h2 key={blockIndex} className="text-2xl font-bold mt-6 mb-3">{trimmedBlock.substring(3)}</h2>;
             }
-            if (firstLine.startsWith('# ')) {
-                return <h1 key={blockIndex} className="text-3xl font-bold font-headline mb-4">{firstLine.substring(2)}</h1>;
+            if (trimmedBlock.startsWith('### ')) {
+                return <h3 key={blockIndex} className="text-xl font-semibold mt-4 mb-2">{trimmedBlock.substring(4)}</h3>;
             }
 
             // Default to paragraph
             return (
                 <p key={blockIndex} className="leading-relaxed my-4">
-                    {block}
+                    {trimmedBlock}
                 </p>
             );
         });

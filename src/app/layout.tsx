@@ -19,12 +19,14 @@ import { Header } from '@/components/header';
 const playfair = Playfair_Display({
   subsets: ['latin', 'latin-ext'],
   display: 'swap',
+  variable: '--font-playfair',
 });
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '700']
+  weight: ['400', '700'],
+  variable: '--font-pt-sans',
 });
 
 
@@ -51,7 +53,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className={cn("antialiased", playfair.className, ptSans.className)}>
+      <body className={cn("antialiased font-body", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
         <PushNotificationManager />
         <ConnectivityProvider>
