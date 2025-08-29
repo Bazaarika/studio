@@ -25,7 +25,7 @@ export default async function CustomPage({ params }: { params: { slug: string } 
             if (!trimmedBlock) return null;
 
             // Check for list items first
-            if (trimmedBlock.startsWith('* ')) {
+            if (trimmedBlock.split('\n').every(line => line.trim().startsWith('* '))) {
                 const listItems = trimmedBlock.split('\n').map(line => line.trim().substring(2));
                 return (
                     <ul key={blockIndex} className="list-disc pl-5 my-4 space-y-1">

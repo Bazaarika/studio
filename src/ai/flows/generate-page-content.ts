@@ -17,7 +17,7 @@ const GeneratePageContentInputSchema = z.object({
 export type GeneratePageContentInput = z.infer<typeof GeneratePageContentInputSchema>;
 
 const GeneratePageContentOutputSchema = z.object({
-  content: z.string().describe("The full page content formatted nicely. Use headings, paragraphs, and lists where appropriate. Start with a main heading."),
+  content: z.string().describe("The full page content formatted using Markdown. Use headings (e.g., '# Title', '## Subtitle'), paragraphs, and bulleted lists (e.g., '* Item 1'). Do not use HTML tags."),
 });
 export type GeneratePageContentOutput = z.infer<typeof GeneratePageContentOutputSchema>;
 
@@ -34,10 +34,15 @@ const prompt = ai.definePrompt({
 
 Your task is to generate the full content for a web page based on the given topic. The content should be well-structured, professional, and suitable for an online fashion store.
 
-- Start with a clear and relevant main heading.
-- Use subheadings to organize the content into logical sections.
+IMPORTANT: You MUST format your entire output using Markdown syntax.
+- For headings, use '#', '##', or '###'.
+- For lists, use '* ' for each item.
+- Do NOT use any HTML tags like '<h1>' or '<ul>'.
+
+- Start with a clear and relevant main heading (e.g., '# About Us').
+- Use subheadings ('##') to organize the content into logical sections.
 - Write clear and concise paragraphs.
-- Use bullet points or numbered lists if it makes the information easier to read.
+- Use bullet points ('* ') if it makes the information easier to read.
 - The tone should be helpful and customer-friendly.
 
 Topic: "{{{topic}}}"
