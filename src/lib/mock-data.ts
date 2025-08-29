@@ -1,7 +1,7 @@
 
 import type { ComponentType } from 'react';
 import type { LucideProps } from 'lucide-react';
-import { Shirt, Diamond, Watch, Footprints, Sparkles, ShoppingBag } from 'lucide-react';
+import { Shirt, Sparkles, User, Spline, PersonStanding, CircleDot } from 'lucide-react';
 import type { Address } from './firebase/firestore';
 
 // New, more detailed Product structure
@@ -70,10 +70,10 @@ export interface Order {
 }
 
 export const categories: Category[] = [
-  { id: 'clothing', name: 'Clothing', icon: Shirt },
-  { id: 'jewelry', name: 'Jewelry', icon: Diamond },
-  { id: 'watches', name: 'Watches', icon: Watch },
-  { id: 'shoes', name: 'Shoes', icon: Footprints },
-  { id: 'accessories', name: 'Accessories', icon: Sparkles },
-  { id: 'bags', name: 'Bags', icon: ShoppingBag },
+  { id: 'kurtis', name: 'Kurtis', icon: User },
+  { id: 'sarees', name: 'Sarees', icon: Spline },
+  { id: 't-shirts', name: 'T-Shirts', icon: Shirt },
+  { id: 'dresses', name: 'Dresses', icon: PersonStanding },
+  { id: 'jeans', name: 'Jeans', icon: CircleDot },
+  { id: 'ethnic-wear', name: 'Ethnic Wear', icon: Sparkles },
 ];
