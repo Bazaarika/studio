@@ -143,15 +143,6 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                         </Button>
                     </div>
                 </div>
-
-                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
-                        <AccordionTrigger>Product Details</AccordionTrigger>
-                        <AccordionContent>
-                           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
                 
                 {product.hasVariants && product.variantOptions?.length > 0 && (
                     <div className="space-y-4">
@@ -178,6 +169,16 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                         ))}
                     </div>
                 )}
+
+                 <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>Product Details</AccordionTrigger>
+                        <AccordionContent>
+                           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+
             </div>
           </div>
         </div>
