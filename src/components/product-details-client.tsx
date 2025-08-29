@@ -24,8 +24,6 @@ export function ProductDetailsClient({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
   
   const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const mainImage = allImages[selectedImageIndex];
 
   useEffect(() => {
     if (product.id) {
@@ -76,39 +74,28 @@ export function ProductDetailsClient({ product }: { product: Product }) {
   return (
     <div className="md:grid md:grid-cols-2 md:gap-8 lg:gap-12">
       {/* Image Gallery */}
-      <div className="space-y-4">
-        <div className="bg-secondary rounded-xl p-4 md:p-8">
-            <div className="aspect-square relative">
-            <Image
-                src={mainImage.url}
-                alt={product.name}
-                fill
-                className="object-contain"
-                data-ai-hint={mainImage.hint}
-            />
-            </div>
-        </div>
-        <div className="px-8 md:px-0">
-            <Carousel opts={{ align: "start", loop: true, }} className="w-full max-w-sm mx-auto md:max-w-none">
-                <CarouselContent className="-ml-2 md:-ml-4">
-                    {allImages.map((img, i) => (
-                        <CarouselItem key={i} className="pl-2 md:pl-4 basis-1/4">
-                              <button onClick={() => setSelectedImageIndex(i)} className={`aspect-square relative rounded-lg overflow-hidden border-2 w-full ${i === selectedImageIndex ? 'border-primary' : 'border-transparent'}`}>
+      <div>
+        <Carousel className="w-full" opts={{ loop: true }}>
+            <CarouselContent>
+                {allImages.map((img, i) => (
+                    <CarouselItem key={i}>
+                         <div className="bg-secondary rounded-xl p-4 md:p-8">
+                            <div className="aspect-square relative">
                                 <Image
                                     src={img.url}
-                                    alt={`${product.name} thumbnail ${i+1}`}
+                                    alt={`${product.name} image ${i + 1}`}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     data-ai-hint={img.hint}
                                 />
-                            </button>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex" />
-                <CarouselNext className="hidden md:flex"/>
-            </Carousel>
-        </div>
+                            </div>
+                        </div>
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2 md:left-4" />
+            <CarouselNext className="right-2 md:right-4" />
+        </Carousel>
       </div>
 
       {/* Product Details */}
