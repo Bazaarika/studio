@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getHomeLayout, getProducts, updateHomeLayoutOrder, deleteHomeSection, addHomeSection } from '@/lib/firebase/firestore';
+import { getHomeLayout, getProducts, updateHomeLayoutOrder, deleteHomeSection, addHomeSection, updateHomeSection } from '@/lib/firebase/firestore';
 import type { HomeSection, Product } from '@/lib/mock-data';
-import { Loader2, PlusCircle, Trash2, GripVertical, Sparkles } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, GripVertical, Sparkles, Edit } from 'lucide-react';
 import Image from 'next/image';
 import { FeaturedProductsDialog } from '../_components/featured-products-dialog';
 import { generateFestiveSale } from '@/ai/flows/generate-festive-sale';
@@ -25,6 +25,7 @@ export default function CustomizeHomePage() {
     const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
     const [isPromptDialogOpen, setIsPromptDialogOpen] = useState(false);
     const [customPrompt, setCustomPrompt] = useState('');
+    const [editingSection, setEditingSection] = useState<HomeSection | null>(null);
 
     const { toast } = useToast();
 
@@ -77,6 +78,29 @@ export default function CustomizeHomePage() {
                  console.error("Failed to add section:", err);
                  toast({ title: "Error", description: "Could not add section.", variant: "destructive" });
             });
+    };
+
+    const handleUpdateSection = async (sectionId: string, title: string, productIds: string[]) => {
+        try {
+            await updateHomeSection(sectionId, { title, productIds });
+            toast({ title: "Success", description: "Section updated successfully." });
+            fetchData();
+        } catch (error) {
+            console.error("Failed to update section:", error);
+            toast({ title: "Error", description: "Could not update section.", variant: "destructive" });
+        } finally {
+            setEditingSection(null);
+        }
+    };
+
+    const handleOpenEditDialog = (section: HomeSection) => {
+        setEditingSection(section);
+        setIsFeaturedDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setIsFeaturedDialogOpen(false);
+        setEditingSection(null); // Clear editing state when dialog closes
     };
 
     const handleAddFestiveSale = async () => {
@@ -207,9 +231,14 @@ export default function CustomizeHomePage() {
                                         {section.description && <CardDescription>{section.description}</CardDescription>}
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteSection(section.id)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditDialog(section)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSection(section.id)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -241,9 +270,11 @@ export default function CustomizeHomePage() {
 
              <FeaturedProductsDialog
                 isOpen={isFeaturedDialogOpen}
-                onClose={() => setIsFeaturedDialogOpen(false)}
+                onClose={handleCloseDialog}
                 products={products}
                 onSave={handleAddFeaturedSection}
+                onUpdate={handleUpdateSection}
+                initialData={editingSection}
              />
 
             <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>

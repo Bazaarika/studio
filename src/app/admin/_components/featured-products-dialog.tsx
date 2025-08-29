@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Product } from '@/lib/mock-data';
+import type { Product, HomeSection } from '@/lib/mock-data';
 import Image from 'next/image';
 
 interface FeaturedProductsDialogProps {
@@ -16,20 +16,36 @@ interface FeaturedProductsDialogProps {
     onClose: () => void;
     products: Product[];
     onSave: (title: string, selectedProductIds: string[]) => void;
+    onUpdate?: (sectionId: string, title: string, selectedProductIds: string[]) => void;
+    initialData?: HomeSection | null;
 }
 
-export function FeaturedProductsDialog({ isOpen, onClose, products, onSave }: FeaturedProductsDialogProps) {
+export function FeaturedProductsDialog({ isOpen, onClose, products, onSave, onUpdate, initialData }: FeaturedProductsDialogProps) {
     const [title, setTitle] = useState('');
     const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+    const isEditMode = !!initialData;
 
-    const handleSave = () => {
-        if (title && selectedProductIds.length > 0) {
-            onSave(title, selectedProductIds);
-            onClose();
-            // Reset state
+    useEffect(() => {
+        if (isOpen && initialData) {
+            setTitle(initialData.title);
+            setSelectedProductIds(initialData.productIds);
+        } else if (!isOpen) {
+            // Reset when dialog closes
             setTitle('');
             setSelectedProductIds([]);
         }
+    }, [isOpen, initialData]);
+
+    const handleSave = () => {
+        if (!title || selectedProductIds.length === 0) return;
+
+        if (isEditMode && onUpdate && initialData) {
+            onUpdate(initialData.id, title, selectedProductIds);
+        } else if (!isEditMode) {
+            onSave(title, selectedProductIds);
+        }
+        
+        onClose();
     };
 
     const handleProductSelect = (productId: string) => {
@@ -44,9 +60,9 @@ export function FeaturedProductsDialog({ isOpen, onClose, products, onSave }: Fe
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle>Create Featured Products Section</DialogTitle>
+                    <DialogTitle>{isEditMode ? 'Edit Section' : 'Create Featured Products Section'}</DialogTitle>
                     <DialogDescription>
-                        Give your section a title and select the products you want to feature.
+                        {isEditMode ? 'Update the title or change the featured products.' : 'Give your section a title and select the products you want to feature.'}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -90,7 +106,7 @@ export function FeaturedProductsDialog({ isOpen, onClose, products, onSave }: Fe
                          <Button type="button" variant="outline">Cancel</Button>
                     </DialogClose>
                     <Button type="button" onClick={handleSave} disabled={!title || selectedProductIds.length === 0}>
-                        Save Section
+                        {isEditMode ? 'Update Section' : 'Save Section'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

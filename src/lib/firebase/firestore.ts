@@ -232,6 +232,12 @@ export const addHomeSection = async (section: Omit<HomeSection, 'id'>): Promise<
     return docRef.id;
 }
 
+// Update an existing home section
+export const updateHomeSection = async (sectionId: string, data: Partial<Pick<HomeSection, 'title' | 'productIds'>>) => {
+    const docRef = doc(db, "home_layout", sectionId);
+    await updateDoc(docRef, data);
+};
+
 // Delete a section from the home page layout
 export const deleteHomeSection = async (sectionId: string) => {
     await deleteDoc(doc(db, "home_layout", sectionId));
