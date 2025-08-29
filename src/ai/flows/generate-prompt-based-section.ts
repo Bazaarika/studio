@@ -115,7 +115,7 @@ const prompt = ai.definePrompt({
 
   Here is the list of all available products:
   {{#each products}}
-  - ID: {{id}}, Name: {{name}}, Category: {{category}}, Price: {{price}}, Tags: {{join tags ", "}}, Description: {{description}}
+  - ID: {{id}}, Name: {{name}}, Category: {{category}}, Price: {{price}}, Tags: {{#each tags}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}, Description: {{description}}
   {{/each}}
   `,
 });
