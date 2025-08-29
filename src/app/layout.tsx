@@ -17,15 +17,13 @@ import { Header } from '@/components/header';
 
 // Font setup
 const playfair = Playfair_Display({
-  subsets: ['latin', 'latin-ext'], // Added 'latin-ext' to support the Rupee symbol
-  variable: '--font-playfair',
+  subsets: ['latin', 'latin-ext'],
   display: 'swap',
   weight: ['400', '700']
 });
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
-  variable: '--font-pt-sans',
   display: 'swap',
   weight: ['400', '700']
 });
@@ -54,7 +52,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
       </head>
-      <body className={cn("antialiased font-body", playfair.variable, ptSans.variable)}>
+      <body className={cn("antialiased font-body", playfair.className, ptSans.className)}>
         <ServiceWorkerRegistrar />
         <PushNotificationManager />
         <ConnectivityProvider>
@@ -63,6 +61,9 @@ export default function RootLayout({
               <CartProvider>
                 <WishlistProvider>
                   <RecentlyViewedProvider>
+                    <div className="hidden md:block">
+                      <Header />
+                    </div>
                     <ClientLayout>
                         {children}
                     </ClientLayout>
