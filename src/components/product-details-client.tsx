@@ -16,6 +16,12 @@ import {
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 export function ProductDetailsClient({ product }: { product: Product }) {
   const { toast } = useToast();
@@ -107,7 +113,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="text-muted-foreground font-semibold">{product.category}</p>
-                        <h1 className="text-3xl font-bold font-headline">{product.name}</h1>
+                        <h1 className="text-2xl font-bold font-headline">{product.name}</h1>
                     </div>
                     <Button variant="ghost" size="icon" onClick={handleShare}>
                         <Share2 />
@@ -138,7 +144,14 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                     </div>
                 </div>
 
-                <p className="text-foreground/80 leading-relaxed">{product.description}</p>
+                 <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>Product Details</AccordionTrigger>
+                        <AccordionContent>
+                           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
                 
                 {product.hasVariants && product.variantOptions?.length > 0 && (
                     <div className="space-y-4">
