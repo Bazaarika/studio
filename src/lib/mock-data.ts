@@ -53,7 +53,7 @@ export interface OrderItem {
 export interface Category {
   id: string;
   name: string;
-  icon: ComponentType<LucideProps>;
+  icon: string; // Icon name from lucide-react
 }
 
 export interface Order {
@@ -82,8 +82,8 @@ export interface PopulatedHomeSection extends HomeSection {
     products: Product[];
 }
 
-
-export const categories: Category[] = [
+// This is now just for fallback or reference. The source of truth is Firestore.
+export const staticCategories = [
   { id: 'kurtis', name: 'Kurtis', icon: User },
   { id: 'sarees', name: 'Sarees', icon: Spline },
   { id: 't-shirts', name: 'T-Shirts', icon: Shirt },

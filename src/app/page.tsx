@@ -1,8 +1,8 @@
 
-import { getProducts, getHomeLayout } from '@/lib/firebase/firestore';
+import { getProducts, getHomeLayout, getCategories } from '@/lib/firebase/firestore';
 import { ProductCardSkeleton } from '@/components/product-card-skeleton';
 import { HomeClient } from '@/components/home-client';
-import type { Product, HomeSection, PopulatedHomeSection } from '@/lib/mock-data';
+import type { Product, HomeSection, PopulatedHomeSection, Category } from '@/lib/mock-data';
 import { shuffle } from 'lodash';
 
 // Helper to shuffle an array for random product selection
@@ -18,8 +18,11 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 
 export default async function Home() {
-  const allProducts = await getProducts();
-  const homeLayout = await getHomeLayout();
+  const [allProducts, homeLayout, categories] = await Promise.all([
+    getProducts(),
+    getHomeLayout(),
+    getCategories()
+  ]);
 
   if (!allProducts || allProducts.length === 0) {
      return (
@@ -52,5 +55,6 @@ export default async function Home() {
     suggestedProducts={suggestedProducts} 
     trendingProducts={trendingProducts}
     initialLayout={populatedLayout}
+    initialCategories={categories}
   />;
 }

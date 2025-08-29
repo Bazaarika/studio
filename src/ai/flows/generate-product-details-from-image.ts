@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { categories } from '@/lib/mock-data';
 import { googleAI } from '@genkit-ai/googleai';
 
 const GenerateProductDetailsFromImageInputSchema = z.object({
@@ -19,6 +18,7 @@ const GenerateProductDetailsFromImageInputSchema = z.object({
     .describe(
       "A photo of a product, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  categories: z.array(z.string()).describe('An array of valid category names.'),
 });
 export type GenerateProductDetailsFromImageInput = z.infer<typeof GenerateProductDetailsFromImageInputSchema>;
 
@@ -35,8 +35,6 @@ export async function generateProductDetailsFromImage(input: GenerateProductDeta
   return generateProductDetailsFromImageFlow(input);
 }
 
-const validCategories = categories.map(c => c.name).join(', ');
-
 const prompt = ai.definePrompt({
   name: 'generateProductDetailsFromImagePrompt',
   model: 'googleai/gemini-1.5-flash-latest',
@@ -48,7 +46,7 @@ const prompt = ai.definePrompt({
 
   Product Image: {{media url=imageDataUri}}
 
-  Valid Categories: ${validCategories}
+  Valid Categories: {{#each categories}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
   Instructions:
   - Generate a concise, appealing, and SEO-friendly product name.

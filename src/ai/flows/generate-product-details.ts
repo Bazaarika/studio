@@ -10,11 +10,11 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { categories } from '@/lib/mock-data';
 import { googleAI } from '@genkit-ai/googleai';
 
 const GenerateProductDetailsInputSchema = z.object({
   productName: z.string().describe('The name of the product.'),
+  categories: z.array(z.string()).describe('An array of valid category names.'),
 });
 export type GenerateProductDetailsInput = z.infer<typeof GenerateProductDetailsInputSchema>;
 
@@ -29,8 +29,6 @@ export async function generateProductDetails(input: GenerateProductDetailsInput)
   return generateProductDetailsFlow(input);
 }
 
-const validCategories = categories.map(c => c.name).join(', ');
-
 const prompt = ai.definePrompt({
   name: 'generateProductDetailsPrompt',
   model: 'googleai/gemini-1.5-flash-latest',
@@ -42,7 +40,7 @@ const prompt = ai.definePrompt({
 
   Product Name: {{{productName}}}
 
-  Valid Categories: ${validCategories}
+  Valid Categories: {{#each categories}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
   Instructions:
   - The description should be engaging and highlight key features, between 2 and 3 sentences.
@@ -61,5 +59,3 @@ const generateProductDetailsFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

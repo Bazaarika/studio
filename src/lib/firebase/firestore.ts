@@ -1,7 +1,7 @@
 
 import { db } from './config';
 import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp, writeBatch, orderBy } from 'firebase/firestore';
-import type { Product, Order, OrderItem, HomeSection } from '@/lib/mock-data';
+import type { Product, Order, OrderItem, HomeSection, Category } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
 export const addProduct = async (productData: Omit<Product, 'id'>) => {
@@ -251,4 +251,29 @@ export const updateHomeLayoutOrder = async (sections: HomeSection[]) => {
         batch.update(docRef, { order: section.order });
     });
     await batch.commit();
+}
+
+// --- Category Management Functions ---
+
+// Get all categories
+export const getCategories = async (): Promise<Category[]> => {
+    const querySnapshot = await getDocs(collection(db, "categories"));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+}
+
+// Add a new category
+export const addCategory = async (category: Omit<Category, 'id'>): Promise<string> => {
+    const docRef = await addDoc(collection(db, "categories"), category);
+    return docRef.id;
+}
+
+// Update an existing category
+export const updateCategory = async (id: string, data: Partial<Category>) => {
+    const docRef = doc(db, "categories", id);
+    await updateDoc(docRef, data);
+}
+
+// Delete a category
+export const deleteCategory = async (id: string) => {
+    await deleteDoc(doc(db, "categories", id));
 }

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product, Category, PopulatedHomeSection } from '@/lib/mock-data';
-import { categories } from '@/lib/mock-data';
+import * as LucideIcons from 'lucide-react';
 import { Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
@@ -95,9 +95,10 @@ interface HomeClientProps {
     suggestedProducts: Product[];
     trendingProducts: Product[];
     initialLayout: PopulatedHomeSection[];
+    initialCategories: Category[];
 }
 
-export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialLayout }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialLayout, initialCategories }: HomeClientProps) {
   // Initialize state directly with server-provided props to prevent hydration mismatch
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>(() => allProducts.slice(0, 8));
   const [hasMore, setHasMore] = useState(() => allProducts.length > 8);
@@ -161,14 +162,18 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
       </div>
   );
   
-  const CategoryCard = ({ category }: { category: Category }) => (
-    <Link href={`/categories?category=${category.id}`} className="flex flex-col items-center gap-2 flex-shrink-0 w-20 group">
-        <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <category.icon className="h-8 w-8 text-primary group-hover:text-primary/80" />
-        </div>
-        <p className="text-sm font-medium text-center text-muted-foreground group-hover:text-primary">{category.name}</p>
-    </Link>
-  );
+  const CategoryCard = ({ category }: { category: Category }) => {
+    // @ts-ignore
+    const IconComponent = LucideIcons[category.icon] || LucideIcons.ShoppingBag;
+    return (
+        <Link href={`/categories?category=${category.name}`} className="flex flex-col items-center gap-2 flex-shrink-0 w-20 group">
+            <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <IconComponent className="h-8 w-8 text-primary group-hover:text-primary/80" />
+            </div>
+            <p className="text-sm font-medium text-center text-muted-foreground group-hover:text-primary">{category.name}</p>
+        </Link>
+    );
+  };
 
   const hasCustomLayout = initialLayout.length > 0;
 
@@ -180,7 +185,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
         <section>
             <h2 className="text-2xl font-bold font-headline mb-4">Categories</h2>
             <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
-                {categories.map(cat => <CategoryCard key={cat.id} category={cat} />)}
+                {initialCategories.map(cat => <CategoryCard key={cat.id} category={cat} />)}
             </div>
         </section>
 

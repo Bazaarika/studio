@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { addProduct, updateProduct } from "@/lib/firebase/firestore";
+import { addProduct, getCategories, updateProduct } from "@/lib/firebase/firestore";
 import { Loader2, PlusCircle, Sparkles, Trash2, ImageIcon, Image as ImageIconSparkles } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
-import { categories } from "@/lib/mock-data";
-import type { Product, ImageField, VariantOption, GeneratedVariant } from "@/lib/mock-data";
+import type { Product, ImageField, VariantOption, GeneratedVariant, Category } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { generateProductDetails } from "@/ai/flows/generate-product-details";
@@ -49,6 +48,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
     const [variantOptions, setVariantOptions] = useState<VariantOption[]>([{ name: "Size", values: "" }]);
     const [generatedVariants, setGeneratedVariants] = useState<GeneratedVariant[]>([]);
 
+    // Data from DB
+    const [categories, setCategories] = useState<Category[]>([]);
+
     // UI State
     const [isLoading, setIsLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
@@ -56,13 +58,20 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
     const [isImageGenLoading, setIsImageGenLoading] = useState(false);
     const [imageUrlForGen, setImageUrlForGen] = useState("");
     const [isGenDialogOpen, setIsGenDialogOpen] = useState(false);
+    
+    useEffect(() => {
+        async function fetchCategories() {
+            const fetchedCategories = await getCategories();
+            setCategories(fetchedCategories);
+        }
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
-        if (mode === 'edit' && initialData) {
+        if (mode === 'edit' && initialData && categories.length > 0) {
             setName(initialData.name || "");
             setDescription(initialData.description || "");
-            const initialCategory = categories.find(c => c.name === initialData.category);
-            setCategory(initialCategory?.id || "");
+            setCategory(initialData.category || "");
             setImages(initialData.images?.length > 0 ? initialData.images : [{ url: "", hint: "" }]);
             setStatus(initialData.status || "Active");
             setTags(initialData.tags?.join(", ") || "");
@@ -75,7 +84,7 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             setVariantOptions(initialData.variantOptions?.length > 0 ? initialData.variantOptions : [{ name: "Size", values: "" }]);
             setGeneratedVariants(initialData.variants || []);
         }
-    }, [mode, initialData]);
+    }, [mode, initialData, categories]);
     
     // Generate variant combinations
     const memoizedVariants = useMemo(() => {
@@ -213,7 +222,7 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             const productData: Omit<Product, 'id'> = {
                 name,
                 description,
-                category: categories.find(c => c.id === category)?.name || "",
+                category,
                 status,
                 vendor,
                 tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
@@ -267,10 +276,10 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
         }
         setIsAiLoading(true);
         try {
-            const result = await generateProductDetails({ productName: name });
+            const result = await generateProductDetails({ productName: name, categories: categories.map(c => c.name) });
             setDescription(result.description);
             const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
-            setCategory(suggestedCategory ? suggestedCategory.id : categories[0]?.id || "");
+            setCategory(suggestedCategory ? suggestedCategory.name : categories[0]?.name || "");
             setTags(result.tags.join(", "));
              toast({
                 title: "AI Details Generated!",
@@ -347,12 +356,12 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             reader.readAsDataURL(blob);
             reader.onloadend = async () => {
                 const base64data = reader.result as string;
-                const result = await generateProductDetailsFromImage({ imageDataUri: base64data });
+                const result = await generateProductDetailsFromImage({ imageDataUri: base64data, categories: categories.map(c => c.name) });
 
                 setName(result.name);
                 setDescription(result.description);
                 const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
-                setCategory(suggestedCategory ? suggestedCategory.id : categories[0]?.id || "");
+                setCategory(suggestedCategory ? suggestedCategory.name : categories[0]?.name || "");
                 setTags(result.tags.join(", "));
                 setImages([{ url: imageUrlForGen, hint: result.aiHint }]);
 
@@ -623,7 +632,7 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -655,5 +664,3 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
         </form>
     );
 }
-
-    
