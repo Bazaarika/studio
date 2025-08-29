@@ -1,7 +1,7 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp } from 'firebase/firestore';
-import type { Product, Order, OrderItem } from '@/lib/mock-data';
+import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp, writeBatch, orderBy } from 'firebase/firestore';
+import type { Product, Order, OrderItem, HomeSection } from '@/lib/mock-data';
 
 // Add a new product to the "products" collection
 export const addProduct = async (productData: Omit<Product, 'id'>) => {
@@ -209,3 +209,40 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
         return null;
     }
 };
+
+
+// --- Home Page Customization Functions ---
+
+// Get the home page layout sections
+export const getHomeLayout = async (): Promise<HomeSection[]> => {
+    const layoutCollection = collection(db, "home_layout");
+    const q = query(layoutCollection, orderBy("order", "asc"));
+    const querySnapshot = await getDocs(q);
+    
+    const layout: HomeSection[] = [];
+    querySnapshot.forEach((doc) => {
+        layout.push({ id: doc.id, ...doc.data() } as HomeSection);
+    });
+    return layout;
+}
+
+// Add a new section to the home page layout
+export const addHomeSection = async (section: Omit<HomeSection, 'id'>): Promise<string> => {
+    const docRef = await addDoc(collection(db, "home_layout"), section);
+    return docRef.id;
+}
+
+// Delete a section from the home page layout
+export const deleteHomeSection = async (sectionId: string) => {
+    await deleteDoc(doc(db, "home_layout", sectionId));
+}
+
+// Update the order of all home page sections
+export const updateHomeLayoutOrder = async (sections: HomeSection[]) => {
+    const batch = writeBatch(db);
+    sections.forEach(section => {
+        const docRef = doc(db, "home_layout", section.id);
+        batch.update(docRef, { order: section.order });
+    });
+    await batch.commit();
+}

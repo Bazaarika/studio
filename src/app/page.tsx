@@ -1,8 +1,9 @@
 
-import { getProducts } from '@/lib/firebase/firestore';
+import { getProducts, getHomeLayout } from '@/lib/firebase/firestore';
 import { ProductCardSkeleton } from '@/components/product-card-skeleton';
 import { HomeClient } from '@/components/home-client';
-import type { Product } from '@/lib/mock-data';
+import type { Product, HomeSection, PopulatedHomeSection } from '@/lib/mock-data';
+import { shuffle } from 'lodash';
 
 // Helper to shuffle an array for random product selection
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -18,7 +19,8 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 export default async function Home() {
   const allProducts = await getProducts();
-  
+  const homeLayout = await getHomeLayout();
+
   if (!allProducts || allProducts.length === 0) {
      return (
         <div className="space-y-12">
@@ -33,7 +35,14 @@ export default async function Home() {
     )
   }
 
-  // Pre-calculate dynamic sections on the server to prevent layout shifts
+  const populatedLayout: PopulatedHomeSection[] = homeLayout.map(section => {
+      const products = section.productIds
+          .map(id => allProducts.find(p => p.id === id))
+          .filter((p): p is Product => p !== undefined);
+      return { ...section, products };
+  });
+
+  // Fallback data in case the layout is empty
   const shuffledProducts = shuffleArray([...allProducts]);
   const suggestedProducts = shuffledProducts.slice(0, 4);
   const trendingProducts = shuffleArray([...allProducts]).slice(0, 4);
@@ -42,5 +51,6 @@ export default async function Home() {
     allProducts={allProducts} 
     suggestedProducts={suggestedProducts} 
     trendingProducts={trendingProducts}
+    initialLayout={populatedLayout}
   />;
 }

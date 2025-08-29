@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import type { Product, Category } from '@/lib/mock-data';
+import type { Product, Category, PopulatedHomeSection } from '@/lib/mock-data';
 import { categories } from '@/lib/mock-data';
 import { Timer, History, Sparkles, Loader2, Hand, TrendingUp } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -94,9 +94,10 @@ interface HomeClientProps {
     allProducts: Product[];
     suggestedProducts: Product[];
     trendingProducts: Product[];
+    initialLayout: PopulatedHomeSection[];
 }
 
-export function HomeClient({ allProducts, suggestedProducts, trendingProducts }: HomeClientProps) {
+export function HomeClient({ allProducts, suggestedProducts, trendingProducts, initialLayout }: HomeClientProps) {
   // Initialize state directly with server-provided props to prevent hydration mismatch
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>(() => allProducts.slice(0, 8));
   const [hasMore, setHasMore] = useState(() => allProducts.length > 8);
@@ -169,6 +170,8 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts }:
     </Link>
   );
 
+  const hasCustomLayout = initialLayout.length > 0;
+
   return (
     <div className="space-y-12">
         <HomeHeader />
@@ -232,32 +235,53 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts }:
           </section>
         )}
 
-        {/* Suggested for You */}
-        {suggestedProducts.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {suggestedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* DYNAMIC SECTIONS FROM ADMIN */}
+        {hasCustomLayout && initialLayout.map(section => (
+            <section key={section.id}>
+                <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
+                    {section.title}
+                </h2>
+                {section.description && <p className="text-muted-foreground mb-4">{section.description}</p>}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {section.products.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+            </section>
+        ))}
 
-        {/* Trending Products */}
-        {trendingProducts.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {trendingProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
+
+        {/* FALLBACK SECTIONS IF NO LAYOUT FROM ADMIN */}
+        {!hasCustomLayout && (
+            <>
+                {/* Suggested for You */}
+                {suggestedProducts.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
+                    <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {suggestedProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                    </div>
+                </section>
+                )}
+
+                {/* Trending Products */}
+                {trendingProducts.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {trendingProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                    </div>
+                </section>
+                )}
+            </>
         )}
 
         {/* Recently Viewed */}

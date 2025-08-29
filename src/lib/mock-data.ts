@@ -69,6 +69,20 @@ export interface Order {
     trackingHistory: { status: string; date: string; location: string }[];
 }
 
+export interface HomeSection {
+    id: string;
+    order: number;
+    type: 'featured_products' | 'sale_banner';
+    title: string;
+    description?: string;
+    productIds: string[];
+}
+
+export interface PopulatedHomeSection extends HomeSection {
+    products: Product[];
+}
+
+
 export const categories: Category[] = [
   { id: 'kurtis', name: 'Kurtis', icon: User },
   { id: 'sarees', name: 'Sarees', icon: Spline },
