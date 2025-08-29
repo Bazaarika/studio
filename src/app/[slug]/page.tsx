@@ -2,6 +2,7 @@
 import { getPageBySlug } from '@/lib/firebase/firestore';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 
 export default async function CustomPage({ params }: { params: { slug: string } }) {
     const slug = params.slug;
@@ -15,32 +16,48 @@ export default async function CustomPage({ params }: { params: { slug: string } 
         notFound();
     }
 
-    // A simple parser to convert markdown-like text to basic HTML elements
+    // An advanced parser to convert markdown-like text to proper HTML elements, handling blocks.
     const formatContent = (content: string) => {
-        return content.split('\n').map((line, index) => {
-            line = line.trim();
-            if (line.startsWith('### ')) {
-                return <h3 key={index} className="text-xl font-semibold mt-4 mb-2">{line.substring(4)}</h3>;
+        const blocks = content.split(/\n\s*\n/); // Split by one or more empty lines
+
+        return blocks.map((block, blockIndex) => {
+            const lines = block.split('\n').map(line => line.trim()).filter(Boolean);
+            if (lines.length === 0) {
+                return null;
             }
-            if (line.startsWith('## ')) {
-                return <h2 key={index} className="text-2xl font-bold mt-6 mb-3">{line.substring(3)}</h2>;
+
+            // Check for list items
+            const isList = lines.every(line => line.startsWith('* '));
+            if (isList) {
+                return (
+                    <ul key={blockIndex} className="list-disc pl-5 my-4 space-y-1">
+                        {lines.map((line, lineIndex) => (
+                            <li key={lineIndex}>{line.substring(2)}</li>
+                        ))}
+                    </ul>
+                );
             }
-            if (line.startsWith('# ')) {
-                return <h1 key={index} className="text-3xl font-bold font-headline mb-4">{line.substring(2)}</h1>;
+
+            // Check for headings
+            const firstLine = lines[0];
+            if (firstLine.startsWith('### ')) {
+                return <h3 key={blockIndex} className="text-xl font-semibold mt-4 mb-2">{firstLine.substring(4)}</h3>;
             }
-             if (line.startsWith('* ')) {
-                return <li key={index} className="ml-5 list-disc">{line.substring(2)}</li>;
+            if (firstLine.startsWith('## ')) {
+                return <h2 key={blockIndex} className="text-2xl font-bold mt-6 mb-3">{firstLine.substring(3)}</h2>;
             }
-            if (line === '') {
-                return <br key={index} />;
+            if (firstLine.startsWith('# ')) {
+                return <h1 key={blockIndex} className="text-3xl font-bold font-headline mb-4">{firstLine.substring(2)}</h1>;
             }
-            if (line.trim().length > 0) {
-              return <p key={index} className="leading-relaxed my-2">{line}</p>;
-            }
-            return null;
+
+            // Default to paragraph
+            return (
+                <p key={blockIndex} className="leading-relaxed my-4">
+                    {block}
+                </p>
+            );
         });
     };
-
 
     return (
         <div className="max-w-4xl mx-auto py-8">
