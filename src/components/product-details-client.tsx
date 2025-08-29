@@ -72,7 +72,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
   };
 
   return (
-    <div className="md:grid md:grid-cols-2 md:gap-8 lg:gap-12">
+    <div className="md:grid md:grid-cols-2 md:gap-8 lg:gap-12 pb-24 md:pb-0">
       {/* Image Gallery */}
       <div>
         <Carousel className="w-full" opts={{ loop: true }}>
