@@ -15,7 +15,7 @@ export default async function CustomPage({ params }: { params: { slug: string } 
         notFound();
     }
 
-    // A simple parser to convert text to basic HTML elements
+    // A simple parser to convert markdown-like text to basic HTML elements
     const formatContent = (content: string) => {
         return content.split('\n').map((line, index) => {
             line = line.trim();
@@ -34,18 +34,21 @@ export default async function CustomPage({ params }: { params: { slug: string } 
             if (line === '') {
                 return <br key={index} />;
             }
-            return <p key={index} className="leading-relaxed my-2">{line}</p>;
+            if (line.trim().length > 0) {
+              return <p key={index} className="leading-relaxed my-2">{line}</p>;
+            }
+            return null;
         });
     };
 
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto py-8">
             <Card>
                 <CardHeader>
                     <CardTitle className="text-4xl font-bold font-headline">{page.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="prose prose-lg max-w-none">
+                <CardContent className="prose prose-lg max-w-none text-foreground">
                     {formatContent(page.content)}
                 </CardContent>
             </Card>
