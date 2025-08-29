@@ -99,6 +99,7 @@ export async function generatePromptBasedSection(input: GeneratePromptBasedSecti
 // Define the prompt for the AI
 const prompt = ai.definePrompt({
   name: 'generatePromptBasedSectionPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   tools: [productFilterTool],
   input: { schema: GeneratePromptBasedSectionInputSchema },
   output: { schema: GeneratePromptBasedSectionOutputSchema },
