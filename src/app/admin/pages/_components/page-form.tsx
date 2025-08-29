@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -46,7 +45,7 @@ export function PageForm({ mode, initialData }: PageFormProps) {
         if (mode === 'add') {
             const newSlug = newTitle
                 .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '') // remove special chars
+                .replace(/[^a-z0-9\s\/-]/g, '') // remove special chars but allow slashes
                 .replace(/\s+/g, '-')         // replace spaces with hyphens
                 .replace(/-+/g, '-');        // remove consecutive hyphens
             setSlug(newSlug);
@@ -115,7 +114,7 @@ export function PageForm({ mode, initialData }: PageFormProps) {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="slug">URL Slug</Label>
-                                <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g., about-us" />
+                                <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g., about-us or info/contact" />
                                 <p className="text-xs text-muted-foreground">This will be the URL of your page: yourstore.com/{slug}</p>
                             </div>
                         </CardContent>

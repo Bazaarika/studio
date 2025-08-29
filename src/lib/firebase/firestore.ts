@@ -233,7 +233,7 @@ export const addHomeSection = async (section: Omit<HomeSection, 'id'>): Promise<
 }
 
 // Update an existing home section
-export const updateHomeSection = async (sectionId: string, data: Partial<Pick<HomeSection, 'title' | 'productIds'>>) => {
+export const updateHomeSection = async (sectionId: string, data: Partial<Pick<HomeSection, 'title' | 'productIds' | 'description'>>) => {
     const docRef = doc(db, "home_layout", sectionId);
     await updateDoc(docRef, data);
 };
