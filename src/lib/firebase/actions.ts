@@ -3,7 +3,6 @@
 
 import admin from 'firebase-admin';
 import { getMessaging } from "firebase-admin/messaging";
-import serviceAccount from '../../../services.json';
 
 interface NotificationPayload {
     title: string;
@@ -20,14 +19,24 @@ function initializeFirebaseAdmin() {
   }
   
   try {
-    const serviceAccountParams = {
-        projectId: serviceAccount.project_id,
-        clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key,
+    // Check if the necessary environment variables are set
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+        console.warn("Firebase Admin credentials environment variables are not set. Push notifications from the admin panel will fail. See README.md for setup instructions.");
+        // We can't proceed with initialization, so we'll let it fail later if used.
+        // We don't throw an error here to allow the rest of the app to build.
+        return null;
+    }
+
+    // Use environment variables to create the service account object
+    const serviceAccount = {
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // The private key needs to be parsed correctly as it's often stored with escaped newlines
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
     }
 
     return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountParams),
+      credential: admin.credential.cert(serviceAccount),
     });
 
   } catch (error: any) {
@@ -43,6 +52,7 @@ function initializeFirebaseAdmin() {
 export async function subscribeToTopic(token: string, topic: string) {
     try {
         const app = initializeFirebaseAdmin();
+        if (!app) throw new Error("Firebase Admin SDK not initialized. Check credentials.");
         await getMessaging(app).subscribeToTopic(token, topic);
         console.log(`Successfully subscribed token to topic: ${topic}`);
     } catch (error) {
@@ -58,6 +68,7 @@ export async function subscribeToTopic(token: string, topic: string) {
 export async function sendPushNotification(payload: NotificationPayload) {
   try {
     const app = initializeFirebaseAdmin();
+    if (!app) throw new Error("Firebase Admin SDK not initialized. Check your environment variables.");
 
     const message = {
       topic: payload.topic,

@@ -44,16 +44,26 @@ After completing both steps, reload your application. The "Could not get permiss
 
 ## Sending Push Notifications from the Admin Panel
 
-To send push notifications from the "/admin/send-notification" page, the application needs access to your Firebase project's Admin SDK credentials.
+To send push notifications from the "/admin/send-notification" page, the application needs access to your Firebase project's Admin SDK credentials. This is done via environment variables.
 
 1.  **Generate a Private Key:**
     *   Go to your Firebase Project Settings.
     *   Navigate to the **"Service accounts"** tab.
     *   Click the **"Generate new private key"** button. A JSON file will be downloaded.
 
-2.  **Create the services.json File:**
-    *   In the root directory of your project (the same level as `package.json`), create a new file named `services.json`.
-    *   Open the downloaded JSON file in a text editor, copy its **entire content**, and paste it into the `services.json` file.
-    *   Save the `services.json` file.
+2.  **Set Environment Variables:**
+    *   Create a new file named `.env` in the root of your project (or open the existing one).
+    *   Open the downloaded JSON file. You will need three values from it: `project_id`, `client_email`, and `private_key`.
+    *   Add the following lines to your `.env` file, replacing the placeholder values with the ones from your JSON file:
 
-After adding the file, you will need to **restart the development server** for the changes to take effect. You can now send notifications from the "/admin/send-notification" page.
+    ```bash
+    FIREBASE_PROJECT_ID=your-project-id-from-json
+    FIREBASE_CLIENT_EMAIL=your-client-email-from-json
+    FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_VERY_LONG_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+    ```
+
+    **Important Note for `FIREBASE_PRIVATE_KEY`:**
+    *   You **must** wrap the entire private key in double quotes (`"`).
+    *   The `\n` characters within the key are important and must be kept exactly as they are in the JSON file.
+
+After adding these variables, you will need to **restart the development server** for the changes to take effect. You can now send notifications from the "/admin/send-notification" page.
