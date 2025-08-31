@@ -1,0 +1,13 @@
+{
+    "name": "bazaarika-next",
+    "compatibility_date": "2025-08-29",
+    "build": {
+      "command": "npm run build",
+      "cwd": ".",
+      "watch_dir": "."
+    },
+    "assets": {
+      "directory": "out"
+    }
+  }
+  

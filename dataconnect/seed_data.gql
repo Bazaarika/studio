@@ -1,0 +1,77 @@
+mutation SeedDatabase @auth(level: NO_ACCESS) {
+  user_upsertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      address: "123 Main St",
+      createdAt: "2024-01-01T00:00:00Z",
+      displayName: "John Doe",
+      email: "john.doe@example.com",
+      passwordHash: "somehash",
+      phoneNumber: "555-1234",
+      userType: "customer"
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      address: "456 Elm St",
+      createdAt: "2024-01-02T00:00:00Z",
+      displayName: "Jane Smith",
+      email: "jane.smith@example.com",
+      passwordHash: "anotherhash",
+      phoneNumber: "555-5678",
+      userType: "seller"
+    }
+  ])
+  product_upsertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440002",
+      sellerId: "650e8400-e29b-41d4-a716-446655440001",
+      category: "electronics",
+      createdAt: "2024-01-03T00:00:00Z",
+      description: "A sample product",
+      imageUrl: "http://example.com/image.jpg",
+      name: "Sample Product",
+      price: 25.00,
+      stockQuantity: 100
+    },
+    {
+      id: "850e8400-e29b-41d4-a716-446655440003",
+      sellerId: "650e8400-e29b-41d4-a716-446655440001",
+      category: "books",
+      createdAt: "2024-01-04T00:00:00Z",
+      description: "Another sample product",
+      imageUrl: "http://example.com/anotherimage.jpg",
+      name: "Another Product",
+      price: 10.00,
+      stockQuantity: 50
+    }
+  ])
+  cartItem_upsertMany(data: [
+    {
+      id: "950e8400-e29b-41d4-a716-446655440004",
+      customerId: "550e8400-e29b-41d4-a716-446655440000",
+      productId: "750e8400-e29b-41d4-a716-446655440002",
+      addedAt: "2024-01-05T00:00:00Z",
+      quantity: 2
+    }
+  ])
+  order_upsertMany(data: [
+    {
+      id: "a50e8400-e29b-41d4-a716-446655440005",
+      customerId: "550e8400-e29b-41d4-a716-446655440000",
+      notes: "Sample order",
+      orderDate: "2024-01-06T00:00:00Z",
+      shippingAddress: "789 Oak St",
+      status: "pending",
+      totalAmount: 50.00
+    }
+  ])
+  orderItem_upsertMany(data: [
+    {
+      id: "b50e8400-e29b-41d4-a716-446655440006",
+      orderId: "a50e8400-e29b-41d4-a716-446655440005",
+      productId: "750e8400-e29b-41d4-a716-446655440002",
+      priceAtPurchase: 25.00,
+      quantity: 2
+    }
+  ])
+}

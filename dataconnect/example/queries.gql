@@ -1,0 +1,35 @@
+mutation AddProductToCart($customerId: UUID!, $productId: UUID!, $quantity: Int!) @auth(level: USER) {
+  cartItem_insert(data: {
+    customerId: $customerId,
+    productId: $productId,
+    quantity: $quantity,
+    addedAt_expr: "request.time"
+  })
+}
+
+query GetProductsByCategory($category: String!) @auth(level: PUBLIC) {
+  products(where: {category: {eq: $category}}) {
+    id
+    name
+    description
+    price
+    imageUrl
+  }
+}
+
+mutation UpdateProductStock($productId: UUID!, $stockQuantity: Int!) @auth(level: USER) {
+  product_update(
+    key: {id: $productId}
+    data: {stockQuantity: $stockQuantity}
+  )
+}
+
+query ListProductsCreatedByUser @auth(level: USER) {
+  products(where: {sellerId: {eq_expr: "auth.uid"}}) {
+    id
+    name
+    description
+    price
+    stockQuantity
+  }
+}
