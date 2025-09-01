@@ -131,6 +131,9 @@ export default function OrdersPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/orders/${order.id}`} target="_blank">View Details</Link>
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/orders/${order.id}/label`} target="_blank">Print Label</Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Update Status</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
