@@ -32,7 +32,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
               <li><Link href="/shipping-returns" className="text-muted-foreground hover:text-primary">Shipping & Returns</Link></li>
-              <li><Link href="/track-order" className="text-muted-foreground hover:text-primary">Track Order</Link></li>
+              <li><Link href="/orders" className="text-muted-foreground hover:text-primary">Track Order</Link></li>
             </ul>
           </div>
         </div>
