@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
     { href: "/admin", icon: Home, label: "Dashboard" },
+    { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },
     { href: "/admin/pages", icon: FileText, label: "Pages" },
     { href: "/admin/send-notification", icon: Send, label: "Send Notification" },
-    { href: "#", icon: ShoppingCart, label: "Orders" },
     { href: "#", icon: Users2, label: "Customers" },
 ];
 
