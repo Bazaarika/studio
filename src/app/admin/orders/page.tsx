@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Loader2, Calendar as CalendarIcon, RefreshCw, Search } from "lucide-react";
+import { MoreHorizontal, Loader2, Calendar as CalendarIcon, RefreshCw, Search, Printer } from "lucide-react";
 import Link from "next/link";
 import { getDocs, collection, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
@@ -20,8 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 async function getAllOrders(): Promise<Order[]> {
     const ordersCollection = collection(db, "orders");
@@ -48,12 +50,14 @@ export default function OrdersPage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
     const [date, setDate] = useState<DateRange | undefined>({
         from: addDays(new Date(), -30),
         to: new Date(),
     });
 
     const { toast } = useToast();
+    const router = useRouter();
 
     const fetchOrders = async () => {
         try {
@@ -122,6 +126,29 @@ export default function OrdersPage() {
                 return 'secondary';
         }
     }
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedOrderIds(filteredOrders.map(order => order.id));
+        } else {
+            setSelectedOrderIds([]);
+        }
+    };
+
+    const handleSelectOrder = (orderId: string, checked: boolean) => {
+        if (checked) {
+            setSelectedOrderIds(prev => [...prev, orderId]);
+        } else {
+            setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
+        }
+    };
+
+    const handlePrintSelected = () => {
+        if (selectedOrderIds.length > 0) {
+            const query = selectedOrderIds.join(',');
+            window.open(`/admin/orders/print-labels?ids=${query}`, '_blank');
+        }
+    };
 
     if (loading) {
         return (
@@ -220,9 +247,23 @@ export default function OrdersPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    {selectedOrderIds.length > 0 && (
+                        <div className="mb-4">
+                            <Button onClick={handlePrintSelected}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Print Selected ({selectedOrderIds.length})
+                            </Button>
+                        </div>
+                    )}
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/50">
+                                <TableHead className="w-12">
+                                     <Checkbox
+                                        checked={selectedOrderIds.length === filteredOrders.length && filteredOrders.length > 0}
+                                        onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                                    />
+                                </TableHead>
                                 <TableHead>Order ID</TableHead>
                                 <TableHead>Product Details</TableHead>
                                 <TableHead>Payment</TableHead>
@@ -235,6 +276,12 @@ export default function OrdersPage() {
                             {filteredOrders.length > 0 ? (
                                 filteredOrders.map(order => (
                                 <TableRow key={order.id}>
+                                    <TableCell>
+                                        <Checkbox
+                                            checked={selectedOrderIds.includes(order.id)}
+                                            onCheckedChange={(checked) => handleSelectOrder(order.id, Boolean(checked))}
+                                        />
+                                    </TableCell>
                                     <TableCell>
                                         <div className="font-medium text-primary">#{order.id.substring(0, 7)}</div>
                                         <div className="text-xs text-muted-foreground">
@@ -280,6 +327,9 @@ export default function OrdersPage() {
                                                 <Button variant="ghost" className="h-8 w-16 p-0">Actions</Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
+                                                 <DropdownMenuItem onSelect={() => window.open(`/admin/orders/${order.id}/label`, '_blank')}>
+                                                    Print Label
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Cancel</DropdownMenuItem>
                                                 <DropdownMenuItem>Confirm</DropdownMenuItem>
                                                 <DropdownMenuItem>Edit</DropdownMenuItem>
@@ -290,7 +340,7 @@ export default function OrdersPage() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24">
+                                    <TableCell colSpan={7} className="text-center h-24">
                                         No orders found.
                                     </TableCell>
                                 </TableRow>
