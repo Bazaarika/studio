@@ -337,6 +337,14 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             setIsHintLoading(null);
         }
     };
+    
+    const handleOpenGenDialog = () => {
+        // Pre-fill the dialog with the first image URL if it exists
+        if (images.length > 0 && images[0].url) {
+            setImageUrlForGen(images[0].url);
+        }
+        setIsGenDialogOpen(true);
+    };
 
     const handleGenerateFromImage = async () => {
         if (!imageUrlForGen) {
@@ -398,7 +406,7 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                 </div>
                                  <Dialog open={isGenDialogOpen} onOpenChange={setIsGenDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" type="button">
+                                        <Button variant="outline" type="button" onClick={handleOpenGenDialog}>
                                             <ImageIconSparkles className="mr-2 h-4 w-4" />
                                             Generate from Image
                                         </Button>
