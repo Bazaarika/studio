@@ -10,11 +10,13 @@ import { Input } from './ui/input';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
 import { type FormEvent } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export function Header() {
   const { user } = useAuth();
   const { cart } = useCart();
   const router = useRouter();
+  const { toast } = useToast();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -51,7 +53,7 @@ export function Header() {
           </form>
           
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative" onClick={() => toast({ title: 'Feature coming soon!' })}>
                 <Bell className="h-6 w-6" />
                 <span className="sr-only">Notifications</span>
             </Button>
@@ -82,7 +84,7 @@ export function Header() {
                     Bazaarika
                 </Link>
                 <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon" className="relative rounded-full">
+                     <Button variant="ghost" size="icon" className="relative rounded-full" onClick={() => toast({ title: 'Feature coming soon!' })}>
                         <Bell className="h-6 w-6" />
                         <span className="sr-only">Notifications</span>
                     </Button>
