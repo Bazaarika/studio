@@ -12,12 +12,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { getUserOrders } from "@/lib/firebase/firestore";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (authLoading) return;
@@ -83,13 +85,18 @@ export default function OrdersPage() {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="gap-2">
+            <CardFooter className="gap-2 flex-wrap">
               <Button variant="outline" asChild>
                 <Link href={`/track-order/${order.id}`}>Track Order</Link>
               </Button>
               <Button asChild>
                 <Link href={`/orders/${order.id}`}>View Details</Link>
               </Button>
+              {order.status === 'Delivered' && (
+                  <Button variant="destructive" onClick={() => toast({ title: "Feature coming soon!"})}>
+                      Return/Refund
+                  </Button>
+              )}
             </CardFooter>
           </Card>
         ))}

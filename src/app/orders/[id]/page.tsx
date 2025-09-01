@@ -12,6 +12,7 @@ import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getOrder } from "@/lib/firebase/firestore";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const orderId = params.id as string;
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!orderId) return;
@@ -141,9 +143,16 @@ export default function OrderDetailsPage() {
                     <p className="text-muted-foreground capitalize">{order.paymentMethod}</p>
                 </CardContent>
             </Card>
-            <Button className="w-full" variant="outline" asChild>
-                <Link href={`/track-order/${order.id}`}>Track Your Order</Link>
-            </Button>
+            <div className="space-y-2">
+                <Button className="w-full" variant="outline" asChild>
+                    <Link href={`/track-order/${order.id}`}>Track Your Order</Link>
+                </Button>
+                {order.status === 'Delivered' && (
+                    <Button className="w-full" variant="destructive" onClick={() => toast({ title: "Feature coming soon!"})}>
+                        Request Return/Refund
+                    </Button>
+                )}
+            </div>
         </div>
       </div>
     </div>
