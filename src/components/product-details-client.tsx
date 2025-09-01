@@ -13,7 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import {
@@ -36,6 +36,21 @@ export function ProductDetailsClient({ product }: { product: Product }) {
       addProductToRecentlyViewed(product.id);
     }
   }, [product.id, addProductToRecentlyViewed]);
+
+  const activeVariant = useMemo(() => {
+    if (!product.hasVariants || Object.keys(selectedVariant).length === 0) {
+      return null;
+    }
+    // This logic assumes a simple variant ID structure. It might need to be more robust
+    // depending on how variant IDs are constructed. For now, it joins the selected values.
+    const selectedIdParts = product.variantOptions.map(opt => selectedVariant[opt.name]).filter(Boolean);
+    if (selectedIdParts.length !== product.variantOptions.length) return null;
+    
+    const variantId = selectedIdParts.join(' / ');
+    return product.variants.find(v => v.id === variantId) || null;
+  }, [product, selectedVariant]);
+
+  const displayPrice = activeVariant ? activeVariant.price : product.price;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -121,7 +136,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                 </div>
 
                 <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold font-headline text-primary">&#8377;{product.price.toFixed(2)}</span>
+                    <span className="text-4xl font-bold font-headline text-primary">&#8377;{displayPrice.toFixed(2)}</span>
                     {product.compareAtPrice && (
                         <span className="text-xl text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</span>
                     )}
