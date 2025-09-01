@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Loader2 } from "lucide-react";
+import { MoreHorizontal, Loader2, Printer } from "lucide-react";
 import Link from "next/link";
 import { getDocs, collection, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import type { Order } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { Timestamp } from "firebase/firestore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 async function getAllOrders(): Promise<Order[]> {
     const ordersCollection = collection(db, "orders");
@@ -38,6 +39,7 @@ async function getAllOrders(): Promise<Order[]> {
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
     const { toast } = useToast();
 
     const fetchOrders = async () => {
@@ -60,6 +62,27 @@ export default function OrdersPage() {
     useEffect(() => {
         fetchOrders();
     }, []);
+
+    const handleSelectAll = (checked: boolean | 'indeterminate') => {
+        if (checked === true) {
+            setSelectedOrderIds(orders.map(order => order.id));
+        } else {
+            setSelectedOrderIds([]);
+        }
+    };
+    
+    const handleSelectRow = (orderId: string, checked: boolean) => {
+        if (checked) {
+            setSelectedOrderIds(prev => [...prev, orderId]);
+        } else {
+            setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
+        }
+    };
+
+    const handlePrintSelected = () => {
+        const orderIds = selectedOrderIds.join(',');
+        window.open(`/admin/orders/print-labels?ids=${orderIds}`, '_blank');
+    }
 
     if (loading) {
         return (
@@ -86,15 +109,31 @@ export default function OrdersPage() {
         <div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Orders</CardTitle>
-                    <CardDescription>
-                        A list of all the orders placed in your store.
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Orders</CardTitle>
+                            <CardDescription>
+                                A list of all the orders placed in your store.
+                            </CardDescription>
+                        </div>
+                        {selectedOrderIds.length > 0 && (
+                            <Button onClick={handlePrintSelected}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Print Selected ({selectedOrderIds.length})
+                            </Button>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-12">
+                                    <Checkbox
+                                        checked={selectedOrderIds.length === orders.length}
+                                        onCheckedChange={handleSelectAll}
+                                    />
+                                </TableHead>
                                 <TableHead>Order ID</TableHead>
                                 <TableHead>Customer</TableHead>
                                 <TableHead>Date</TableHead>
@@ -108,7 +147,13 @@ export default function OrdersPage() {
                         <TableBody>
                             {orders.length > 0 ? (
                                 orders.map(order => (
-                                <TableRow key={order.id}>
+                                <TableRow key={order.id} data-state={selectedOrderIds.includes(order.id) ? "selected" : undefined}>
+                                    <TableCell>
+                                        <Checkbox
+                                            checked={selectedOrderIds.includes(order.id)}
+                                            onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
+                                        />
+                                    </TableCell>
                                     <TableCell className="font-medium">#{order.id.substring(0, 7)}</TableCell>
                                     <TableCell>{order.shippingAddress.name}</TableCell>
                                     <TableCell>
@@ -142,7 +187,7 @@ export default function OrdersPage() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24">
+                                    <TableCell colSpan={7} className="text-center h-24">
                                         No orders found.
                                     </TableCell>
                                 </TableRow>
