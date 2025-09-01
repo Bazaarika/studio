@@ -15,6 +15,7 @@ import type { Order } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { Timestamp } from "firebase/firestore";
 import { Checkbox } from "@/components/ui/checkbox";
+import Image from "next/image";
 
 async function getAllOrders(): Promise<Order[]> {
     const ordersCollection = collection(db, "orders");
@@ -130,9 +131,12 @@ export default function OrdersPage() {
                             <TableRow>
                                 <TableHead className="w-12">
                                     <Checkbox
-                                        checked={selectedOrderIds.length === orders.length}
+                                        checked={selectedOrderIds.length > 0 && selectedOrderIds.length === orders.length}
                                         onCheckedChange={handleSelectAll}
                                     />
+                                </TableHead>
+                                <TableHead className="w-16">
+                                     <span className="sr-only">Image</span>
                                 </TableHead>
                                 <TableHead>Order ID</TableHead>
                                 <TableHead>Customer</TableHead>
@@ -152,6 +156,15 @@ export default function OrdersPage() {
                                         <Checkbox
                                             checked={selectedOrderIds.includes(order.id)}
                                             onCheckedChange={(checked) => handleSelectRow(order.id, !!checked)}
+                                        />
+                                    </TableCell>
+                                     <TableCell>
+                                        <Image
+                                            src={order.items[0]?.imageUrl || 'https://placehold.co/64x64.png'}
+                                            alt={order.items[0]?.name || 'Product Image'}
+                                            width={48}
+                                            height={48}
+                                            className="aspect-square rounded-md object-cover"
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">#{order.id.substring(0, 7)}</TableCell>
@@ -187,7 +200,7 @@ export default function OrdersPage() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center h-24">
+                                    <TableCell colSpan={8} className="text-center h-24">
                                         No orders found.
                                     </TableCell>
                                 </TableRow>
