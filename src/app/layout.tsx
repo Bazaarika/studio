@@ -52,6 +52,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Bazaarika" />
         <link rel="apple-touch-icon" href="/icon-192x192.svg" />
+        <link rel="icon" href="/icon-192x192.svg" type="image/svg+xml" />
       </head>
       <body className={cn("antialiased font-body", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
