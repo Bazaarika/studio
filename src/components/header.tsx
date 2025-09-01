@@ -53,7 +53,6 @@ export function Header() {
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-6 w-6" />
-                 <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">6</span>
                 <span className="sr-only">Notifications</span>
             </Button>
             <Button variant="ghost" size="icon" className="relative" asChild>
@@ -85,7 +84,6 @@ export function Header() {
                 <div className="flex items-center gap-2">
                      <Button variant="ghost" size="icon" className="relative rounded-full">
                         <Bell className="h-6 w-6" />
-                        <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">6</span>
                         <span className="sr-only">Notifications</span>
                     </Button>
                     <Link href="/profile">
