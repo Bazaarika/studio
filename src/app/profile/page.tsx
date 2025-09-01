@@ -156,8 +156,8 @@ function ProfileView() {
   const supportLinks = [
     { icon: Home, label: "Contact Us", onClick: () => toast({ title: "Feature coming soon!" }) },
     { icon: HelpCircle, label: "Help and Information", onClick: () => toast({ title: "Feature coming soon!" }) },
-    { icon: ShieldCheck, label: "Privacy Policy", onClick: () => toast({ title: "Feature coming soon!" }) },
-    { icon: FileText, label: "Terms & Conditions", onClick: () => toast({ title: "Feature coming soon!" }) },
+    { icon: ShieldCheck, label: "Privacy Policy", href: "/privacy-policy" },
+    { icon: FileText, label: "Terms & Conditions", href: "/terms-and-conditions" },
   ];
 
   const ProfileRow = ({ icon: Icon, label, href, onClick, isLogout = false }: { icon: React.ElementType, label: string, href?: string, onClick?: () => void, isLogout?: boolean }) => {
@@ -266,7 +266,7 @@ function ProfileView() {
           <CardContent className="divide-y p-0">
             <div className="px-6">
                 {supportLinks.map((item) => (
-                    <ProfileRow key={item.label} icon={item.icon} label={item.label} onClick={item.onClick} />
+                    <ProfileRow key={item.label} icon={item.icon} label={item.label} href={item.href} onClick={item.onClick} />
                 ))}
             </div>
           </CardContent>
