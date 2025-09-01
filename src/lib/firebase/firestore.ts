@@ -210,6 +210,25 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
     }
 };
 
+// Update the status of an order
+export const updateOrderStatus = async (orderId: string, status: 'Processing' | 'Shipped' | 'Delivered', location: string) => {
+    const orderRef = doc(db, "orders", orderId);
+    const newHistoryEntry = {
+        status: status,
+        date: new Date().toISOString(),
+        location: location
+    };
+    try {
+        await updateDoc(orderRef, {
+            status: status,
+            trackingHistory: arrayUnion(newHistoryEntry)
+        });
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        throw new Error("Failed to update order status");
+    }
+};
+
 
 // --- Home Page Customization Functions ---
 

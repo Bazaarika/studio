@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { updateOrderStatus } from "@/lib/firebase/firestore";
 
 async function getAllOrders(): Promise<Order[]> {
     const ordersCollection = collection(db, "orders");
@@ -147,6 +148,35 @@ export default function OrdersPage() {
         if (selectedOrderIds.length > 0) {
             const query = selectedOrderIds.join(',');
             window.open(`/admin/orders/print-labels?ids=${query}`, '_blank');
+        }
+    };
+    
+    const handleConfirmAndPrint = async (orderId: string) => {
+        try {
+            // Update status in Firestore
+            await updateOrderStatus(orderId, "Shipped", "Warehouse, Mumbai");
+            
+            // Optimistically update the UI
+            setAllOrders(prevOrders => 
+                prevOrders.map(order => 
+                    order.id === orderId ? { ...order, status: 'Shipped' } : order
+                )
+            );
+            
+            toast({
+                title: "Order Confirmed",
+                description: `Order #${orderId.substring(0,7)} has been marked as shipped.`,
+            });
+            
+            // Open print label page in a new tab
+            window.open(`/admin/orders/${orderId}/label`, '_blank');
+        } catch (error) {
+            console.error("Failed to confirm order:", error);
+            toast({
+                title: "Error",
+                description: "Could not confirm the order. Please try again.",
+                variant: "destructive",
+            });
         }
     };
 
@@ -327,11 +357,13 @@ export default function OrdersPage() {
                                                 <Button variant="ghost" className="h-8 w-16 p-0">Actions</Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                 <DropdownMenuItem onSelect={() => window.open(`/admin/orders/${order.id}/label`, '_blank')}>
+                                                <DropdownMenuItem onSelect={() => handleConfirmAndPrint(order.id)}>
+                                                    Confirm & Print Label
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => window.open(`/admin/orders/${order.id}/label`, '_blank')}>
                                                     Print Label
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem>Cancel</DropdownMenuItem>
-                                                <DropdownMenuItem>Confirm</DropdownMenuItem>
                                                 <DropdownMenuItem>Edit</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -356,5 +388,3 @@ export default function OrdersPage() {
         </div>
     )
 }
-
-    
