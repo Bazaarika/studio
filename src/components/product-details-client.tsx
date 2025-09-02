@@ -17,6 +17,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from '@/lib/utils';
 
 export function ProductDetailsClient({ product }: { product: Product }) {
   const { toast } = useToast();
@@ -181,7 +182,7 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                 )}
 
                  <Tabs defaultValue="description" className="w-full">
-                    <TabsList>
+                    <TabsList className="w-full justify-start overflow-x-auto">
                         <TabsTrigger value="description">Description</TabsTrigger>
                         {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
                         {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
