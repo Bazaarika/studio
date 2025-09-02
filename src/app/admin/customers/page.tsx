@@ -3,18 +3,19 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Loader2, UserPlus } from "lucide-react";
-import Link from "next/link";
+import { MoreHorizontal, Loader2, UserPlus, Search } from "lucide-react";
 import { getCustomers, type Customer } from "@/lib/firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
     const { toast } = useToast();
 
     useEffect(() => {
@@ -37,6 +38,17 @@ export default function CustomersPage() {
         fetchCustomers();
     }, [toast]);
 
+    const filteredCustomers = useMemo(() => {
+        if (!searchQuery) {
+            return customers;
+        }
+        const lowercasedQuery = searchQuery.toLowerCase();
+        return customers.filter(customer =>
+            customer.name?.toLowerCase().includes(lowercasedQuery) ||
+            customer.email?.toLowerCase().includes(lowercasedQuery)
+        );
+    }, [customers, searchQuery]);
+
     const getInitials = (name: string | null | undefined) => {
         if (!name || name.trim() === '') return "U";
         return name.trim().split(' ').map(n => n[0]).join('').toUpperCase();
@@ -52,14 +64,26 @@ export default function CustomersPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold">Customers</h1>
                     <p className="text-muted-foreground">Manage your customers and view their details.</p>
                 </div>
-                <Button onClick={() => toast({ title: "Feature coming soon!"})}>
-                    <UserPlus className="mr-2 h-4 w-4" /> Add Customer
-                </Button>
+                 <div className="flex items-center gap-2">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search by name or email..."
+                            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <Button onClick={() => toast({ title: "Feature coming soon!"})}>
+                        <UserPlus className="mr-2 h-4 w-4" /> Add Customer
+                    </Button>
+                </div>
             </div>
             <Card>
                 <CardContent>
@@ -76,8 +100,8 @@ export default function CustomersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {customers.length > 0 ? (
-                                customers.map(customer => (
+                            {filteredCustomers.length > 0 ? (
+                                filteredCustomers.map(customer => (
                                     <TableRow key={customer.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
