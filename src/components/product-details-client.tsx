@@ -16,12 +16,7 @@ import {
 import { useEffect, useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ProductDetailsClient({ product }: { product: Product }) {
   const { toast } = useToast();
@@ -185,38 +180,32 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                     </div>
                 )}
 
-                 <Accordion type="single" collapsible className="w-full" defaultValue="description">
-                    <AccordionItem value="description">
-                        <AccordionTrigger>Product Description</AccordionTrigger>
-                        <AccordionContent>
-                           <p className="text-foreground/80 leading-relaxed">{product.description}</p>
-                        </AccordionContent>
-                    </AccordionItem>
+                 <Tabs defaultValue="description" className="w-full">
+                    <TabsList>
+                        <TabsTrigger value="description">Description</TabsTrigger>
+                        {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
+                        {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
+                        {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
+                    </TabsList>
+                    <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
+                        {product.description}
+                    </TabsContent>
                     {product.specifications && (
-                        <AccordionItem value="specifications">
-                            <AccordionTrigger>Specifications</AccordionTrigger>
-                            <AccordionContent>
-                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.specifications}</p>
-                            </AccordionContent>
-                        </AccordionItem>
+                        <TabsContent value="specifications" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                            {product.specifications}
+                        </TabsContent>
                     )}
-                     {product.productHighlights && (
-                        <AccordionItem value="highlights">
-                            <AccordionTrigger>Product Highlights</AccordionTrigger>
-                            <AccordionContent>
-                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.productHighlights}</p>
-                            </AccordionContent>
-                        </AccordionItem>
+                    {product.productHighlights && (
+                        <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                            {product.productHighlights}
+                        </TabsContent>
                     )}
                     {product.showcase && (
-                        <AccordionItem value="showcase">
-                            <AccordionTrigger>Showcase</AccordionTrigger>
-                            <AccordionContent>
-                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.showcase}</p>
-                            </AccordionContent>
-                        </AccordionItem>
+                        <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                           {product.showcase}
+                        </TabsContent>
                     )}
-                </Accordion>
+                </Tabs>
 
             </div>
           </div>
