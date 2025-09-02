@@ -13,10 +13,10 @@ const navLinks = [
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
     { href: "/admin/returns", icon: Undo2, label: "Manage Returns" },
+    { href: "/admin/customers", icon: Users2, label: "Customers" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },
     { href: "/admin/pages", icon: FileText, label: "Pages" },
     { href: "/admin/send-notification", icon: Send, label: "Send Notification" },
-    { href: "#", icon: Users2, label: "Customers" },
 ];
 
 

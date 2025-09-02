@@ -18,7 +18,7 @@ import {
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { doc, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { doc, onSnapshot, Unsubscribe, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { updateUserAddress, type Address, updateUserPhone } from "@/lib/firebase/firestore";
 
@@ -71,6 +71,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
     const router = useRouter();
 
+    const updateUserDocument = async (user: User) => {
+        const userDocRef = doc(db, "users", user.uid);
+        const userData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+        };
+        // Use setDoc with merge:true to create or update the document
+        await setDoc(userDocRef, userData, { merge: true });
+    };
+
     useEffect(() => {
         let unsubscribeFromFirestore: Unsubscribe | null = null;
 
@@ -83,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (user) {
                 setUser(user);
                 setUserInCache(user);
+                updateUserDocument(user); // Sync user data to Firestore on auth change
                 
                 const userDocRef = doc(db, "users", user.uid);
                 unsubscribeFromFirestore = onSnapshot(userDocRef, (doc) => {
@@ -224,6 +237,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const updatedUser = { ...currentUser, ...payload } as User;
             setUser(updatedUser);
             setUserInCache(updatedUser);
+            // Also update the user's document in Firestore
+            await updateUserDocument(updatedUser);
             toast({
                 title: "Profile Updated!",
                 description: "Your changes have been saved successfully."

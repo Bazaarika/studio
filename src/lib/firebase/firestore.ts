@@ -364,3 +364,57 @@ export const updatePage = async (id: string, pageData: Partial<Omit<Page, 'id' |
 export const deletePage = async (id: string) => {
     await deleteDoc(doc(db, "pages", id));
 }
+
+// --- Customer Management Functions ---
+
+export interface UserProfile {
+    id: string; // This will be the UID
+    name?: string;
+    email?: string;
+    photoURL?: string;
+    phone?: string;
+    address?: Address;
+}
+
+export interface Customer extends UserProfile {
+    totalOrders: number;
+    totalSpent: number;
+}
+
+
+// This function fetches all users and calculates their order stats.
+export const getCustomers = async (): Promise<Customer[]> => {
+    // 1. Fetch all orders
+    const ordersSnapshot = await getDocs(collection(db, "orders"));
+    const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+
+    // 2. Aggregate order data by userId
+    const customerStats: { [key: string]: { totalOrders: number; totalSpent: number } } = {};
+    for (const order of orders) {
+        if (!customerStats[order.userId]) {
+            customerStats[order.userId] = { totalOrders: 0, totalSpent: 0 };
+        }
+        customerStats[order.userId].totalOrders += 1;
+        customerStats[order.userId].totalSpent += order.total;
+    }
+
+    // 3. Fetch all user profiles from the 'users' collection
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    const customers: Customer[] = [];
+    
+    usersSnapshot.forEach(doc => {
+        const userData = doc.data();
+        const userId = doc.id;
+        const stats = customerStats[userId] || { totalOrders: 0, totalSpent: 0 };
+        customers.push({
+            id: userId,
+            name: userData.displayName || 'N/A', // Assuming you store displayName in the user doc
+            email: userData.email || 'N/A',
+            photoURL: userData.photoURL || '',
+            phone: userData.phone || 'N/A',
+            ...stats
+        });
+    });
+
+    return customers;
+}
