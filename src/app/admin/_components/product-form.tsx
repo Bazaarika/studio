@@ -18,6 +18,7 @@ import { generateImageHint } from "@/ai/flows/generate-image-hint";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { generateProductDetailsFromImage } from "@/ai/flows/generate-product-details-from-image";
+import { generateRichProductDetails } from "@/ai/flows/generate-rich-product-details";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,6 +59,8 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
     // UI State
     const [isLoading, setIsLoading] = useState(false);
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isRichAiLoading, setIsRichAiLoading] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState("");
     const [isHintLoading, setIsHintLoading] = useState<number | null>(null);
     const [isImageGenLoading, setIsImageGenLoading] = useState(false);
     const [imageUrlForGen, setImageUrlForGen] = useState("");
@@ -310,6 +313,38 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
         }
     };
 
+    const handleGenerateRichDetails = async () => {
+        if (!aiPrompt) {
+            toast({
+                title: "AI Prompt is missing",
+                description: "Please enter a prompt to generate rich details.",
+                variant: "destructive",
+            });
+            return;
+        }
+        setIsRichAiLoading(true);
+        try {
+            const result = await generateRichProductDetails({ prompt: aiPrompt });
+            setDescription(result.description);
+            setSpecifications(result.specifications);
+            setShowcase(result.showcase);
+            setProductHighlights(result.productHighlights);
+            toast({
+                title: "AI Content Generated!",
+                description: "All content tabs have been filled with generated details.",
+            });
+        } catch (error) {
+            console.error("Error generating rich product details:", error);
+            toast({
+                title: "AI Generation Failed",
+                description: "Could not generate rich content. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsRichAiLoading(false);
+        }
+    };
+
     const handleGenerateImageHint = async (index: number) => {
         const imageUrl = images[index].url;
         if (!imageUrl) {
@@ -466,6 +501,23 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                 </div>
                             </div>
                             
+                            <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="ai-prompt">Generate Rich Content with AI</Label>
+                                    <Textarea 
+                                        id="ai-prompt" 
+                                        value={aiPrompt} 
+                                        onChange={(e) => setAiPrompt(e.target.value)} 
+                                        placeholder="Enter a prompt, e.g., 'blue floral summer dress' or 'heavy work bridal lehenga'"
+                                        rows={2}
+                                    />
+                                </div>
+                                <Button type="button" onClick={handleGenerateRichDetails} disabled={isRichAiLoading}>
+                                    {isRichAiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Generate Content for Tabs
+                                </Button>
+                            </div>
+
                             <Tabs defaultValue="description">
                                 <TabsList>
                                     <TabsTrigger value="description">Product Description</TabsTrigger>
