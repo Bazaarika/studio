@@ -26,6 +26,9 @@ export interface Product {
   id?: string; // Optional because it's added by Firestore
   name: string;
   description: string;
+  specifications?: string;
+  showcase?: string;
+  productHighlights?: string;
   category: string;
   price: number;
   compareAtPrice?: number;

@@ -185,13 +185,37 @@ export function ProductDetailsClient({ product }: { product: Product }) {
                     </div>
                 )}
 
-                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
-                        <AccordionTrigger>Product Details</AccordionTrigger>
+                 <Accordion type="single" collapsible className="w-full" defaultValue="description">
+                    <AccordionItem value="description">
+                        <AccordionTrigger>Product Description</AccordionTrigger>
                         <AccordionContent>
                            <p className="text-foreground/80 leading-relaxed">{product.description}</p>
                         </AccordionContent>
                     </AccordionItem>
+                    {product.specifications && (
+                        <AccordionItem value="specifications">
+                            <AccordionTrigger>Specifications</AccordionTrigger>
+                            <AccordionContent>
+                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.specifications}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
+                     {product.productHighlights && (
+                        <AccordionItem value="highlights">
+                            <AccordionTrigger>Product Highlights</AccordionTrigger>
+                            <AccordionContent>
+                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.productHighlights}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
+                    {product.showcase && (
+                        <AccordionItem value="showcase">
+                            <AccordionTrigger>Showcase</AccordionTrigger>
+                            <AccordionContent>
+                               <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">{product.showcase}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
                 </Accordion>
 
             </div>

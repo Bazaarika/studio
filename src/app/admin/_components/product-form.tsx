@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { generateProductDetailsFromImage } from "@/ai/flows/generate-product-details-from-image";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProductFormProps {
     mode: 'add' | 'edit';
@@ -33,6 +34,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
     // Form State
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [specifications, setSpecifications] = useState("");
+    const [showcase, setShowcase] = useState("");
+    const [productHighlights, setProductHighlights] = useState("");
     const [category, setCategory] = useState("");
     const [images, setImages] = useState<ImageField[]>([{ url: "", hint: "" }]);
     const [status, setStatus] = useState("Active");
@@ -71,6 +75,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
         if (mode === 'edit' && initialData && categories.length > 0) {
             setName(initialData.name || "");
             setDescription(initialData.description || "");
+            setSpecifications(initialData.specifications || "");
+            setShowcase(initialData.showcase || "");
+            setProductHighlights(initialData.productHighlights || "");
             setCategory(initialData.category || "");
             setImages(initialData.images?.length > 0 ? initialData.images : [{ url: "", hint: "" }]);
             setStatus(initialData.status || "Active");
@@ -168,6 +175,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
     const resetForm = () => {
         setName("");
         setDescription("");
+        setSpecifications("");
+        setShowcase("");
+        setProductHighlights("");
         setPrice("");
         setCompareAtPrice("");
         setStock("");
@@ -222,6 +232,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             const productData: Omit<Product, 'id'> = {
                 name,
                 description,
+                specifications,
+                showcase,
+                productHighlights,
                 category,
                 status,
                 vendor,
@@ -452,10 +465,28 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Product Description</Label>
-                                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the product..." />
-                            </div>
+                            
+                            <Tabs defaultValue="description">
+                                <TabsList>
+                                    <TabsTrigger value="description">Product Description</TabsTrigger>
+                                    <TabsTrigger value="specifications">Specifications</TabsTrigger>
+                                    <TabsTrigger value="showcase">Showcase</TabsTrigger>
+                                    <TabsTrigger value="highlights">Product Highlights</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="description" className="mt-4">
+                                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the product..." rows={8} />
+                                </TabsContent>
+                                <TabsContent value="specifications" className="mt-4">
+                                     <Textarea value={specifications} onChange={(e) => setSpecifications(e.target.value)} placeholder="e.g., Material: Cotton, Fit: Regular..." rows={8} />
+                                </TabsContent>
+                                <TabsContent value="showcase" className="mt-4">
+                                     <Textarea value={showcase} onChange={(e) => setShowcase(e.target.value)} placeholder="Describe how to showcase this product..." rows={8} />
+                                </TabsContent>
+                                <TabsContent value="highlights" className="mt-4">
+                                    <Textarea value={productHighlights} onChange={(e) => setProductHighlights(e.target.value)} placeholder="e.g., - Hand-stitched embroidery..." rows={8} />
+                                </TabsContent>
+                            </Tabs>
+
                         </CardContent>
                     </Card>
 
