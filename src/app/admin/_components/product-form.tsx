@@ -416,6 +416,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
 
                 setName(result.name);
                 setDescription(result.description);
+                setSpecifications(result.specifications);
+                setShowcase(result.showcase);
+                setProductHighlights(result.productHighlights);
                 const suggestedCategory = categories.find(c => c.name.toLowerCase() === result.category.toLowerCase());
                 setCategory(suggestedCategory ? suggestedCategory.name : categories[0]?.name || "");
                 setTags(result.tags.join(", "));

@@ -28,6 +28,9 @@ const GenerateProductDetailsFromImageOutputSchema = z.object({
   category: z.string().describe('The most relevant product category.'),
   tags: z.array(z.string()).describe('An array of 3-4 relevant and specific tags for the product to improve searchability.'),
   aiHint: z.string().describe('A two-word descriptive hint for the image, suitable for an image search. E.g., "floral dress" or "leather boots".'),
+  specifications: z.string().describe("A bulleted list of key specifications based on the image. Use markdown format (e.g., '- Material: Cotton'). Include details like fabric, fit, occasion, and care instructions."),
+  showcase: z.string().describe("A short paragraph describing how to style or showcase the product in the image. Provide fashion tips or pairing suggestions."),
+  productHighlights: z.string().describe("A bulleted list of 3-5 key highlights or selling points from the image. Use markdown format (e.g., '- Lightweight and breathable fabric')."),
 });
 export type GenerateProductDetailsFromImageOutput = z.infer<typeof GenerateProductDetailsFromImageOutputSchema>;
 
@@ -40,7 +43,7 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateProductDetailsFromImageInputSchema},
   output: {schema: GenerateProductDetailsFromImageOutputSchema},
-  prompt: `You are an expert e-commerce merchandiser and copywriter.
+  prompt: `You are an expert e-commerce merchandiser and copywriter for a fashion brand "Bazaarika".
   
   Analyze the following product image and generate all the necessary details for an e-commerce listing.
 
@@ -50,10 +53,13 @@ const prompt = ai.definePrompt({
 
   Instructions:
   - Generate a concise, appealing, and SEO-friendly product name.
-  - Write an engaging product description that highlights key features, between 2 and 3 sentences.
-  - Select the most appropriate category from the "Valid Categories" list provided.
-  - Provide 3 to 4 specific and relevant tags as an array of strings to improve searchability. For clothing, include the specific item type (e.g., 't-shirt', 'kurti'), style ('casual', 'formal'), occasion ('party wear', 'summer'), and material if identifiable.
-  - Provide a concise, two-word descriptive hint for the image itself (e.g., "floral dress", "leather boots").
+  - Write an engaging product description (2-3 sentences).
+  - Select the most appropriate category from the "Valid Categories" list.
+  - Provide 3 to 4 specific and relevant tags as an array of strings.
+  - Provide a concise, two-word descriptive hint for the image itself (e.g., "floral dress").
+  - **Specifications**: Create a bulleted list (using markdown '-') of technical details visible or inferred from the image. Include Material, Fit, Occasion, and Wash Care.
+  - **Showcase**: Write a short paragraph with styling tips based on the item in the image.
+  - **Product Highlights**: Create a bulleted list (using markdown '-') of 3-5 key selling points based on the image. Focus on benefits.
   `,
 });
 
