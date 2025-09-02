@@ -57,7 +57,7 @@ export default function CustomersPage() {
                     <h1 className="text-2xl font-bold">Customers</h1>
                     <p className="text-muted-foreground">Manage your customers and view their details.</p>
                 </div>
-                <Button>
+                <Button onClick={() => toast({ title: "Feature coming soon!"})}>
                     <UserPlus className="mr-2 h-4 w-4" /> Add Customer
                 </Button>
             </div>
@@ -103,10 +103,8 @@ export default function CustomersPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href={`/profile?userId=${customer.id}`}>View Profile</Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>View Orders</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => toast({ title: "Feature coming soon!"})}>View Profile</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => toast({ title: "Feature coming soon!"})}>View Orders</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
