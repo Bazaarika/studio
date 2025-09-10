@@ -18,10 +18,11 @@ import {
 import { app } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { doc, onSnapshot, Unsubscribe, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, Unsubscribe, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { updateUserAddress, type Address, updateUserPhone } from "@/lib/firebase/firestore";
 
+type UserRole = 'admin' | 'vendor' | 'customer';
 
 interface UserUpdatePayload {
     displayName?: string;
@@ -30,6 +31,7 @@ interface UserUpdatePayload {
 
 interface AuthContextType {
     user: User | null;
+    role: UserRole | null;
     address: Address | null;
     phone: string | null;
     loading: boolean;
@@ -65,6 +67,7 @@ const setUserInCache = (user: User | null) => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(getUserFromCache);
+    const [role, setRole] = useState<UserRole | null>(null);
     const [address, setAddress] = useState<Address | null>(null);
     const [phone, setPhone] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -73,11 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const updateUserDocument = async (user: User) => {
         const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
         const userData = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
+            role: userDoc.exists() ? userDoc.data().role : 'customer', // Persist role or default to customer
         };
         // Use setDoc with merge:true to create or update the document
         await setDoc(userDocRef, userData, { merge: true });
@@ -101,9 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 unsubscribeFromFirestore = onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
                         const data = doc.data();
+                        setRole(data.role || 'customer');
                         setAddress(data.address || null);
                         setPhone(data.phone || null);
                     } else {
+                        setRole('customer');
                         setAddress(null);
                         setPhone(null);
                     }
@@ -116,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
                 setUser(null);
                 setUserInCache(null);
+                setRole(null);
                 setAddress(null);
                 setPhone(null);
                 if (loading) setLoading(false);
@@ -126,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .then((result) => {
                 if (result) {
                     toast({ title: "Signed in successfully!"});
+                    // Role-based redirect can be added here later
                     router.push('/profile');
                 }
             })
@@ -194,7 +203,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signUpWithEmail = async (email: string, pass: string) => {
         setLoading(true);
         try {
-            await createUserWithEmailAndPassword(auth, email, pass);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            // Explicitly set role for new email sign-ups
+            const userDocRef = doc(db, "users", userCredential.user.uid);
+            await setDoc(userDocRef, { role: 'customer' }, { merge: true });
             router.push('/profile');
         } catch (error) {
             handleAuthError(error as AuthError);
@@ -207,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
          setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, pass);
-            router.push('/profile');
+            // Role will be fetched by onAuthStateChanged, then redirect
         } catch (error) {
             handleAuthError(error as AuthError);
         } finally {
@@ -283,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, address, phone, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress, savePhone }}>
+        <AuthContext.Provider value={{ user, role, address, phone, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress, savePhone }}>
             {children}
         </AuthContext.Provider>
     );

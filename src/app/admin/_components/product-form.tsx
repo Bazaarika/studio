@@ -22,13 +22,16 @@ import { generateRichProductDetails } from "@/ai/flows/generate-rich-product-det
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProductFormProps {
     mode: 'add' | 'edit';
+    userRole: 'admin' | 'vendor';
     initialData?: Product | null;
 }
 
-export function ProductForm({ mode, initialData }: ProductFormProps) {
+export function ProductForm({ mode, userRole, initialData }: ProductFormProps) {
+    const { user } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     
@@ -239,8 +242,8 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                 showcase,
                 productHighlights,
                 category,
-                status,
-                vendor,
+                status: userRole === 'vendor' ? 'Pending' : status,
+                vendor: userRole === 'vendor' ? user!.uid : 'admin',
                 tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
                 images,
                 price: parseFloat(price) || 0,
@@ -255,8 +258,10 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
             if (mode === 'add') {
                 await addProduct(productData);
                 toast({
-                    title: "Product added!",
-                    description: `${name} has been added to the store.`,
+                    title: userRole === 'vendor' ? "Product Submitted!" : "Product Added!",
+                    description: userRole === 'vendor' 
+                        ? `${name} has been submitted for review.`
+                        : `${name} has been added to the store.`,
                 });
                 resetForm();
             } else if (mode === 'edit' && initialData?.id) {
@@ -266,8 +271,9 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                     description: `${name} has been updated successfully.`,
                 });
             }
-
-            router.push('/admin/products');
+            
+            const redirectPath = userRole === 'admin' ? '/admin/products' : '/vendor/products';
+            router.push(redirectPath);
 
         } catch (error) {
             console.error("Error saving product:", error);
@@ -688,30 +694,32 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
 
                 </div>
                 <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Product Status</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Select value={status} onValueChange={setStatus}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Set status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Draft">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="secondary">Draft</Badge>
-                                        </div>
-                                    </SelectItem>
-                                    <SelectItem value="Active">
-                                         <div className="flex items-center gap-2">
-                                            <Badge variant="default">Active</Badge>
-                                        </div>
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </CardContent>
-                    </Card>
+                    {userRole === 'admin' && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Product Status</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Select value={status} onValueChange={setStatus}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Set status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Draft">
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary">Draft</Badge>
+                                            </div>
+                                        </SelectItem>
+                                        <SelectItem value="Active">
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="default">Active</Badge>
+                                            </div>
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     <Card>
                         <CardHeader>
@@ -731,10 +739,12 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="vendor">Vendor</Label>
-                                <Input id="vendor" value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="e.g., Bazaarika" />
-                            </div>
+                            {userRole === 'admin' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="vendor">Vendor</Label>
+                                    <Input id="vendor" value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="e.g., Bazaarika" />
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label htmlFor="tags">Tags</Label>
                                 <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g., summer, new (comma-separated)" />
@@ -750,7 +760,7 @@ export function ProductForm({ mode, initialData }: ProductFormProps) {
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
                             </>
                         ) : (
-                            "Save Product"
+                            mode === 'add' ? "Save Product" : "Save Changes"
                         )}
                     </Button>
                 </div>

@@ -35,12 +35,17 @@ export interface Product {
   stock: number;
   sku?: string;
   images: ImageField[];
-  status: 'Active' | 'Draft';
-  vendor: string;
+  status: 'Active' | 'Draft' | 'Pending' | 'Rejected' | 'Approved';
+  vendor: string; // User ID of the vendor or 'admin'
   tags: string[];
   hasVariants: boolean;
   variantOptions: VariantOption[];
   variants: GeneratedVariant[];
+}
+
+// For displaying products with vendor info in the admin panel
+export interface ProductWithVendor extends Product {
+    vendorName?: string;
 }
 
 

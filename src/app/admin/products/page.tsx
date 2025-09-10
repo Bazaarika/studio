@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, PlusCircle, Loader2, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { getProducts, deleteProduct } from "@/lib/firebase/firestore";
-import type { Product } from "@/lib/mock-data";
+import { getProductsWithVendor, deleteProduct, updateProductStatus } from "@/lib/firebase/firestore";
+import type { ProductWithVendor } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -25,15 +25,16 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export default function ProductsPage() {
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<ProductWithVendor[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     const { toast } = useToast();
 
     const fetchProducts = async () => {
+        setLoading(true);
         try {
-            const fetchedProducts = await getProducts();
+            const fetchedProducts = await getProductsWithVendor();
             setProducts(fetchedProducts);
         } catch (error) {
             console.error("Failed to fetch products:", error);
@@ -78,6 +79,38 @@ export default function ProductsPage() {
         }
     };
 
+    const handleStatusUpdate = async (productId: string, status: 'Approved' | 'Rejected') => {
+        try {
+            await updateProductStatus(productId, status);
+            toast({
+                title: `Product ${status}`,
+                description: `The product has been successfully ${status.toLowerCase()}.`
+            });
+            fetchProducts(); // Refresh list to show new status
+        } catch (error) {
+             console.error(`Failed to update product status to ${status}:`, error);
+            toast({
+                title: "Error",
+                description: "Failed to update product status.",
+                variant: "destructive"
+            });
+        }
+    };
+    
+    const getStatusVariant = (status: string) => {
+        switch (status) {
+            case 'Approved':
+                return 'default';
+            case 'Pending':
+                return 'secondary';
+            case 'Rejected':
+                return 'destructive';
+            default:
+                return 'outline';
+        }
+    }
+
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[60vh]">
@@ -91,11 +124,11 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h1 className="text-2xl font-bold">Products</h1>
-                    <p className="text-muted-foreground">Manage your products here.</p>
+                    <p className="text-muted-foreground">Manage and approve products from your vendors.</p>
                 </div>
                 <Button asChild>
                     <Link href="/admin/add-product">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Product (Admin)
                     </Link>
                 </Button>
             </div>
@@ -109,6 +142,7 @@ export default function ProductsPage() {
                                 </TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Vendor</TableHead>
                                 <TableHead>Price</TableHead>
                                 <TableHead className="hidden md:table-cell">Stock</TableHead>
                                 <TableHead>
@@ -131,10 +165,11 @@ export default function ProductsPage() {
                                     </TableCell>
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>
-                                        <Badge variant={product.status === 'Active' ? 'default' : 'secondary'}>
+                                        <Badge variant={getStatusVariant(product.status)}>
                                             {product.status}
                                         </Badge>
                                     </TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">{product.vendorName || 'Admin'}</TableCell>
                                     <TableCell>&#8377;{product.price.toFixed(2)}</TableCell>
                                     <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
                                     <TableCell>
@@ -147,6 +182,17 @@ export default function ProductsPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                {product.status === 'Pending' && (
+                                                    <>
+                                                        <DropdownMenuItem onSelect={() => handleStatusUpdate(product.id!, 'Approved')}>
+                                                            <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => handleStatusUpdate(product.id!, 'Rejected')} className="text-destructive">
+                                                           <XCircle className="mr-2 h-4 w-4" /> Reject
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                    </>
+                                                )}
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/admin/products/${product.id}`}>Edit</Link>
                                                 </DropdownMenuItem>
@@ -163,7 +209,7 @@ export default function ProductsPage() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center h-24">
+                                    <TableCell colSpan={7} className="text-center h-24">
                                         No products found.
                                     </TableCell>
                                 </TableRow>
@@ -193,5 +239,3 @@ export default function ProductsPage() {
         </div>
     )
 }
-
-    
