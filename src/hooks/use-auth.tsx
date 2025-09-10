@@ -79,12 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const updateUserDocument = async (user: User) => {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
+        const existingRole = userDoc.exists() ? userDoc.data().role : undefined;
+
         const userData = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            role: userDoc.exists() ? userDoc.data().role : 'customer', // Persist role or default to customer
+            role: existingRole || 'customer', // If role exists use it, otherwise default to 'customer'
         };
         // Use setDoc with merge:true to create or update the document
         await setDoc(userDocRef, userData, { merge: true });
