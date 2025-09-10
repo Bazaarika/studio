@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 
 export function Footer() {
@@ -24,6 +23,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/about-us" className="text-muted-foreground hover:text-primary">About Us</Link></li>
               <li><Link href="/careers" className="text-muted-foreground hover:text-primary">Careers</Link></li>
+               <li><Link href="/vendor/register" className="font-semibold text-primary hover:underline">Become a Seller</Link></li>
               <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Contact</Link></li>
             </ul>
           </div>
