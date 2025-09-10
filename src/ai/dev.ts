@@ -11,4 +11,5 @@ import '@/ai/flows/generate-festive-sale.ts';
 import '@/ai/flows/generate-prompt-based-section.ts';
 import '@/ai/flows/generate-page-content.ts';
 import '@/ai/flows/generate-rich-product-details.ts';
+import '@/ai/flows/generate-image-prompt.ts';
     

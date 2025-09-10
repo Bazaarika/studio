@@ -2,7 +2,7 @@
 "use client"
 
 import Link from "next/link";
-import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate, FileText, Undo2 } from "lucide-react";
+import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate, FileText, Undo2, ImageIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ const navLinks = [
     { href: "/admin/customers", icon: Users2, label: "Customers" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },
     { href: "/admin/pages", icon: FileText, label: "Pages" },
+    { href: "/admin/image-prompter", icon: ImageIcon, label: "AI Image Prompter" },
     { href: "/admin/send-notification", icon: Send, label: "Send Notification" },
 ];
 
