@@ -1,7 +1,7 @@
 
 import { db } from './config';
 import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp, writeBatch, orderBy } from 'firebase/firestore';
-import type { Product, Order, OrderItem, HomeSection, Category, Page } from '@/lib/mock-data';
+import type { Product, Order, OrderItem, HomeSection, Category, Page, ProductWithVendor } from '@/lib/mock-data';
 import { activateVendorAccount } from './actions';
 
 // Add a new product to the "products" collection
@@ -16,7 +16,7 @@ export const addProduct = async (productData: Omit<Product, 'id'>) => {
 };
 
 // Update an existing product
-export const updateProduct = async (id: string, productData: Omit<Product, 'id'>) => {
+export const updateProduct = async (id: string, productData: Partial<Product>) => {
     const docRef = doc(db, "products", id);
     try {
         await updateDoc(docRef, productData);
@@ -461,4 +461,39 @@ export const approveVendor = async (userId: string) => {
 
     // 2. Enable the user's Auth account via a Server Action
     await activateVendorAccount(userId);
+};
+
+
+// Get all products and enrich them with vendor's display name
+export const getProductsWithVendor = async (): Promise<ProductWithVendor[]> => {
+    const productsSnapshot = await getDocs(collection(db, "products"));
+    const products: Product[] = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+    const vendorIds = [...new Set(products.map(p => p.vendor).filter(v => v !== 'admin' && v))];
+    
+    const vendorsMap = new Map<string, string>();
+    if (vendorIds.length > 0) {
+        // Fetch vendor details in chunks of 10 to avoid firestore limitations
+        for (let i = 0; i < vendorIds.length; i += 10) {
+            const chunk = vendorIds.slice(i, i + 10);
+            const vendorsSnapshot = await getDocs(query(collection(db, "users"), where("uid", "in", chunk)));
+            vendorsSnapshot.forEach(doc => {
+                vendorsMap.set(doc.id, doc.data().displayName || 'Unnamed Vendor');
+            });
+        }
+    }
+
+    // Join products with vendor names
+    const productsWithVendor: ProductWithVendor[] = products.map(product => ({
+        ...product,
+        vendorName: product.vendor === 'admin' ? 'Admin' : vendorsMap.get(product.vendor) || 'Unknown Vendor',
+    }));
+
+    return productsWithVendor;
+}
+
+// Update a product's status (for admin approval)
+export const updateProductStatus = async (productId: string, status: 'Approved' | 'Rejected') => {
+    const productRef = doc(db, "products", productId);
+    await updateDoc(productRef, { status });
 };
