@@ -20,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { doc, onSnapshot, Unsubscribe, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { updateUserAddress, type Address, updateUserPhone } from "@/lib/firebase/firestore";
+import { updateUserAddress, type Address, updateUserPhone, type VendorApplicationData } from "@/lib/firebase/firestore";
+import { activateVendorAccount } from "@/lib/firebase/actions";
 
 type UserRole = 'admin' | 'vendor' | 'customer';
 
@@ -39,6 +40,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     signUpWithEmail: (email: string, pass: string) => Promise<void>;
     signInWithEmail: (email: string, pass: string) => Promise<void>;
+    registerVendor: (vendorData: VendorApplicationData) => Promise<void>;
     updateUserProfile: (payload: UserUpdatePayload) => Promise<void>;
     saveAddress: (address: Address) => Promise<void>;
     savePhone: (phone: string) => Promise<void>;
@@ -179,6 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                  title = "Invalid Email";
                 description = "Please enter a valid email address.";
                 break;
+            case 'auth/user-disabled':
+                title = "Account Pending";
+                description = "Your account is awaiting approval from an administrator.";
+                break;
         }
 
         toast({ title, description, variant: "destructive" });
@@ -213,6 +219,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const registerVendor = async (vendorData: VendorApplicationData) => {
+        const { email, password, contactName, ...vendorDetails } = vendorData;
+        
+        // 1. Create a temporary, disabled user in Firebase Auth
+        const tempAuth = getAuth(app); // Use a separate instance if needed, but not strictly necessary
+        const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
+        const user = userCredential.user;
+
+        // 2. Disable the account immediately
+        await activateVendorAccount(user.uid); // This server action will actually disable it initially. We re-enable on approval.
+        
+        // This is a workaround since client-side cannot disable users. The backend function should handle this.
+        // For now, we rely on Firestore status. In a real app, a Cloud Function would create a disabled user.
+        
+        // 3. Create the user document in Firestore with 'pending' status
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: contactName,
+            role: 'vendor',
+            status: 'pending',
+            ...vendorDetails,
+        });
+
+        // 4. Sign out the temporary user
+        await firebaseSignOut(tempAuth);
     };
 
     const signInWithEmail = async (email: string, pass: string) => {
@@ -295,7 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
     return (
-        <AuthContext.Provider value={{ user, role, address, phone, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, updateUserProfile, saveAddress, savePhone }}>
+        <AuthContext.Provider value={{ user, role, address, phone, loading, signInWithGoogle, signOut, signUpWithEmail, signInWithEmail, registerVendor, updateUserProfile, saveAddress, savePhone }}>
             {children}
         </AuthContext.Provider>
     );

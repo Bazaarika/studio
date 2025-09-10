@@ -92,3 +92,40 @@ export async function sendPushNotification(payload: NotificationPayload) {
     throw new Error("Failed to send push notification.");
   }
 }
+
+/**
+ * Activates a vendor's Firebase Auth account.
+ */
+export async function activateVendorAccount(uid: string) {
+    const admin = await initializeFirebaseAdmin();
+    if (!admin) throw new Error("Firebase Admin SDK not initialized.");
+    await admin.auth().updateUser(uid, { disabled: false });
+}
+
+/**
+ * Sends an email to the vendor upon approval.
+ * NOTE: This is a placeholder. For a real app, you would integrate a service like SendGrid, Mailgun, or use the Firebase "Trigger Email" extension.
+ */
+export async function sendVendorApprovalEmail(email: string) {
+    console.log(`
+    =================================================
+    SIMULATING VENDOR APPROVAL EMAIL
+    =================================================
+    TO: ${email}
+    FROM: no-reply@bazaarika.com
+    SUBJECT: Your Vendor Application has been Approved!
+
+    Hello,
+
+    Congratulations! Your application to become a seller on Bazaarika has been approved.
+    You can now log in to your vendor dashboard using the email and password you registered with.
+
+    Login here: [YOUR_LOGIN_URL]
+
+    Welcome aboard!
+    The Bazaarika Team
+    =================================================
+    `);
+    // In a real app, you would have your email sending logic here.
+    return { success: true };
+}

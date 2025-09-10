@@ -13,6 +13,7 @@ const navLinks = [
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
+    { href: "/admin/vendors", icon: Users2, label: "Vendors" },
     { href: "/admin/returns", icon: Undo2, label: "Manage Returns" },
     { href: "/admin/customers", icon: Users2, label: "Customers" },
     { href: "/admin/customize-home", icon: LayoutTemplate, label: "Customize Home" },

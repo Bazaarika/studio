@@ -2,6 +2,7 @@
 import { db } from './config';
 import { collection, addDoc, getDocs, getDoc, doc, DocumentData, setDoc, deleteDoc, updateDoc, arrayUnion, arrayRemove, query, where, serverTimestamp, Timestamp, writeBatch, orderBy } from 'firebase/firestore';
 import type { Product, Order, OrderItem, HomeSection, Category, Page } from '@/lib/mock-data';
+import { activateVendorAccount } from './actions';
 
 // Add a new product to the "products" collection
 export const addProduct = async (productData: Omit<Product, 'id'>) => {
@@ -418,3 +419,46 @@ export const getCustomers = async (): Promise<Customer[]> => {
 
     return customers;
 }
+
+
+// --- Vendor Application Management ---
+
+export interface VendorApplicationData {
+    shopName: string;
+    contactName: string;
+    email: string;
+    phone: string;
+    password?: string;
+    address: string;
+    gstNumber: string;
+    panNumber: string;
+}
+
+export interface VendorApplication extends VendorApplicationData {
+    uid: string;
+    status: 'pending' | 'approved' | 'rejected';
+}
+
+
+export const getVendorApplications = async (): Promise<VendorApplication[]> => {
+    const q = query(collection(db, "users"), where("role", "==", "vendor"));
+    const querySnapshot = await getDocs(q);
+    
+    const applications: VendorApplication[] = [];
+    querySnapshot.forEach((doc) => {
+        applications.push(doc.data() as VendorApplication);
+    });
+    
+    return applications;
+};
+
+export const approveVendor = async (userId: string) => {
+    // 1. Update the user's status in Firestore
+    const userDocRef = doc(db, "users", userId);
+    await updateDoc(userDocRef, {
+        status: 'approved'
+    });
+
+    // 2. Enable the user's Auth account via a Server Action
+    await activateVendorAccount(userId);
+};
