@@ -24,6 +24,13 @@ const navLinks = [
 export function SidebarNav() {
     const pathname = usePathname();
 
+    const isActive = (href: string) => {
+        if (href === '/admin') {
+            return pathname === '/admin';
+        }
+        return pathname.startsWith(href);
+    };
+
     return (
         <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
             <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
@@ -42,7 +49,7 @@ export function SidebarNav() {
                                     href={link.href}
                                     className={cn(
                                         "flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8",
-                                        pathname.startsWith(link.href) ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                                        isActive(link.href) ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
                                     <link.icon className="h-5 w-5" />

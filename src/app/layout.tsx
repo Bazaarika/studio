@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
         
         {/* PWA Tags */}
         <link rel="manifest" href="/manifest.json" />
@@ -63,9 +63,7 @@ export default function RootLayout({
               <CartProvider>
                 <WishlistProvider>
                   <RecentlyViewedProvider>
-                    <div className="hidden md:block">
-                      <Header />
-                    </div>
+                    <Header />
                     <ClientLayout>
                         {children}
                     </ClientLayout>

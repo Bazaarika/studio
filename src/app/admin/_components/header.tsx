@@ -24,6 +24,13 @@ const navLinks = [
 export function Header() {
     const pathname = usePathname();
 
+    const activeLink = navLinks.find(link => {
+        if (link.href === '/admin') {
+            return pathname === '/admin';
+        }
+        return pathname.startsWith(link.href);
+    });
+
     return (
          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <Sheet>
@@ -51,7 +58,7 @@ export function Header() {
                                 href={link.href}
                                 className={cn(
                                     "flex items-center gap-4 px-2.5",
-                                    pathname.startsWith(link.href) && link.href !== '/admin' || pathname === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                    activeLink?.href === link.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 <link.icon className="h-5 w-5" />
@@ -63,7 +70,7 @@ export function Header() {
             </Sheet>
              <div className="hidden sm:block">
                 <h1 className="text-xl font-semibold">
-                    {navLinks.find(link => pathname.startsWith(link.href))?.label || "Dashboard"}
+                    {activeLink?.label || "Dashboard"}
                 </h1>
             </div>
         </header>

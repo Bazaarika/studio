@@ -7,14 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Truck, Pencil, Loader2, Wallet, CheckCircle, ChevronRight, Banknote } from "lucide-react";
 import Image from "next/image";
 import { useCart, type CartItem } from "@/hooks/use-cart";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { getProduct, placeOrder } from "@/lib/firebase/firestore";
+import { placeOrder } from "@/lib/firebase/firestore";
 import type { OrderItem } from "@/lib/mock-data";
 
 // Extend window interface for Razorpay
@@ -25,7 +25,7 @@ declare global {
 }
 
 // Custom SwipeButton component
-const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: string }) => {
+const SwipeButton = ({ onComplete, text, disabled }: { onComplete: () => void; text: string; disabled?: boolean; }) => {
   const x = useMotionValue(0);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [buttonWidth, setButtonWidth] = useState(0);
@@ -44,15 +44,15 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
   );
   
   const handleDragEnd = () => {
-      if (buttonWidth > 0) {
-        const swipeThreshold = buttonWidth * 0.75;
-        if (x.get() > swipeThreshold) {
-            setIsCompleted(true);
-            onComplete();
-        } else {
-            animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
-        }
-    }
+      if (disabled || !buttonWidth) return;
+      
+      const swipeThreshold = buttonWidth * 0.75;
+      if (x.get() > swipeThreshold) {
+          setIsCompleted(true);
+          onComplete();
+      } else {
+          animate(x, 0, { type: "spring", stiffness: 300, damping: 20 });
+      }
   };
 
   const dragConstraints = { 
@@ -64,24 +64,24 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
   return (
     <div
       ref={buttonRef}
-      className="relative w-full h-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden"
+      className={cn("relative w-full h-14 rounded-full flex items-center justify-center overflow-hidden", disabled ? "bg-muted" : "bg-primary/20")}
     >
       <motion.div
         className="absolute left-0 top-0 h-full bg-primary"
         style={{ width: x, background }}
       />
       <motion.div
-        className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10 cursor-grab"
-        drag={!isCompleted ? "x" : false}
+        className="absolute left-1 top-1 h-12 w-12 rounded-full bg-background flex items-center justify-center z-10"
+        drag={!isCompleted && !disabled ? "x" : false}
         dragConstraints={dragConstraints}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ x }}
-        whileTap={{ cursor: "grabbing" }}
+        whileTap={!disabled ? { cursor: "grabbing" } : {}}
       >
-        <ChevronRight className="h-6 w-6 text-primary" />
+        <ChevronRight className={cn("h-6 w-6", disabled ? "text-muted-foreground" : "text-primary")} />
       </motion.div>
-      <span className="z-20 text-primary-foreground font-semibold text-lg pointer-events-none">
+      <span className={cn("z-20 font-semibold text-lg pointer-events-none", disabled ? "text-muted-foreground" : "text-primary-foreground")}>
         {text}
       </span>
     </div>
@@ -89,59 +89,40 @@ const SwipeButton = ({ onComplete, text }: { onComplete: () => void; text: strin
 };
 
 
-export function CheckoutClient() {
+export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartItem[]; isBuyNow: boolean }) {
   const { cart: mainCart, clearCart } = useCart();
   const { user, address, loading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
-
-  const isBuyNow = searchParams.get('buyNow') === 'true';
-  const productId = searchParams.get('productId');
-  const quantity = parseInt(searchParams.get('quantity') || '1', 10);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    async function prepareCheckoutItems() {
-        setLoadingItems(true);
-        if (isBuyNow && productId) {
-            try {
-                const product = await getProduct(productId);
-                if (product) {
-                    setCheckoutItems([{...product, quantity: quantity}]);
-                } else {
-                    toast({ title: "Product not found", description: "The item you tried to buy is no longer available.", variant: "destructive"});
-                    router.push('/');
-                }
-            } catch (error) {
-                 toast({ title: "Error", description: "Could not fetch product details.", variant: "destructive"});
-                 router.push('/');
-            }
-        } else {
-            setCheckoutItems(mainCart);
-        }
-        setLoadingItems(false);
+    setIsClient(true);
+    if (isBuyNow) {
+        setCheckoutItems(initialItems);
+    } else {
+        setCheckoutItems(mainCart);
     }
-    prepareCheckoutItems();
-  }, [isBuyNow, productId, quantity, mainCart, router, toast]);
+  }, [isBuyNow, initialItems, mainCart]);
 
 
   useEffect(() => {
-    if (!loadingItems && !isBuyNow && checkoutItems.length === 0) {
+    // This effect runs on the client after hydration
+    if (isClient && !isBuyNow && mainCart.length === 0) {
       toast({
           title: "Your cart is empty",
           description: "Add some items to checkout.",
       })
-      router.push('/categories');
+      router.replace('/categories');
     }
-  }, [loadingItems, checkoutItems, router, toast, isBuyNow]);
+  }, [isClient, mainCart, router, isBuyNow, toast]);
 
     const placeOrderInDb = async (paymentId?: string) => {
-        if (!user || !address?.address || !paymentMethod) return;
+        if (!user || !address?.address || !paymentMethod || checkoutItems.length === 0) return;
 
         const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         const shipping = subtotal > 0 ? 50.00 : 0;
@@ -163,7 +144,6 @@ export function CheckoutClient() {
                 clearCart();
             }
             
-            // Redirect to the new order success page
             router.push(`/order-success/${orderId}`);
 
         } catch (error) {
@@ -176,36 +156,11 @@ export function CheckoutClient() {
 
     const handleCodOrder = () => {
         setIsPlacingOrder(true);
-        if (!user) {
-            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
-            router.push('/login');
-            setIsPlacingOrder(false);
-            return;
-        }
-        if (!address?.address) {
-            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
-            router.push('/profile');
-            setIsPlacingOrder(false);
-            return;
-        }
         placeOrderInDb("COD");
     };
 
     const handleOnlinePayment = () => {
         setIsPlacingOrder(true);
-        if (!user) {
-            toast({ title: "Please login", description: "You need to be logged in to place an order.", variant: "destructive" });
-            router.push('/login');
-            setIsPlacingOrder(false);
-            return;
-        }
-        if (!address?.address) {
-            toast({ title: "No Address", description: "Please set a shipping address in your profile.", variant: "destructive" });
-            router.push('/profile');
-            setIsPlacingOrder(false);
-            return;
-        }
-
         const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         const shipping = subtotal > 0 ? 50.00 : 0;
         const total = subtotal + shipping;
@@ -221,12 +176,12 @@ export function CheckoutClient() {
                 placeOrderInDb(response.razorpay_payment_id);
             },
             prefill: {
-                name: user.displayName || 'Bazaarika User',
-                email: user.email || '',
+                name: user?.displayName || 'Bazaarika User',
+                email: user?.email || '',
                 contact: ''
             },
             notes: {
-                address: [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ')
+                address: [address?.address, address?.city, address?.zip, address?.country].filter(Boolean).join(', ')
             },
             theme: {
                 color: "#A020F0" // Purple theme color for Razorpay modal
@@ -262,7 +217,7 @@ export function CheckoutClient() {
         }
     };
   
-  if (authLoading || loadingItems) {
+  if (authLoading || !isClient) {
     return (
         <div className="flex justify-center items-center min-h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -275,14 +230,23 @@ export function CheckoutClient() {
   const total = subtotal + shipping;
 
   const formattedAddress = address ? [address.address, address.city, address.zip, address.country].filter(Boolean).join(', ') : '';
+  const canPlaceOrder = !!user && !!formattedAddress && !!paymentMethod && checkoutItems.length > 0;
 
   const handleSwipeComplete = () => {
+    if (!canPlaceOrder) return;
     if (paymentMethod === 'online') {
         handleOnlinePayment();
     } else if (paymentMethod === 'cod') {
         handleCodOrder();
     }
   }
+  
+  let swipeText = "Swipe to Place Order";
+  if (!user) swipeText = "Please Login to Continue";
+  else if (!formattedAddress) swipeText = "Please Add an Address";
+  else if (!paymentMethod) swipeText = "Select a Payment Method";
+  else if (paymentMethod === 'online') swipeText = "Swipe to Pay";
+  else if (paymentMethod === 'cod') swipeText = "Swipe to Confirm";
 
   return (
     <div className="max-w-xl mx-auto space-y-8 pb-24">
@@ -393,15 +357,12 @@ export function CheckoutClient() {
                         <Loader2 className="h-6 w-6 animate-spin" />
                         <span className="text-lg font-semibold">Placing Order...</span>
                     </div>
-                ) : paymentMethod && formattedAddress ? (
+                ) : (
                     <SwipeButton 
                         onComplete={handleSwipeComplete}
-                        text={paymentMethod === 'online' ? 'Swipe to Pay' : 'Swipe to Confirm'}
+                        text={swipeText}
+                        disabled={!canPlaceOrder}
                     />
-                ) : (
-                    <div className="text-center text-muted-foreground font-medium h-14 flex items-center justify-center">
-                       { !formattedAddress ? "Please add a shipping address" : "Please select a payment method" }
-                    </div>
                 )}
             </div>
         </div>
