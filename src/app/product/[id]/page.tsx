@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { getProduct, getProducts } from '@/lib/firebase/firestore';
 import type { Product } from '@/lib/mock-data';
