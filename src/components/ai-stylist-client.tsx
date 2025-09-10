@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Upload } from "lucide-react";
+import { Loader2, Sparkles, Upload, Link as LinkIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AiStylistClient() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null); // Can be data URI or URL
+  const [urlInput, setUrlInput] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -24,18 +26,27 @@ export function AiStylistClient() {
       reader.onloadend = () => {
         const dataUri = reader.result as string;
         setImagePreview(URL.createObjectURL(file));
-        setImageDataUri(dataUri);
+        setImageUrl(dataUri);
         setSuggestions([]);
+        setUrlInput("");
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = event.target.value;
+    setUrlInput(newUrl);
+    setImageUrl(newUrl);
+    setImagePreview(newUrl); // Use URL directly for preview
+    setSuggestions([]);
+  }
+
   const handleSubmit = async () => {
-    if (!imageDataUri) {
+    if (!imageUrl) {
       toast({
         title: "No image selected",
-        description: "Please upload an image of your outfit.",
+        description: "Please upload an image or provide an image URL.",
         variant: "destructive",
       });
       return;
@@ -45,13 +56,13 @@ export function AiStylistClient() {
     setSuggestions([]);
 
     try {
-      const result = await getStyleSuggestions({ outfitImageDataUri: imageDataUri });
+      const result = await getStyleSuggestions({ imageUrl: imageUrl });
       setSuggestions(result.suggestions);
     } catch (error) {
       console.error("Error getting style suggestions:", error);
       toast({
         title: "An error occurred",
-        description: "Failed to get style suggestions. Please try again.",
+        description: "Failed to get style suggestions. Please check the URL or try again.",
         variant: "destructive",
       });
     } finally {
@@ -64,7 +75,7 @@ export function AiStylistClient() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Upload className="h-6 w-6" /> Upload Your Outfit
+            <Upload className="h-6 w-6" /> Provide Your Outfit
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -77,8 +88,31 @@ export function AiStylistClient() {
               </div>
             )}
           </div>
-          <Input type="file" accept="image/*" onChange={handleImageChange} disabled={isLoading} />
-          <Button onClick={handleSubmit} disabled={isLoading || !imageDataUri} className="w-full">
+
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload">
+                <Upload className="mr-2 h-4 w-4" /> Upload Image
+              </TabsTrigger>
+              <TabsTrigger value="url">
+                <LinkIcon className="mr-2 h-4 w-4" /> Use URL
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="upload" className="mt-4">
+              <Input type="file" accept="image/*" onChange={handleImageChange} disabled={isLoading} />
+            </TabsContent>
+            <TabsContent value="url" className="mt-4">
+              <Input 
+                type="url" 
+                placeholder="https://..." 
+                value={urlInput}
+                onChange={handleUrlChange}
+                disabled={isLoading} 
+              />
+            </TabsContent>
+          </Tabs>
+          
+          <Button onClick={handleSubmit} disabled={isLoading || !imageUrl} className="w-full">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

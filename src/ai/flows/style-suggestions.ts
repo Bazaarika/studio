@@ -14,10 +14,10 @@ import {z} from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
 const StyleSuggestionsInputSchema = z.object({
-  outfitImageDataUri: z
+  imageUrl: z
     .string()
     .describe(
-      "A photo of an outfit, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of an outfit, as a public URL or a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type StyleSuggestionsInput = z.infer<typeof StyleSuggestionsInputSchema>;
@@ -40,7 +40,7 @@ const prompt = ai.definePrompt({
 
   Based on the following outfit, provide a few styling suggestions to enhance the look.
 
-  Outfit: {{media url=outfitImageDataUri}}
+  Outfit: {{media url=imageUrl}}
 
   Suggestions:`,
 });
