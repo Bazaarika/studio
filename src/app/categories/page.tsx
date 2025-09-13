@@ -1,10 +1,11 @@
+
 import { getProducts } from '@/lib/firebase/firestore';
 import { CategoriesClient } from '@/components/categories-client';
 import { generateCategories, type AiCategory } from '@/ai/flows/generate-categories';
 
 const ALL_CATEGORY: AiCategory = { name: 'All', keywords: [] };
 
-// This is now a Server Component responsible for initial data fetching
+// This is a Server Component responsible for initial data fetching
 export default async function CategoriesPage() {
   const products = await getProducts();
 

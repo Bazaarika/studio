@@ -1,3 +1,4 @@
+
 import { getProducts } from '@/lib/firebase/firestore';
 import { WishlistClient } from '@/components/wishlist-client';
 

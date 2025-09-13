@@ -1,3 +1,4 @@
+
 import { getProducts, getHomeLayout, getCategories } from '@/lib/firebase/firestore';
 import { HomeClient } from '@/components/home-client';
 import type { Product, PopulatedHomeSection } from '@/lib/mock-data';
@@ -13,7 +14,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return array;
 };
 
-// This is now a Server Component, fetching data on the server
+// This is a Server Component, fetching data on the server with caching.
 export default async function Home() {
   // Fetch all required data in parallel for performance
   const [allProducts, homeLayout, categories] = await Promise.all([
