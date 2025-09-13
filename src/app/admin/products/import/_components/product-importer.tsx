@@ -157,8 +157,8 @@ export function ProductImporter() {
         );
     };
 
-    const handleViewDetails = (productHandle: string) => {
-        const productRawData = csvData.find(row => row['Handle'] === productHandle && row['Title']);
+    const handleViewDetails = (productName: string) => {
+        const productRawData = csvData.find(row => row['Title'] === productName);
         if (productRawData) {
             setSelectedProductDetails(productRawData);
             setIsDetailsModalOpen(true);
@@ -262,7 +262,7 @@ export function ProductImporter() {
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>₹{product.price.toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="sm" onClick={() => handleViewDetails(product.sku)}>
+                                        <Button variant="outline" size="sm" onClick={() => handleViewDetails(product.name)}>
                                             <Eye className="mr-2 h-4 w-4" />
                                             View Full Details
                                         </Button>
@@ -304,6 +304,5 @@ export function ProductImporter() {
                 </DialogContent>
             </Dialog>
         </div>
-    )
-
-    
+    );
+}
