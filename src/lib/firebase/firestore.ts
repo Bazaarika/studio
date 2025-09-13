@@ -15,6 +15,24 @@ export const addProduct = async (productData: Omit<Product, 'id'>) => {
   }
 };
 
+// Batch add multiple products
+export const batchAddProducts = async (products: Omit<Product, 'id'>[]) => {
+    const batch = writeBatch(db);
+    const productsCollection = collection(db, "products");
+
+    products.forEach(productData => {
+        const docRef = doc(productsCollection); // Create a new doc with a generated id
+        batch.set(docRef, productData);
+    });
+
+    try {
+        await batch.commit();
+    } catch (e) {
+        console.error("Error batch adding documents: ", e);
+        throw new Error("Failed to batch add products");
+    }
+}
+
 // Update an existing product
 export const updateProduct = async (id: string, productData: Partial<Product>) => {
     const docRef = doc(db, "products", id);

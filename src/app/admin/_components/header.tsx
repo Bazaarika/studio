@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Home, Package, PanelLeft, ShoppingCart, Users2, List, Send, LayoutTemplate, FileText, Undo2, ImageIcon } from "lucide-react";
+import { Home, Package, PanelLeft, ShoppingCart, Users2, List, Send, LayoutTemplate, FileText, Undo2, ImageIcon, Upload } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const navLinks = [
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
+    { href: "/admin/products/import", icon: Upload, label: "Import Products" },
     { href: "/admin/vendors", icon: Users2, label: "Vendors" },
     { href: "/admin/returns", icon: Undo2, label: "Manage Returns" },
     { href: "/admin/customers", icon: Users2, label: "Customers" },

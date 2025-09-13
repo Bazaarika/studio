@@ -2,7 +2,7 @@
 "use client"
 
 import Link from "next/link";
-import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate, FileText, Undo2, ImageIcon } from "lucide-react";
+import { Home, Package, ShoppingCart, Users2, Settings, List, Send, LayoutTemplate, FileText, Undo2, ImageIcon, Upload } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const navLinks = [
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/products", icon: List, label: "Products" },
     { href: "/admin/add-product", icon: Package, label: "Add Product" },
+    { href: "/admin/products/import", icon: Upload, label: "Import Products" },
     { href: "/admin/vendors", icon: Users2, label: "Vendors" },
     { href: "/admin/returns", icon: Undo2, label: "Manage Returns" },
     { href: "/admin/customers", icon: Users2, label: "Customers" },
@@ -28,6 +29,10 @@ export function SidebarNav() {
     const isActive = (href: string) => {
         if (href === '/admin') {
             return pathname === '/admin';
+        }
+        // Make sure /admin/products doesn't also match /admin/products/import
+        if (href === '/admin/products') {
+            return pathname === '/admin/products';
         }
         return pathname.startsWith(href);
     };
