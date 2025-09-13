@@ -131,7 +131,7 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                   {allImages.map((img, i) => (
                       <CarouselItem key={i}>
                           <div className="bg-secondary rounded-xl p-4 md:p-8">
-                              <div className="aspect-square relative">
+                              <div className="aspect-[4/3] relative">
                                   <Image
                                       src={img.url}
                                       alt={`${product.name} image ${i + 1}`}
