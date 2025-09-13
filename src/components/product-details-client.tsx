@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -200,7 +199,7 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
             )}
 
             <Tabs defaultValue="description" className="w-full">
-                <TabsList className="w-full justify-start overflow-x-auto">
+                <TabsList>
                     <TabsTrigger value="description">Description</TabsTrigger>
                     {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
                     {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
