@@ -13,9 +13,10 @@ import { useWishlist } from '@/hooks/use-wishlist';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, priority = false }: ProductCardProps) {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -67,7 +68,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 src={imageUrl}
                 alt={product.name}
                 width={400}
-                height={400}
+                height={533} // Adjusted for a 3:4 aspect ratio
+                priority={priority}
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 className="aspect-[3/4] w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
                 data-ai-hint={aiHint}
                 />

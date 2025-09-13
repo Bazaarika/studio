@@ -205,6 +205,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
                       fill
                       className="object-cover"
                       data-ai-hint={dealOfTheDay.images?.[0]?.hint || ''}
+                      priority
                    />
                    <Badge variant="destructive" className="absolute top-3 left-3 text-sm py-1 px-3">On Sale!</Badge>
                 </div>
@@ -248,8 +249,8 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
                 </h2>
                 {section.description && <p className="text-muted-foreground mb-4">{section.description}</p>}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {section.products.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                    {section.products.map((product, index) => (
+                        <ProductCard key={product.id} product={product} priority={index < 4} />
                     ))}
                 </div>
             </section>
@@ -266,8 +267,8 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
                     <Sparkles className="h-6 w-6 text-accent" /> Suggested for you
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {suggestedProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                    {suggestedProducts.map((product, index) => (
+                        <ProductCard key={product.id} product={product} priority={index < 4} />
                     ))}
                     </div>
                 </section>
@@ -280,8 +281,8 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
                     <TrendingUp className="h-6 w-6 text-accent" /> Trending Now
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {trendingProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                    {trendingProducts.map((product, index) => (
+                        <ProductCard key={product.id} product={product} priority={index < 4} />
                     ))}
                     </div>
                 </section>
