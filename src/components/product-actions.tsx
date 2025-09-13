@@ -35,6 +35,18 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
     };
 
     const PriceDisplay = () => (
+        <div className="flex flex-col items-start">
+             <span className="text-xs text-muted-foreground">Price</span>
+            <div className="flex items-baseline gap-2">
+                <p className="text-xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                    <p className="text-sm text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</p>
+                )}
+            </div>
+        </div>
+    );
+    
+     const DesktopPriceDisplay = () => (
         <div className="flex items-baseline gap-2">
             <p className="text-xl md:text-2xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
             {product.compareAtPrice && product.compareAtPrice > product.price && (
@@ -56,19 +68,18 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
                         className="fixed bottom-0 left-0 w-full bg-background/80 backdrop-blur-sm border-t z-30 md:hidden"
                     >
                          <div className="container mx-auto px-4">
-                            <div className="flex items-center justify-between gap-2 h-20">
-                                <div className="flex-shrink-0">
-                                    <span className="text-sm text-muted-foreground">Price</span>
+                            <div className="flex items-center justify-between gap-4 h-20">
+                                <div className="flex-grow">
                                     <PriceDisplay />
                                 </div>
-                                <div className="flex items-center gap-2 flex-grow max-w-[250px]">
-                                    <Button size="lg" variant="outline" className="rounded-full w-1/2" onClick={handleAddToCart}>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Button size="lg" variant="outline" className="rounded-full" onClick={handleAddToCart}>
                                        <ShoppingCart className="h-5 w-5" /> 
-                                       <span className="ml-2">Add</span>
+                                       <span className="ml-2 hidden sm:inline">Add</span>
                                     </Button>
-                                    <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground w-1/2" onClick={handleBuyNow}>
+                                    <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleBuyNow}>
                                         <Zap className="h-5 w-5" /> 
-                                        <span className="ml-2">Buy</span>
+                                        <span className="ml-2 hidden sm:inline">Buy</span>
                                     </Button>
                                 </div>
                             </div>
@@ -82,7 +93,7 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <span className="text-sm text-muted-foreground">Price</span>
-                        <PriceDisplay />
+                        <DesktopPriceDisplay />
                     </div>
                     <div className="flex flex-col gap-2">
                         <Button size="lg" variant="outline" className="rounded-full w-full" onClick={handleAddToCart}>
@@ -99,5 +110,3 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
         </>
     );
 }
-
-  
