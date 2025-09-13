@@ -9,17 +9,24 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 import { Loader2, Upload, FileCheck2, List } from "lucide-react";
-import type { Product, VariantOption, GeneratedVariant, ImageField } from "@/lib/mock-data";
+import type { Product } from "@/lib/mock-data";
 import { batchAddProducts } from "@/lib/firebase/firestore";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 interface CsvRow {
     [key: string]: string;
 }
 
+type ProductToUpload = Omit<Product, 'id'>;
+
 export function ProductImporter() {
     const [csvData, setCsvData] = useState<CsvRow[]>([]);
+    const [productsToUpload, setProductsToUpload] = useState<ProductToUpload[]>([]);
+    const [selectedHandles, setSelectedHandles] = useState<string[]>([]);
     const [fileName, setFileName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -35,11 +42,15 @@ export function ProductImporter() {
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    setCsvData(results.data as CsvRow[]);
+                    const parsedData = results.data as CsvRow[];
+                    setCsvData(parsedData);
+                    const processedProducts = processProducts(parsedData);
+                    setProductsToUpload(processedProducts);
+                    setSelectedHandles(processedProducts.map(p => p.name)); // Select all by default
                     setIsLoading(false);
                     toast({
                         title: "File Parsed",
-                        description: `${results.data.length} rows found in ${file.name}.`
+                        description: `${processedProducts.length} products found in ${file.name}.`
                     });
                 },
                 error: (error: any) => {
@@ -54,30 +65,23 @@ export function ProductImporter() {
         }
     };
     
-    const processProducts = (): Omit<Product, 'id'>[] => {
-        const productsMap = new Map<string, Omit<Product, 'id'>>();
-        let currentProductHandle: string | null = null;
-        let currentProduct: Omit<Product, 'id'> | null = null;
-    
-        csvData.forEach(row => {
+    const processProducts = (data: CsvRow[]): ProductToUpload[] => {
+        const productsMap = new Map<string, ProductToUpload>();
+
+        data.forEach(row => {
             const handle = row['Handle'];
             if (!handle) return;
-    
-            if (handle !== currentProductHandle) {
-                // New product starts here
-                if (currentProduct) {
-                    productsMap.set(currentProductHandle!, { ...currentProduct });
-                }
-    
-                currentProductHandle = handle;
-                currentProduct = {
+
+            if (!productsMap.has(handle)) {
+                // This is a new product
+                productsMap.set(handle, {
                     name: row['Title'],
-                    description: row['Body (HTML)'],
-                    category: row['Custom Product Type'],
+                    description: row['Body (HTML)'] || '',
+                    category: row['Custom Product Type'] || 'Uncategorized',
                     price: parseFloat(row['Variant Price']) || 0,
                     compareAtPrice: parseFloat(row['Variant Compare At Price']) || 0,
-                    stock: parseInt(row['Variant Inventory Qty'], 10) || 0,
-                    sku: row['Variant SKU'],
+                    stock: 0, // Will be summed from variants
+                    sku: row['Variant SKU'] || '',
                     images: row['Image Src'] ? [{ url: row['Image Src'], hint: row['Image Alt Text'] || '' }] : [],
                     status: (row['Status'] as any) || 'Draft',
                     vendor: row['Vendor'] || 'admin',
@@ -85,56 +89,80 @@ export function ProductImporter() {
                     hasVariants: false,
                     variantOptions: [],
                     variants: [],
-                };
+                });
             }
-    
-            if (currentProduct) {
-                const option1Name = row['Option1 Name'];
-                const option1Value = row['Option1 Value'];
-    
-                if (option1Name && option1Value) {
-                    currentProduct.hasVariants = true;
-                    let option = currentProduct.variantOptions.find(opt => opt.name === option1Name);
-                    if (!option) {
-                        option = { name: option1Name, values: '' };
-                        currentProduct.variantOptions.push(option);
-                    }
-                    if (!option.values.split(',').map(v => v.trim()).includes(option1Value)) {
-                        option.values = (option.values ? `${option.values},` : '') + option1Value;
-                    }
-    
-                    // This is a variant row
-                    currentProduct.variants.push({
-                        id: option1Value, // Simple ID for now
-                        [option1Name]: option1Value,
-                        price: parseFloat(row['Variant Price']) || 0,
-                        stock: parseInt(row['Variant Inventory Qty'], 10) || 0,
-                    });
+
+            const product = productsMap.get(handle)!;
+
+            // Handle variants
+            const option1Name = row['Option1 Name'];
+            const option1Value = row['Option1 Value'];
+
+            if (option1Name && option1Value) {
+                product.hasVariants = true;
+
+                // Add variant option type if not present
+                let option = product.variantOptions.find(opt => opt.name === option1Name);
+                if (!option) {
+                    option = { name: option1Name, values: '' };
+                    product.variantOptions.push(option);
                 }
+                
+                // Add variant option value if not present
+                const values = option.values.split(',').map(v => v.trim()).filter(Boolean);
+                if (!values.includes(option1Value)) {
+                    values.push(option1Value);
+                    option.values = values.join(', ');
+                }
+
+                // Add the variant details
+                product.variants.push({
+                    id: option1Value,
+                    [option1Name]: option1Value,
+                    price: parseFloat(row['Variant Price']) || 0,
+                    stock: parseInt(row['Variant Inventory Qty'], 10) || 0,
+                });
+
+                // Sum variant stock for total stock
+                product.stock += parseInt(row['Variant Inventory Qty'], 10) || 0;
+            } else {
+                 // If no variants, use the main product stock
+                product.stock = parseInt(row['Variant Inventory Qty'], 10) || 0;
             }
+
         });
-    
-        // Add the last product
-        if (currentProduct && currentProductHandle) {
-            productsMap.set(currentProductHandle, { ...currentProduct });
-        }
-    
+
         return Array.from(productsMap.values());
     };
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedHandles(productsToUpload.map(p => p.name));
+        } else {
+            setSelectedHandles([]);
+        }
+    };
     
-    const productsToUpload = processProducts();
+    const handleSelectRow = (handle: string) => {
+        setSelectedHandles(prev => 
+            prev.includes(handle)
+                ? prev.filter(h => h !== handle)
+                : [...prev, handle]
+        );
+    };
 
     const handleImport = async () => {
-        if (productsToUpload.length === 0) {
-            toast({ title: "No products to import", variant: "destructive" });
+        const selectedProducts = productsToUpload.filter(p => selectedHandles.includes(p.name));
+        if (selectedProducts.length === 0) {
+            toast({ title: "No products selected", description: "Please select at least one product to import.", variant: "destructive" });
             return;
         }
         setIsUploading(true);
         try {
-            await batchAddProducts(productsToUpload);
+            await batchAddProducts(selectedProducts);
             toast({
                 title: "Import Successful!",
-                description: `${productsToUpload.length} products have been added to the store.`
+                description: `${selectedProducts.length} products have been added to the store.`
             });
             router.push('/admin/products');
         } catch (error) {
@@ -145,6 +173,7 @@ export function ProductImporter() {
         }
     };
 
+    const isAllSelected = productsToUpload.length > 0 && selectedHandles.length === productsToUpload.length;
 
     return (
         <div className="space-y-8">
@@ -152,7 +181,7 @@ export function ProductImporter() {
                 <CardHeader>
                     <CardTitle>Upload CSV</CardTitle>
                     <CardDescription>
-                        Select a CSV file to import your products. The file should match the Shopify CSV format.
+                        Select a Shopify-formatted CSV file to import your products.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -165,9 +194,9 @@ export function ProductImporter() {
                                 </div>
                              </Button>
                         </Label>
-                        <Button onClick={handleImport} disabled={productsToUpload.length === 0 || isUploading}>
+                        <Button onClick={handleImport} disabled={selectedHandles.length === 0 || isUploading}>
                             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileCheck2 className="mr-2 h-4 w-4" />}
-                             Import {productsToUpload.length > 0 ? productsToUpload.length : ''} Products
+                             Import {selectedHandles.length > 0 ? selectedHandles.length : ''} Products
                         </Button>
                     </div>
                      {isLoading && <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /><span>Parsing file...</span></div>}
@@ -178,42 +207,74 @@ export function ProductImporter() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><List className="h-5 w-5" /> Preview</CardTitle>
                     <CardDescription>
-                        Showing a preview of the products that will be imported. Variants are grouped under the main product.
+                       Select the products you want to import from the CSV file.
                     </CardDescription>
                 </CardHeader>
                  <CardContent>
                     <div className="border rounded-md">
-                        <div className="grid grid-cols-[64px_3fr_1fr_1fr_1fr] p-2 bg-muted font-semibold text-sm">
-                            <div/>
-                            <div>Title</div>
-                            <div>Status</div>
-                            <div>Variants</div>
-                            <div>Price</div>
-                        </div>
-                        <div className="max-h-[500px] overflow-y-auto">
-                        {productsToUpload.length > 0 ? productsToUpload.map((product, index) => (
-                           <div key={index} className="grid grid-cols-[64px_3fr_1fr_1fr_1fr] p-2 border-t items-center">
-                                <div>
-                                    <Image
-                                        src={product.images[0]?.url || 'https://placehold.co/64x64.png'}
-                                        alt={product.name}
-                                        width={48}
-                                        height={48}
-                                        className="rounded-md object-cover"
-                                    />
-                                </div>
-                                <div>{product.name}</div>
-                                <div>{product.status}</div>
-                                <div>{product.hasVariants ? product.variants.length : 1}</div>
-                                <div>₹{product.price.toFixed(2)}</div>
-                           </div>
-                        )) : (
-                            <div className="text-center p-8 text-muted-foreground">Upload a CSV file to see a preview.</div>
-                        )}
-                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-12">
+                                        <Checkbox 
+                                            checked={isAllSelected}
+                                            onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                                        />
+                                    </TableHead>
+                                    <TableHead className="w-[80px]">Image</TableHead>
+                                    <TableHead>Title</TableHead>
+                                    <TableHead>Handle</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Vendor</TableHead>
+                                    <TableHead>Tags</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {productsToUpload.length > 0 ? productsToUpload.map((product, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        <Checkbox 
+                                            checked={selectedHandles.includes(product.name)}
+                                            onCheckedChange={() => handleSelectRow(product.name)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Image
+                                            src={product.images[0]?.url || 'https://placehold.co/64x64.png'}
+                                            alt={product.name}
+                                            width={48}
+                                            height={48}
+                                            className="rounded-md object-cover"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{product.name}</TableCell>
+                                    <TableCell className="text-muted-foreground">{product.sku}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>{product.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>{product.category}</TableCell>
+                                    <TableCell>{product.vendor}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1 max-w-xs">
+                                            {product.tags.slice(0, 3).map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                            Upload a CSV file to see a preview.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
                     </div>
                  </CardContent>
              </Card>
         </div>
     )
 }
+
+    
