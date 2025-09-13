@@ -8,14 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
-import { Loader2, Upload, FileCheck2, List } from "lucide-react";
+import { Loader2, Upload, FileCheck2, List, Eye } from "lucide-react";
 import type { Product } from "@/lib/mock-data";
 import { batchAddProducts } from "@/lib/firebase/firestore";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CsvRow {
     [key: string]: string;
@@ -30,6 +31,11 @@ export function ProductImporter() {
     const [fileName, setFileName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    
+    // State for the details modal
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedProductDetails, setSelectedProductDetails] = useState<CsvRow | null>(null);
+
     const { toast } = useToast();
     const router = useRouter();
 
@@ -151,6 +157,14 @@ export function ProductImporter() {
         );
     };
 
+    const handleViewDetails = (productHandle: string) => {
+        const productRawData = csvData.find(row => row['Handle'] === productHandle && row['Title']);
+        if (productRawData) {
+            setSelectedProductDetails(productRawData);
+            setIsDetailsModalOpen(true);
+        }
+    };
+
     const handleImport = async () => {
         const selectedProducts = productsToUpload.filter(p => selectedHandles.includes(p.name));
         if (selectedProducts.length === 0) {
@@ -196,7 +210,7 @@ export function ProductImporter() {
                         </Label>
                         <Button onClick={handleImport} disabled={selectedHandles.length === 0 || isUploading}>
                             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileCheck2 className="mr-2 h-4 w-4" />}
-                             Import {selectedHandles.length > 0 ? selectedHandles.length : ''} Products
+                             Import {selectedHandles.length > 0 ? `(${selectedHandles.length})` : ''} Products
                         </Button>
                     </div>
                      {isLoading && <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /><span>Parsing file...</span></div>}
@@ -223,11 +237,8 @@ export function ProductImporter() {
                                     </TableHead>
                                     <TableHead className="w-[80px]">Image</TableHead>
                                     <TableHead>Title</TableHead>
-                                    <TableHead>Handle</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Vendor</TableHead>
-                                    <TableHead>Tags</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -249,21 +260,17 @@ export function ProductImporter() {
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell className="text-muted-foreground">{product.sku}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>{product.status}</Badge>
-                                    </TableCell>
-                                    <TableCell>{product.category}</TableCell>
-                                    <TableCell>{product.vendor}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1 max-w-xs">
-                                            {product.tags.slice(0, 3).map(tag => <Badge key={tag} variant="outline">{tag}</Badge>)}
-                                        </div>
+                                    <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="outline" size="sm" onClick={() => handleViewDetails(product.sku)}>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            View Full Details
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                                             Upload a CSV file to see a preview.
                                         </TableCell>
                                     </TableRow>
@@ -273,8 +280,30 @@ export function ProductImporter() {
                     </div>
                  </CardContent>
              </Card>
+
+            <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Full Product Details</DialogTitle>
+                        <DialogDescription>
+                           This is all the data for the selected product from the CSV file.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedProductDetails && (
+                        <ScrollArea className="h-96 w-full rounded-md border p-4">
+                            <div className="space-y-2">
+                                {Object.entries(selectedProductDetails).map(([key, value]) => (
+                                    <div key={key} className="grid grid-cols-[1fr_2fr] gap-4 text-sm">
+                                        <span className="font-semibold text-muted-foreground">{key}</span>
+                                        <span className="break-words">{value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
-}
 
     
