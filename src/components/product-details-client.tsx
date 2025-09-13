@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -125,12 +126,12 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     <>
       <div className="grid md:grid-cols-2 md:gap-8 lg:gap-12">
         {/* Image Gallery */}
-        <div>
+        <div className="md:w-full -mx-4 md:mx-0">
           <Carousel className="w-full" opts={{ loop: true }}>
               <CarouselContent>
                   {allImages.map((img, i) => (
                       <CarouselItem key={i}>
-                          <div className="bg-secondary rounded-xl p-4 md:p-8">
+                          <div className="bg-secondary rounded-none md:rounded-xl p-0 md:p-8">
                               <div className="aspect-[4/3] relative">
                                   <Image
                                       src={img.url}
