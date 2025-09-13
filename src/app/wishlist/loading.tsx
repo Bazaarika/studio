@@ -5,7 +5,7 @@ export default function WishlistLoading() {
   return (
     <div className="space-y-8">
       <header className="text-center">
-        <Skeleton className="h-10 w-48 mx-auto" />
+        <Skeleton className="h-10 w-48 mx-auto rounded-md" />
       </header>
       
       <section>
