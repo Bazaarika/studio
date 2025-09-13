@@ -53,7 +53,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
   const imageUrl = (product.images && product.images.length > 0 && product.images[0].url) 
     ? product.images[0].url 
-    : "https://placehold.co/400x400.png";
+    : "https://placehold.co/400x533.png";
   
   const aiHint = (product.images && product.images.length > 0 && product.images[0].hint)
     ? product.images[0].hint
@@ -63,15 +63,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   return (
     <Link href={`/product/${product.id}`} className="group block">
       <div className="relative overflow-hidden rounded-xl">
-        <div className="bg-secondary p-2 rounded-xl">
+        <div className="bg-secondary p-2 rounded-xl aspect-[3/4]">
              <Image
                 src={imageUrl}
                 alt={product.name}
                 width={400}
-                height={533} // Adjusted for a 3:4 aspect ratio
+                height={533}
                 priority={priority}
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                className="aspect-[3/4] w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
                 data-ai-hint={aiHint}
                 />
         </div>
