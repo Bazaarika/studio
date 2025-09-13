@@ -13,7 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +25,10 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
   const { addProductToRecentlyViewed } = useRecentlyViewed();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<Record<string, string>>({});
+  const [isBuyButtonVisible, setIsBuyButtonVisible] = useState(true);
   
+  const relatedProductsRef = useRef<HTMLDivElement | null>(null);
+
   const allImages = product.images?.length > 0 ? product.images : [{ url: "https://placehold.co/600x800.png", hint: "placeholder image" }];
 
   useEffect(() => {
@@ -34,12 +37,36 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     }
   }, [product.id, addProductToRecentlyViewed]);
 
+  // Intersection Observer for hiding the sticky buy button
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When the related products section is intersecting (visible), hide the button.
+        setIsBuyButtonVisible(!entry.isIntersecting);
+      },
+      {
+        root: null, // observes intersections relative to the viewport
+        rootMargin: '0px',
+        threshold: 0.1, // Trigger when 10% of the element is visible
+      }
+    );
+
+    const currentRef = relatedProductsRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
   const activeVariant = useMemo(() => {
     if (!product.hasVariants || Object.keys(selectedVariant).length === 0) {
       return null;
     }
-    // This logic assumes a simple variant ID structure. It might need to be more robust
-    // depending on how variant IDs are constructed. For now, it joins the selected values.
     const selectedIdParts = product.variantOptions.map(opt => selectedVariant[opt.name]).filter(Boolean);
     if (selectedIdParts.length !== product.variantOptions.length) return null;
     
@@ -80,7 +107,6 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     setQuantity(prev => {
         const newQuantity = prev + amount;
         if (newQuantity < 1) return 1;
-        // In a real app, you'd check against product.stock
         return newQuantity;
     })
   }
@@ -201,24 +227,28 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
             </Tabs>
           </div>
           
-          {/* Actions are now part of the right column on desktop */}
           <div className="mt-auto pt-6">
-             <ProductActions product={{...product, price: displayPrice}} quantity={quantity} />
+             <ProductActions 
+                product={{...product, price: displayPrice}} 
+                quantity={quantity}
+                isVisible={isBuyButtonVisible}
+             />
           </div>
         </div>
       </div>
       
-      {/* Related Products Section */}
-      {relatedProducts.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold font-headline mb-4">You might also like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((relatedProduct) => (
-              <ProductCard key={relatedProduct.id} product={relatedProduct} />
-            ))}
+      <div ref={relatedProductsRef}>
+        {relatedProducts.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold font-headline mb-4">You might also like</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <ProductCard key={relatedProduct.id} product={relatedProduct} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
