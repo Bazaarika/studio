@@ -87,7 +87,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       <div className="mt-2 space-y-1">
         <h3 className="text-sm font-semibold text-foreground">{product.name}</h3>
         <div className="flex items-center justify-between gap-4">
-            <p className="text-base font-bold text-foreground">&#8377;{product.price.toFixed(2)}</p>
+            <div className="flex items-baseline gap-2">
+                <p className="text-base font-bold text-foreground">&#8377;{product.price.toFixed(2)}</p>
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                    <p className="text-sm text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</p>
+                )}
+            </div>
              <Button 
                 size="icon" 
                 variant="ghost" 

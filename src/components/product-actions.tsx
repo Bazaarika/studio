@@ -34,6 +34,15 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
         router.push(checkoutUrl);
     };
 
+    const PriceDisplay = () => (
+        <div className="flex items-baseline gap-2">
+            <p className="text-xl md:text-2xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
+            {product.compareAtPrice && product.compareAtPrice > product.price && (
+                <p className="text-base text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</p>
+            )}
+        </div>
+    );
+
     return (
         <>
             {/* Sticky bar for mobile */}
@@ -50,7 +59,7 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
                             <div className="flex items-center justify-between gap-2 h-20">
                                 <div className="flex-shrink-0">
                                     <span className="text-sm text-muted-foreground">Price</span>
-                                    <p className="text-xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
+                                    <PriceDisplay />
                                 </div>
                                 <div className="flex items-center gap-2 flex-grow max-w-[250px]">
                                     <Button size="lg" variant="outline" className="rounded-full w-1/2" onClick={handleAddToCart}>
@@ -73,7 +82,7 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                         <span className="text-sm text-muted-foreground">Price</span>
-                        <p className="text-2xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
+                        <PriceDisplay />
                     </div>
                     <div className="flex flex-col gap-2">
                         <Button size="lg" variant="outline" className="rounded-full w-full" onClick={handleAddToCart}>
