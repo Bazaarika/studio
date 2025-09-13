@@ -14,7 +14,7 @@ import { Playfair_Display, PT_Sans } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/header';
 import { Suspense } from 'react';
-import Loading from './loading';
+import { Loader2 } from 'lucide-react';
 
 // Font setup for performance
 const playfair = Playfair_Display({
@@ -41,6 +41,14 @@ export const metadata: Metadata = {
   },
 };
 
+function RootLoading() {
+  return (
+    <div className="flex justify-center items-center h-[calc(100vh-80px)]">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,7 +70,7 @@ export default function RootLayout({
                   <RecentlyViewedProvider>
                     <Header />
                     {/* Wrap children in Suspense for route-level loading */}
-                    <Suspense fallback={<Loading />}>
+                    <Suspense fallback={<RootLoading />}>
                       <ClientLayout>
                           {children}
                       </ClientLayout>

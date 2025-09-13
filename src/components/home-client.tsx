@@ -29,10 +29,10 @@ function HomeHeader() {
     return (
         <section className="flex items-center justify-between">
             <div className="space-y-2">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-4 w-64" />
+                <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+                <div className="h-4 w-64 bg-muted rounded animate-pulse" />
             </div>
-            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
         </section>
     )
   }
