@@ -39,9 +39,6 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
              <span className="text-xs text-muted-foreground">Price</span>
             <div className="flex items-baseline gap-2">
                 <p className="text-xl font-bold font-headline">&#8377;{product.price.toFixed(2)}</p>
-                {product.compareAtPrice && product.compareAtPrice > product.price && (
-                    <p className="text-sm text-muted-foreground line-through">&#8377;{product.compareAtPrice.toFixed(2)}</p>
-                )}
             </div>
         </div>
     );
@@ -79,7 +76,7 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
                                     </Button>
                                     <Button size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleBuyNow}>
                                         <Zap className="h-5 w-5" /> 
-                                        <span className="ml-2 hidden sm:inline">Buy</span>
+                                        <span className="ml-2">Buy Now</span>
                                     </Button>
                                 </div>
                             </div>

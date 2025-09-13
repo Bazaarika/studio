@@ -18,6 +18,7 @@ import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { ProductCard } from './product-card';
+import { Badge } from '@/components/ui/badge';
 
 export function ProductDetailsClient({ product, relatedProducts }: { product: Product, relatedProducts: Product[] }) {
   const { toast } = useToast();
@@ -74,6 +75,12 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
   }, [product, selectedVariant]);
 
   const displayPrice = activeVariant ? activeVariant.price : product.price;
+  const displayCompareAtPrice = activeVariant ? undefined : product.compareAtPrice;
+
+  const discountPercent =
+    displayCompareAtPrice && displayCompareAtPrice > displayPrice
+      ? Math.round(((displayCompareAtPrice - displayPrice) / displayCompareAtPrice) * 100)
+      : 0;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -154,6 +161,16 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                     <Share2 />
                 </Button>
             </div>
+            
+            <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-foreground">₹{displayPrice.toFixed(2)}</p>
+                {displayCompareAtPrice && displayCompareAtPrice > displayPrice && (
+                    <p className="text-lg text-muted-foreground line-through">₹{displayCompareAtPrice.toFixed(2)}</p>
+                )}
+                {discountPercent > 0 && (
+                     <Badge variant="destructive">{discountPercent}% OFF</Badge>
+                )}
+            </div>
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
@@ -228,7 +245,7 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
           
           <div className="mt-auto pt-6">
              <ProductActions 
-                product={{...product, price: displayPrice}} 
+                product={{...product, price: displayPrice, compareAtPrice: displayCompareAtPrice}} 
                 quantity={quantity}
                 isVisible={isBuyButtonVisible}
              />
