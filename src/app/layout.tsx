@@ -1,4 +1,3 @@
-
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/hooks/use-auth';
@@ -14,10 +13,12 @@ import { PushNotificationManager } from '@/components/push-notification-manager'
 import { Playfair_Display, PT_Sans } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/header';
+import { Suspense } from 'react';
+import Loading from './loading';
 
-// Font setup
+// Font setup for performance
 const playfair = Playfair_Display({
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin'],
   display: 'swap',
   variable: '--font-playfair',
 });
@@ -29,11 +30,15 @@ const ptSans = PT_Sans({
   variable: '--font-pt-sans',
 });
 
-
+// Metadata for SEO
 export const metadata: Metadata = {
-  title: 'Bazaarika Lite - Modern E-commerce',
+  title: 'Bazaarika - Modern E-commerce',
   description: 'Discover the latest trends in fashion and accessories. Your modern e-commerce experience starts here.',
   manifest: '/manifest.json',
+  themeColor: '#A020F0',
+  icons: {
+    apple: '/icon-192x192.png',
+  },
 };
 
 export default function RootLayout({
@@ -45,14 +50,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
-        
-        {/* PWA Tags */}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Bazaarika" />
-        <link rel="apple-touch-icon" href="/icon-192x192.svg" />
-        <link rel="icon" href="/icon-192x192.svg" type="image/svg+xml" />
       </head>
       <body className={cn("antialiased font-body", playfair.variable, ptSans.variable)}>
         <ServiceWorkerRegistrar />
@@ -64,9 +61,12 @@ export default function RootLayout({
                 <WishlistProvider>
                   <RecentlyViewedProvider>
                     <Header />
-                    <ClientLayout>
-                        {children}
-                    </ClientLayout>
+                    {/* Wrap children in Suspense for route-level loading */}
+                    <Suspense fallback={<Loading />}>
+                      <ClientLayout>
+                          {children}
+                      </ClientLayout>
+                    </Suspense>
                     <Toaster />
                   </RecentlyViewedProvider>
                 </WishlistProvider>

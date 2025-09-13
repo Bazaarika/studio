@@ -1,55 +1,29 @@
-
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ProductCard } from '@/components/product-card';
 import type { Product } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, ShoppingCart, Loader2 } from 'lucide-react';
+import { Search, SlidersHorizontal, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
-import { generateCategories, type AiCategory } from '@/ai/flows/generate-categories';
+import type { AiCategory } from '@/ai/flows/generate-categories';
 import Link from 'next/link';
 
 interface CategoriesClientProps {
-  products: Product[];
+  initialProducts: Product[];
+  initialCategories: AiCategory[];
 }
 
-const ALL_CATEGORY: AiCategory = { name: 'All', keywords: [] };
-
-export function CategoriesClient({ products }: CategoriesClientProps) {
+export function CategoriesClient({ initialProducts, initialCategories }: CategoriesClientProps) {
   const { cart } = useCart();
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<AiCategory>(ALL_CATEGORY);
-  const [aiCategories, setAiCategories] = useState<AiCategory[]>([ALL_CATEGORY]);
-  const [isAiLoading, setIsAiLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchAiCategories() {
-      if (products.length > 0) {
-        setIsAiLoading(true);
-        try {
-          const productDetails = products.map(p => ({ name: p.name, description: p.description }));
-          const result = await generateCategories({ products: productDetails });
-          setAiCategories([ALL_CATEGORY, ...result.categories]);
-        } catch (error) {
-          console.error("Failed to fetch AI categories:", error);
-          setAiCategories([ALL_CATEGORY]); // Fallback
-        } finally {
-          setIsAiLoading(false);
-        }
-      } else {
-        setAiCategories([ALL_CATEGORY]);
-        setIsAiLoading(false);
-      }
-    }
-    fetchAiCategories();
-  }, [products]);
+  const [selectedCategory, setSelectedCategory] = useState<AiCategory>(initialCategories[0]);
 
   const filteredProducts = useMemo(() => {
-    let results = products;
+    let results = initialProducts;
 
     // 1. Filter by category
     if (selectedCategory.name !== 'All') {
@@ -79,7 +53,7 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
     }
     
     return results;
-  }, [products, selectedCategory, searchQuery]);
+  }, [initialProducts, selectedCategory, searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -110,13 +84,7 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-          {isAiLoading ? (
-            <div className="flex items-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin"/>
-                <span className="text-muted-foreground text-sm">Generating categories...</span>
-            </div>
-          ) : (
-            aiCategories.map((category) => (
+            {initialCategories.map((category) => (
               <Button
                 key={category.name}
                 variant={selectedCategory.name === category.name ? "default" : "secondary"}
@@ -125,8 +93,7 @@ export function CategoriesClient({ products }: CategoriesClientProps) {
               >
                 {category.name}
               </Button>
-            ))
-          )}
+            ))}
         </div>
       </header>
 

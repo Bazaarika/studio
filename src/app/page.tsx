@@ -1,8 +1,9 @@
-
 import { getProducts, getHomeLayout, getCategories } from '@/lib/firebase/firestore';
 import { ProductCardSkeleton } from '@/components/product-card-skeleton';
 import { HomeClient } from '@/components/home-client';
 import type { Product, PopulatedHomeSection } from '@/lib/mock-data';
+import { Suspense } from 'react';
+import { HomeLoadingSkeleton } from './loading';
 
 // Helper to shuffle an array for random product selection
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -26,17 +27,7 @@ export default async function Home() {
 
   // If there are no products, show a loading/empty state.
   if (!allProducts || allProducts.length === 0) {
-     return (
-        <div className="space-y-12">
-            <div className="h-64 bg-muted rounded-lg animate-pulse"></div>
-            <div className="space-y-4">
-                 <div className="h-8 w-1/3 bg-muted rounded animate-pulse"></div>
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-                </div>
-            </div>
-        </div>
-    )
+     return <HomeLoadingSkeleton />;
   }
 
   // Populate the layout sections with full product details
@@ -53,11 +44,15 @@ export default async function Home() {
   const trendingProducts = shuffleArray([...allProducts]).slice(0, 4);
 
   // Pass all server-fetched data to the Client Component
-  return <HomeClient 
-    allProducts={allProducts} 
-    suggestedProducts={suggestedProducts} 
-    trendingProducts={trendingProducts}
-    initialLayout={populatedLayout}
-    initialCategories={categories}
-  />;
+  return (
+    <Suspense fallback={<HomeLoadingSkeleton />}>
+      <HomeClient 
+        allProducts={allProducts} 
+        suggestedProducts={suggestedProducts} 
+        trendingProducts={trendingProducts}
+        initialLayout={populatedLayout}
+        initialCategories={categories}
+      />
+    </Suspense>
+  );
 }
