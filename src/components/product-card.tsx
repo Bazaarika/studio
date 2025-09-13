@@ -106,3 +106,5 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     </Link>
   );
 }
+
+  

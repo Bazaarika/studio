@@ -99,3 +99,5 @@ export function ProductActions({ product, quantity, isVisible }: ProductActionsP
         </>
     );
 }
+
+  
