@@ -55,12 +55,8 @@ const parseInlineMarkdown = (text: string): React.ReactNode => {
 };
 
 
-export default async function CustomPage({ params }: { params: { slug: string[] } }) {
-    if (!params.slug || params.slug.length === 0) {
-        notFound();
-    }
-
-    const slug = params.slug.join('/');
+export default async function CustomPage({ params }: { params: { slug: string } }) {
+    const slug = params.slug;
     if (!slug) {
         notFound();
     }
