@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import React from 'react';
 import Link from 'next/link';
 
+export const revalidate = 3600; // Revalidate static pages every hour
+
 // Helper function to parse inline markdown (bold, italics, links)
 const parseInlineMarkdown = (text: string): React.ReactNode => {
     // Regex for bold, italics, and links

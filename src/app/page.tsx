@@ -3,16 +3,8 @@ import { getProducts, getHomeLayout, getCategories } from '@/lib/firebase/firest
 import { HomeClient } from '@/components/home-client';
 import type { Product, PopulatedHomeSection } from '@/lib/mock-data';
 
-// Helper to shuffle an array for random product selection
-const shuffleArray = <T,>(array: T[]): T[] => {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-  }
-  return array;
-};
+// Revalidate the page every 60 seconds (Incremental Static Regeneration)
+export const revalidate = 60;
 
 // This is a Server Component, fetching data on the server with caching.
 export default async function Home() {
@@ -36,10 +28,9 @@ export default async function Home() {
       return { ...section, products };
   });
 
-  // Create fallback data in case the admin layout is empty
-  const shuffledProducts = shuffleArray([...allProducts]);
-  const suggestedProducts = shuffledProducts.slice(0, 4);
-  const trendingProducts = shuffleArray([...allProducts]).slice(0, 4);
+  // Create deterministic fallback data in case the admin layout is empty
+  const suggestedProducts = allProducts.slice(0, 4);
+  const trendingProducts = allProducts.slice(4, 8);
 
   // Pass all server-fetched data to the Client Component
   return (

@@ -3,6 +3,8 @@ import { getProducts } from '@/lib/firebase/firestore';
 import { CategoriesClient } from '@/components/categories-client';
 import { generateCategories, type AiCategory } from '@/ai/flows/generate-categories';
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 const ALL_CATEGORY: AiCategory = { name: 'All', keywords: [] };
 
 // This is a Server Component responsible for initial data fetching

@@ -4,6 +4,9 @@ import { getProduct, getProducts } from '@/lib/firebase/firestore';
 import type { Product } from '@/lib/mock-data';
 import { ProductDetailsClient } from '@/components/product-details-client';
 
+// Revalidate the page every 60 seconds (Incremental Static Regeneration)
+export const revalidate = 60;
+
 // Make this a Server Component to fetch data on the server
 export default async function ProductDetailsPage({ params }: { params: { id: string } }) {
   const id = params.id;
