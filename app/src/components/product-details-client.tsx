@@ -241,47 +241,49 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                     <h3 className="text-xl font-bold font-headline">All details</h3>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <Tabs defaultValue="specifications" className="w-full">
-                        <TabsList>
-                            {specificationsList.length > 0 && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
-                            <TabsTrigger value="description">Description</TabsTrigger>
-                            {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
-                            {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
-                        </TabsList>
-                        {specificationsList.length > 0 && (
-                            <TabsContent value="specifications">
-                                <div className="mt-4 space-y-4">
-                                    <h4 className="text-lg font-semibold">General</h4>
-                                    <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                                        {specificationsList.map((spec, index) => (
-                                            <div key={index} className="border-b pb-2">
-                                                <p className="text-muted-foreground">{spec.key}</p>
-                                                <p className="font-medium text-foreground">{spec.value}</p>
-                                            </div>
-                                        ))}
+                    <div className="w-full max-w-full overflow-x-auto">
+                        <Tabs defaultValue="specifications" className="w-full">
+                            <TabsList>
+                                {specificationsList.length > 0 && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
+                                <TabsTrigger value="description">Description</TabsTrigger>
+                                {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
+                                {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
+                            </TabsList>
+                            {specificationsList.length > 0 && (
+                                <TabsContent value="specifications">
+                                    <div className="mt-4 space-y-4">
+                                        <h4 className="text-lg font-semibold">General</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                                            {specificationsList.map((spec, index) => (
+                                                <div key={index} className="border-b pb-2">
+                                                    <p className="text-muted-foreground">{spec.key}</p>
+                                                    <p className="font-medium text-foreground">{spec.value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="text-center pt-2">
+                                            <Button variant="outline" className="rounded-full">
+                                                See more <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="text-center pt-2">
-                                        <Button variant="outline" className="rounded-full">
-                                            See more <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
-                                        </Button>
-                                    </div>
-                                </div>
+                                </TabsContent>
+                            )}
+                            <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
+                                {product.description}
                             </TabsContent>
-                        )}
-                        <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
-                            {product.description}
-                        </TabsContent>
-                        {product.productHighlights && (
-                            <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                                {product.productHighlights}
-                            </TabsContent>
-                        )}
-                        {product.showcase && (
-                            <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                            {product.showcase}
-                            </TabsContent>
-                        )}
-                    </Tabs>
+                            {product.productHighlights && (
+                                <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                    {product.productHighlights}
+                                </TabsContent>
+                            )}
+                            {product.showcase && (
+                                <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                {product.showcase}
+                                </TabsContent>
+                            )}
+                        </Tabs>
+                    </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

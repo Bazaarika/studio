@@ -225,32 +225,34 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
-                    <Tabs defaultValue="description" className="w-full">
-                        <TabsList>
-                            <TabsTrigger value="description">Description</TabsTrigger>
-                            {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
-                            {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
-                            {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
-                        </TabsList>
-                        <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
-                            {product.description}
-                        </TabsContent>
-                        {product.specifications && (
-                            <TabsContent value="specifications" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                                {product.specifications}
+                    <div className="w-full max-w-full overflow-x-auto">
+                        <Tabs defaultValue="description" className="w-full">
+                            <TabsList>
+                                <TabsTrigger value="description">Description</TabsTrigger>
+                                {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
+                                {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
+                                {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
+                            </TabsList>
+                            <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
+                                {product.description}
                             </TabsContent>
-                        )}
-                        {product.productHighlights && (
-                            <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                                {product.productHighlights}
-                            </TabsContent>
-                        )}
-                        {product.showcase && (
-                            <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                            {product.showcase}
-                            </TabsContent>
-                        )}
-                    </Tabs>
+                            {product.specifications && (
+                                <TabsContent value="specifications" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                    {product.specifications}
+                                </TabsContent>
+                            )}
+                            {product.productHighlights && (
+                                <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                    {product.productHighlights}
+                                </TabsContent>
+                            )}
+                            {product.showcase && (
+                                <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                {product.showcase}
+                                </TabsContent>
+                            )}
+                        </Tabs>
+                    </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
