@@ -19,7 +19,7 @@ import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { ProductCard } from './product-card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function ProductDetailsClient({ product, relatedProducts }: { product: Product, relatedProducts: Product[] }) {
   const { toast } = useToast();
@@ -224,32 +224,33 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                         <p className="text-sm text-muted-foreground">Features, description and more</p>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2 text-foreground/80 leading-relaxed space-y-4">
-                    <div>
-                        <h4 className="font-semibold text-foreground mb-2">Description</h4>
-                        <p>{product.description}</p>
-                    </div>
-                    {product.productHighlights && (
-                        <div>
-                            <Separator className="my-4"/>
-                            <h4 className="font-semibold text-foreground mb-2">Highlights</h4>
-                            <div className="whitespace-pre-wrap">{product.productHighlights}</div>
-                        </div>
-                    )}
-                     {product.specifications && (
-                        <div>
-                            <Separator className="my-4"/>
-                            <h4 className="font-semibold text-foreground mb-2">Specifications</h4>
-                            <div className="whitespace-pre-wrap">{product.specifications}</div>
-                        </div>
-                    )}
-                    {product.showcase && (
-                        <div>
-                            <Separator className="my-4"/>
-                            <h4 className="font-semibold text-foreground mb-2">Showcase</h4>
-                            <div className="whitespace-pre-wrap">{product.showcase}</div>
-                        </div>
-                    )}
+                <AccordionContent className="pt-2">
+                    <Tabs defaultValue="description" className="w-full">
+                        <TabsList>
+                            <TabsTrigger value="description">Description</TabsTrigger>
+                            {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
+                            {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
+                            {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
+                        </TabsList>
+                        <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
+                            {product.description}
+                        </TabsContent>
+                        {product.specifications && (
+                            <TabsContent value="specifications" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                {product.specifications}
+                            </TabsContent>
+                        )}
+                        {product.productHighlights && (
+                            <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                                {product.productHighlights}
+                            </TabsContent>
+                        )}
+                        {product.showcase && (
+                            <TabsContent value="showcase" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                            {product.showcase}
+                            </TabsContent>
+                        )}
+                    </Tabs>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -280,3 +281,5 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     </>
   );
 }
+
+    
