@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -18,6 +19,7 @@ import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { ProductCard } from './product-card';
+import { Badge } from '@/components/ui/badge';
 
 export function ProductDetailsClient({ product, relatedProducts }: { product: Product, relatedProducts: Product[] }) {
   const { toast } = useToast();
@@ -74,6 +76,12 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
   }, [product, selectedVariant]);
 
   const displayPrice = activeVariant ? activeVariant.price : product.price;
+  const displayCompareAtPrice = activeVariant ? undefined : product.compareAtPrice;
+
+  const discountPercent =
+    displayCompareAtPrice && displayCompareAtPrice > displayPrice
+      ? Math.round(((displayCompareAtPrice - displayPrice) / displayCompareAtPrice) * 100)
+      : 0;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -118,18 +126,18 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     <>
       <div className="grid md:grid-cols-2 md:gap-8 lg:gap-12">
         {/* Image Gallery */}
-        <div>
+        <div className="md:w-full -mx-4 md:mx-0">
           <Carousel className="w-full" opts={{ loop: true }}>
               <CarouselContent>
                   {allImages.map((img, i) => (
                       <CarouselItem key={i}>
-                          <div className="bg-secondary rounded-xl p-4 md:p-8">
-                              <div className="aspect-square relative">
+                          <div className="bg-secondary rounded-none md:rounded-xl">
+                              <div className="aspect-[4/5] relative">
                                   <Image
                                       src={img.url}
                                       alt={`${product.name} image ${i + 1}`}
                                       fill
-                                      className="object-contain"
+                                      className="object-cover"
                                       data-ai-hint={img.hint}
                                   />
                               </div>
@@ -153,6 +161,16 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
                 <Button variant="ghost" size="icon" onClick={handleShare}>
                     <Share2 />
                 </Button>
+            </div>
+            
+            <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-foreground">₹{displayPrice.toFixed(2)}</p>
+                {displayCompareAtPrice && displayCompareAtPrice > displayPrice && (
+                    <p className="text-lg text-muted-foreground line-through">₹{displayCompareAtPrice.toFixed(2)}</p>
+                )}
+                {discountPercent > 0 && (
+                     <Badge variant="destructive">{discountPercent}% OFF</Badge>
+                )}
             </div>
 
             <div className="flex items-center justify-between">
@@ -228,7 +246,7 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
           
           <div className="mt-auto pt-6">
              <ProductActions 
-                product={{...product, price: displayPrice}} 
+                product={{...product, price: displayPrice, compareAtPrice: displayCompareAtPrice}} 
                 quantity={quantity}
                 isVisible={isBuyButtonVisible}
              />
