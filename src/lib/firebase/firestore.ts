@@ -159,6 +159,7 @@ export const placeOrder = async (
     total: number, 
     shippingAddress: Address, 
     paymentMethod: string,
+    idToken: string, // Added for security
     paymentId?: string
 ): Promise<string> => {
     try {

@@ -122,7 +122,12 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
   }, [isClient, mainCart, router, isBuyNow, toast]);
 
     const placeOrderInDb = async (paymentId?: string) => {
-        if (!user || !address?.address || !paymentMethod || checkoutItems.length === 0) return;
+        setIsPlacingOrder(true);
+        if (!user || !address?.address || !paymentMethod || checkoutItems.length === 0) {
+            toast({ title: "Checkout Error", description: "Missing required information to place order.", variant: "destructive"});
+            setIsPlacingOrder(false);
+            return;
+        };
 
         const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         const shipping = subtotal > 0 ? 50.00 : 0;
@@ -138,7 +143,8 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
         }));
 
         try {
-            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod, paymentId);
+            const idToken = await user.getIdToken();
+            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod, idToken, paymentId);
             
             if (!isBuyNow) {
                 clearCart();
@@ -149,13 +155,11 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
         } catch (error) {
             console.error("Failed to place order:", error);
             toast({ title: "Order Failed", description: "There was an issue placing your order. Please try again.", variant: "destructive" });
-        } finally {
-             setIsPlacingOrder(false);
+            setIsPlacingOrder(false);
         }
     }
 
     const handleCodOrder = () => {
-        setIsPlacingOrder(true);
         placeOrderInDb("COD");
     };
 

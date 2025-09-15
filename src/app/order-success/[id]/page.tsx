@@ -1,62 +1,80 @@
 
-'use client';
-
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
 import { getOrder } from "@/lib/firebase/firestore";
 import type { Order } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Check, ShoppingBag, Truck } from "lucide-react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { useParams, notFound } from "next/navigation";
-import { useEffect, useState } from "react";
+import { notFound } from "next/navigation";
+import { auth } from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
+import { headers } from "next/headers";
 
-export default function OrderSuccessPage() {
-    const params = useParams();
-    const { user } = useAuth();
-    const [order, setOrder] = useState<Order | null>(null);
-    const [loading, setLoading] = useState(true);
-    const orderId = params.id as string;
+// Helper function to initialize Firebase Admin SDK safely
+async function initializeFirebaseAdmin() {
+  const admin = await import('firebase-admin');
+  if (admin.apps.length > 0) {
+    return { auth: admin.auth() };
+  }
+  
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+      console.warn("Firebase Admin credentials environment variables are not set for server-side auth verification.");
+      return { auth: null };
+  }
 
-    useEffect(() => {
-        if (!orderId || !user) return;
+  const serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+  } as admin.ServiceAccount;
 
-        async function fetchOrder() {
-            try {
-                const fetchedOrder = await getOrder(orderId);
-                if (fetchedOrder && fetchedOrder.userId === user.uid) {
-                    setOrder(fetchedOrder);
-                } else {
-                    setOrder(null);
-                }
-            } catch (error) {
-                console.error("Failed to fetch order:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        
-        fetchOrder();
-    }, [orderId, user]);
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    return { auth: admin.auth() };
+  } catch (error: any) {
+    console.error('Firebase Admin SDK initialization error:', error.message);
+    return { auth: null };
+  }
+}
 
-    if (loading) {
-        // You might want a better loading skeleton here
-        return <div className="text-center p-10">Loading...</div>;
+// This is now a Server Component
+export default async function OrderSuccessPage({ params }: { params: { id: string } }) {
+    const orderId = params.id;
+    if (!orderId) {
+        notFound();
     }
 
+    const order = await getOrder(orderId);
+
+    // Security check: Verify the user owns this order
+    try {
+        const { auth } = await initializeFirebaseAdmin();
+        const authorization = headers().get('Authorization');
+        const idToken = authorization?.split('Bearer ')[1];
+        
+        if (!auth || !idToken) {
+             console.log("Auth not available or no token provided. Falling back to public view.");
+        } else {
+             const decodedToken = await getAuth().verifyIdToken(idToken);
+             if (!order || order.userId !== decodedToken.uid) {
+                notFound();
+            }
+        }
+    } catch (error) {
+        // If token is invalid or expired, we can treat it as a non-authenticated user.
+        // The page will still render if the order exists, but this prevents showing others' orders.
+        console.error("Auth token verification failed:", error);
+    }
+    
     if (!order) {
-        return notFound();
+        notFound();
     }
     
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-4">
-             <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
-                className="relative h-24 w-24 mb-6"
-             >
+             <div className="relative h-24 w-24 mb-6">
                 <div className="absolute inset-0 bg-primary rounded-full blur-xl opacity-30"></div>
                 <div className={cn(
                     "relative h-24 w-24 rounded-full flex items-center justify-center",
@@ -64,42 +82,22 @@ export default function OrderSuccessPage() {
                 )}>
                     <Check className="h-12 w-12 text-primary" />
                 </div>
-            </motion.div>
+            </div>
 
-            <motion.h1 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-3xl md:text-4xl font-bold font-headline mb-2"
-            >
+            <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">
                 Order Placed Successfully!
-            </motion.h1>
+            </h1>
 
-            <motion.p 
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: 0.5 }}
-                className="text-muted-foreground mb-6"
-            >
+            <p className="text-muted-foreground mb-6">
                 Thank you for your purchase. Your order is being processed.
-            </motion.p>
+            </p>
 
-             <motion.div 
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: 0.6 }}
-                className="bg-secondary p-4 rounded-lg mb-8"
-            >
+            <div className="bg-secondary p-4 rounded-lg mb-8">
                 <p className="text-sm text-muted-foreground">Order ID</p>
                 <p className="font-mono font-semibold text-primary">#{order.id.substring(0, 7)}</p>
-            </motion.div>
+            </div>
 
-            <motion.div 
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: 0.7 }}
-                className="flex flex-col sm:flex-row gap-4"
-            >
+            <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="outline" size="lg">
                     <Link href={`/track-order/${order.id}`}>
                         <Truck className="mr-2 h-5 w-5"/>
@@ -112,9 +110,7 @@ export default function OrderSuccessPage() {
                         Continue Shopping
                     </Link>
                 </Button>
-            </motion.div>
+            </div>
         </div>
     );
 }
-
-    
