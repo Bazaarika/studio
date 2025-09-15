@@ -101,16 +101,15 @@ export function CategoryDialog({ isOpen, onClose, onSave, onUpdate, initialData 
                            Use a URL for a custom image icon. Overrides Lucide icon.
                         </p>
                         {imageUrl && (
-                            <div className="mt-2 flex items-center justify-center rounded-md border bg-muted p-2 h-24 w-24">
+                            <div className="mt-2 flex items-center justify-center rounded-md border bg-muted p-2 h-24 w-24 relative">
                                 <Image
                                     src={imageUrl}
                                     alt="Icon Preview"
-                                    width={80}
-                                    height={80}
+                                    fill
                                     className="object-contain"
-                                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                                    onError={(e) => e.currentTarget.style.display = 'none'}
                                 />
-                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                <ImageIcon className="h-8 w-8 text-muted-foreground absolute -z-10" />
                             </div>
                         )}
                     </div>
