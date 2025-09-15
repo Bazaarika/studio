@@ -21,6 +21,23 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// Helper function to parse specifications string into key-value pairs
+const parseSpecifications = (specs: string | undefined | null): { key: string, value: string }[] => {
+    if (!specs || typeof specs !== 'string') return [];
+    return specs.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.startsWith('- '))
+        .map(line => {
+            const cleanLine = line.substring(2).trim();
+            const parts = cleanLine.split(':');
+            const key = parts[0]?.trim() ?? '';
+            const value = parts.slice(1).join(':').trim() ?? '';
+            return { key, value };
+        })
+        .filter(item => item.key && item.value);
+};
+
+
 export function ProductDetailsClient({ product, relatedProducts }: { product: Product, relatedProducts: Product[] }) {
   const { toast } = useToast();
   const { addProductToRecentlyViewed } = useRecentlyViewed();
@@ -68,11 +85,11 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     if (!product.hasVariants || Object.keys(selectedVariant).length === 0) {
       return null;
     }
-    const selectedIdParts = product.variantOptions.map(opt => selectedVariant[opt.name]).filter(Boolean);
-    if (selectedIdParts.length !== product.variantOptions.length) return null;
+    const selectedIdParts = product.variantOptions?.map(opt => selectedVariant[opt.name]).filter(Boolean);
+    if (!selectedIdParts || selectedIdParts.length !== product.variantOptions?.length) return null;
     
     const variantId = selectedIdParts.join(' / ');
-    return product.variants.find(v => v.id === variantId) || null;
+    return product.variants?.find(v => v.id === variantId) || null;
   }, [product, selectedVariant]);
 
   const displayPrice = activeVariant ? activeVariant.price : product.price;
@@ -82,6 +99,8 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
     displayCompareAtPrice && displayCompareAtPrice > displayPrice
       ? Math.round(((displayCompareAtPrice - displayPrice) / displayCompareAtPrice) * 100)
       : 0;
+
+  const specificationsList = useMemo(() => parseSpecifications(product.specifications), [product.specifications]);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -217,30 +236,42 @@ export function ProductDetailsClient({ product, relatedProducts }: { product: Pr
             )}
 
             <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1" className="border-t border-b">
-                <AccordionTrigger className="hover:no-underline py-3">
-                    <div className="text-left">
-                        <h3 className="text-lg font-bold">All details</h3>
-                        <p className="text-sm text-muted-foreground">Features, description and more</p>
-                    </div>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>
+                    <h3 className="text-xl font-bold font-headline">All details</h3>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2">
+                <AccordionContent>
                     <div className="w-full max-w-full overflow-x-auto">
-                        <Tabs defaultValue="description" className="w-full">
+                        <Tabs defaultValue="specifications" className="w-full">
                             <TabsList>
+                                {specificationsList.length > 0 && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
                                 <TabsTrigger value="description">Description</TabsTrigger>
-                                {product.specifications && <TabsTrigger value="specifications">Specifications</TabsTrigger>}
                                 {product.productHighlights && <TabsTrigger value="highlights">Highlights</TabsTrigger>}
                                 {product.showcase && <TabsTrigger value="showcase">Showcase</TabsTrigger>}
                             </TabsList>
+                            {specificationsList.length > 0 && (
+                                <TabsContent value="specifications">
+                                    <div className="mt-4 space-y-4">
+                                        <h4 className="text-lg font-semibold">General</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                                            {specificationsList.map((spec, index) => (
+                                                <div key={index} className="border-b pb-2">
+                                                    <p className="text-muted-foreground">{spec.key}</p>
+                                                    <p className="font-medium text-foreground">{spec.value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="text-center pt-2">
+                                            <Button variant="outline" className="rounded-full">
+                                                See more <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                            )}
                             <TabsContent value="description" className="mt-4 text-foreground/80 leading-relaxed">
                                 {product.description}
                             </TabsContent>
-                            {product.specifications && (
-                                <TabsContent value="specifications" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                                    {product.specifications}
-                                </TabsContent>
-                            )}
                             {product.productHighlights && (
                                 <TabsContent value="highlights" className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
                                     {product.productHighlights}
