@@ -338,7 +338,7 @@ export default function CustomizeHomePage() {
                                 <div key={category.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
                                     <div className="flex items-center gap-3">
                                         {category.imageUrl ? (
-                                            <Image src={category.imageUrl} alt={category.name} width={20} height={20} className="h-5 w-5" />
+                                            <Image src={category.imageUrl} alt={category.name} width={20} height={20} className="h-5 w-5 object-contain" />
                                         ) : (
                                             <IconComponent className="h-5 w-5 text-muted-foreground" />
                                         )}

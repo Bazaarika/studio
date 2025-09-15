@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Category } from '@/lib/mock-data';
 import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
+import { ImageIcon } from 'lucide-react';
 
 interface CategoryDialogProps {
     isOpen: boolean;
@@ -39,10 +41,14 @@ export function CategoryDialog({ isOpen, onClose, onSave, onUpdate, initialData 
     const handleSave = () => {
         if (!name || (!icon && !imageUrl)) return;
 
+        // If an image URL is provided, we can use a placeholder for the icon name if it's empty.
+        // This ensures categories with only images are still valid.
+        const iconToSave = icon || (imageUrl ? 'Image' : '');
+
         if (isEditMode && onUpdate && initialData) {
-            onUpdate(initialData.id, name, icon || 'Image', imageUrl);
+            onUpdate(initialData.id, name, iconToSave, imageUrl);
         } else if (!isEditMode) {
-            onSave(name, icon || 'Image', imageUrl);
+            onSave(name, iconToSave, imageUrl);
         }
         
         onClose();
@@ -94,6 +100,19 @@ export function CategoryDialog({ isOpen, onClose, onSave, onUpdate, initialData 
                         <p className="text-xs text-muted-foreground">
                            Use a URL for a custom image icon. Overrides Lucide icon.
                         </p>
+                        {imageUrl && (
+                            <div className="mt-2 flex items-center justify-center rounded-md border bg-muted p-2 h-24 w-24">
+                                <Image
+                                    src={imageUrl}
+                                    alt="Icon Preview"
+                                    width={80}
+                                    height={80}
+                                    className="object-contain"
+                                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                                />
+                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                        )}
                     </div>
                 </div>
                 <DialogFooter>

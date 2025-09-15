@@ -169,7 +169,7 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
         <Link href={`/categories?category=${category.name}`} className="flex flex-col items-center gap-2 flex-shrink-0 w-20 group">
             <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/20 transition-colors relative overflow-hidden">
                  {category.imageUrl ? (
-                    <Image src={category.imageUrl} alt={category.name} fill className="object-cover" />
+                    <Image src={category.imageUrl} alt={category.name} fill className="object-contain p-2" />
                 ) : (
                     <IconComponent className="h-8 w-8 text-primary group-hover:text-primary/80" />
                 )}
