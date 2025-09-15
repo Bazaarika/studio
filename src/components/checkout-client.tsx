@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, Pencil, Loader2, Wallet, CheckCircle, ChevronRight, Banknote } from "lucide-react";
+import { CreditCard, Truck, Pencil, Loader2, Wallet, CheckCircle, ChevronRight, Banknote, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useCart, type CartItem } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { placeOrder } from "@/lib/firebase/firestore";
-import type { OrderItem } from "@/lib/mock-data";
+import type { OrderItem, Order } from "@/lib/mock-data";
 
 // Extend window interface for Razorpay
 declare global {
@@ -88,6 +88,53 @@ const SwipeButton = ({ onComplete, text, disabled }: { onComplete: () => void; t
   );
 };
 
+const SuccessPopup = ({ order }: { order: Order }) => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center p-4 text-center"
+    >
+        <div className="relative h-24 w-24 mb-6">
+            <div className="absolute inset-0 bg-primary rounded-full blur-xl opacity-30"></div>
+            <div className={cn(
+                "relative h-24 w-24 rounded-full flex items-center justify-center",
+                "bg-gradient-to-br from-primary/10 via-secondary to-secondary border-2 border-primary/20"
+            )}>
+                <CheckCircle className="h-12 w-12 text-primary" />
+            </div>
+        </div>
+
+        <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">
+            Order Placed Successfully!
+        </h1>
+
+        <p className="text-muted-foreground mb-6">
+            Thank you for your purchase. Your order is being processed.
+        </p>
+
+        <div className="bg-secondary p-4 rounded-lg mb-8">
+            <p className="text-sm text-muted-foreground">Order ID</p>
+            <p className="font-mono font-semibold text-primary">#{order.id.substring(0, 7)}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild variant="outline" size="lg">
+                <Link href={`/track-order/${order.id}`}>
+                    <Truck className="mr-2 h-5 w-5"/>
+                    Track Your Order
+                </Link>
+            </Button>
+            <Button asChild size="lg">
+                 <Link href="/categories">
+                    <ShoppingBag className="mr-2 h-5 w-5"/>
+                    Continue Shopping
+                </Link>
+            </Button>
+        </div>
+    </motion.div>
+);
+
 
 export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartItem[]; isBuyNow: boolean }) {
   const { cart: mainCart, clearCart } = useCart();
@@ -99,6 +146,7 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -144,17 +192,18 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
 
         try {
             const idToken = await user.getIdToken();
-            const orderId = await placeOrder(user.uid, orderItems, total, address, paymentMethod, idToken, paymentId);
+            const newOrder = await placeOrder(user.uid, orderItems, total, address, paymentMethod, idToken, paymentId);
             
             if (!isBuyNow) {
                 clearCart();
             }
             
-            router.push(`/order-success/${orderId}`);
+            setCompletedOrder(newOrder);
 
         } catch (error) {
             console.error("Failed to place order:", error);
             toast({ title: "Order Failed", description: "There was an issue placing your order. Please try again.", variant: "destructive" });
+        } finally {
             setIsPlacingOrder(false);
         }
     }
@@ -227,6 +276,10 @@ export function CheckoutClient({ initialItems, isBuyNow }: { initialItems: CartI
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
+  }
+  
+  if (completedOrder) {
+      return <SuccessPopup order={completedOrder} />;
   }
   
   const subtotal = checkoutItems.reduce((acc, item) => acc + item.price * item.quantity, 0);

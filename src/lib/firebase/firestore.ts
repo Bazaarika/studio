@@ -161,7 +161,7 @@ export const placeOrder = async (
     paymentMethod: string,
     idToken: string, // Added for security
     paymentId?: string
-): Promise<string> => {
+): Promise<Order> => {
     try {
         const orderData: Omit<Order, 'id'> = {
             userId,
@@ -184,7 +184,8 @@ export const placeOrder = async (
         };
 
         const docRef = await addDoc(collection(db, "orders"), dataToSave);
-        return docRef.id;
+        return { id: docRef.id, ...orderData };
+
     } catch (error) {
         console.error("Error placing order: ", error);
         throw new Error("Failed to place order");
