@@ -226,3 +226,5 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
       </div>
   );
 }
+
+    
