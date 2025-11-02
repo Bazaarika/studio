@@ -7,11 +7,9 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
 import type { Product, Category, PopulatedHomeSection } from '@/lib/mock-data';
 import * as LucideIcons from 'lucide-react';
-import { Timer, History, Sparkles, Loader2, Hand, TrendingUp, ShoppingBag } from 'lucide-react';
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { History, Sparkles, Loader2, Hand, TrendingUp, ShoppingBag } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRecentlyViewed } from '@/hooks/use-recently-viewed';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { RecentlyViewedCard } from '@/components/recently-viewed-card';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -55,41 +53,6 @@ function HomeHeader() {
   );
 }
 
-// Helper function to get the deal of the day based on the current date
-const getDealOfTheDay = (products: Product[]): Product | null => {
-  if (products.length === 0) {
-    return null;
-  }
-  const dayOfYear = Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-  return products[dayOfYear % products.length];
-};
-
-// Custom hook for the countdown timer
-const useCountdown = () => {
-    const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' });
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = new Date();
-            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-            const distance = endOfDay.getTime() - now.getTime();
-
-            if (distance < 0) {
-                setTimeLeft({ hours: '00', minutes: '00', seconds: '00' });
-            } else {
-                const hours = Math.floor((distance / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
-                const minutes = Math.floor((distance / 1000 / 60) % 60).toString().padStart(2, '0');
-                const seconds = Math.floor((distance / 1000) % 60).toString().padStart(2, '0');
-                setTimeLeft({ hours, minutes, seconds });
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    return timeLeft;
-};
-
 interface HomeClientProps {
     allProducts: Product[];
     suggestedProducts: Product[];
@@ -106,7 +69,6 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
   const { recentlyViewedIds } = useRecentlyViewed();
   const [recentlyViewedProducts, setRecentlyViewedProducts] = useState<Product[]>([]);
   
-  const timeLeft = useCountdown();
   const loader = useRef<HTMLDivElement | null>(null);
 
   // Logic for Recently Viewed Products - runs only on the client
@@ -148,20 +110,6 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
     };
   }, [handleObserver]);
 
-  const dealOfTheDay = useMemo(() => getDealOfTheDay(allProducts), [allProducts]);
-  const discountPercent = dealOfTheDay?.compareAtPrice && dealOfTheDay?.price
-    ? Math.round(((dealOfTheDay.compareAtPrice - dealOfTheDay.price) / dealOfTheDay.compareAtPrice) * 100)
-    : 0;
-  
-  const CountdownBlock = ({ value, label }: { value: string, label: string }) => (
-      <div className="flex flex-col items-center">
-          <div className="text-2xl md:text-3xl font-bold text-background bg-primary/20 rounded-lg p-2 w-12 h-12 flex items-center justify-center">
-              {value}
-          </div>
-          <span className="text-xs text-muted-foreground mt-1">{label}</span>
-      </div>
-  );
-  
   const CategoryCard = ({ category }: { category: Category }) => {
     // @ts-ignore
     const IconComponent = LucideIcons[category.icon] || ShoppingBag;
@@ -192,58 +140,6 @@ export function HomeClient({ allProducts, suggestedProducts, trendingProducts, i
                 {initialCategories.map(cat => <CategoryCard key={cat.id} category={cat} />)}
             </div>
         </section>
-
-
-        {/* Deal of the Day Section */}
-        {dealOfTheDay && (
-          <section>
-             <h2 className="text-2xl font-bold font-headline mb-4">Deal of the Day</h2>
-             <div className={cn(
-                  "grid md:grid-cols-2 gap-6 md:gap-8 rounded-2xl p-4 md:p-6",
-                  "bg-gradient-to-br from-primary/10 via-secondary to-secondary border-2 border-primary/20"
-              )}>
-                <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden">
-                   <Image 
-                      src={dealOfTheDay.images?.[0]?.url || 'https://picsum.photos/600/600'}
-                      alt={dealOfTheDay.name}
-                      fill
-                      className="object-cover"
-                      data-ai-hint={dealOfTheDay.images?.[0]?.hint || ''}
-                      priority
-                   />
-                   <Badge variant="destructive" className="absolute top-3 left-3 text-sm py-1 px-3">On Sale!</Badge>
-                </div>
-                <div className="flex flex-col justify-center gap-4">
-                  <h3 className="text-2xl md:text-3xl font-bold font-headline">{dealOfTheDay.name}</h3>
-                  <p className="text-muted-foreground text-sm">{dealOfTheDay.description}</p>
-                  <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-primary">₹{dealOfTheDay.price.toFixed(2)}</span>
-                      {dealOfTheDay.compareAtPrice && (
-                          <>
-                            <span className="text-lg text-muted-foreground line-through">₹{dealOfTheDay.compareAtPrice.toFixed(2)}</span>
-                            <Badge variant="secondary" className="text-primary font-bold">{discountPercent}% OFF</Badge>
-                          </>
-                      )}
-                  </div>
-
-                   <div className="space-y-2">
-                       <p className="font-semibold text-sm flex items-center gap-2"><Timer className="h-5 w-5 text-primary"/> Offer ends in:</p>
-                       <div className="flex items-center gap-2 text-primary">
-                           <CountdownBlock value={timeLeft.hours} label="Hours" />
-                           <span className="text-2xl font-bold pb-4">:</span>
-                           <CountdownBlock value={timeLeft.minutes} label="Mins" />
-                            <span className="text-2xl font-bold pb-4">:</span>
-                           <CountdownBlock value={timeLeft.seconds} label="Secs" />
-                       </div>
-                   </div>
-
-                  <Button asChild size="lg" className="mt-2 rounded-full w-full md:w-auto">
-                    <Link href={`/product/${dealOfTheDay.id}`}>View Deal</Link>
-                  </Button>
-                </div>
-              </div>
-          </section>
-        )}
 
         {/* DYNAMIC SECTIONS FROM ADMIN */}
         {hasCustomLayout && initialLayout.map(section => (
